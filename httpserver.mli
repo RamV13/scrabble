@@ -6,16 +6,16 @@ type meth = Code.meth
 
 (* [request] contains HTTP headers and a string body *)
 type request = { 
-                 headers : Header.t;
-                 req_body : string
-               }
+  headers : Header.t;
+  req_body : string
+}
 
 (* [response] contains HTTP headers, status code, and a string body *)
 type response = {
-                  headers : Header.t;
-                  status : Code.status_code;
-                  res_body : string
-                }
+  headers : Header.t;
+  status : Code.status_code;
+  res_body : string
+}
 
 (* [callback] is a function that converts a request into a response *)
 type callback = request -> response
