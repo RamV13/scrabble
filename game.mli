@@ -1,6 +1,6 @@
+
 type player = {
-  player_id : string;
-  game_id : string;
+  player_name : string;
   tiles : char list;
   score : int;
   order : int;
@@ -8,7 +8,8 @@ type player = {
 }
 
 type state = {
-  id : string;
+  id : int;
+  name : string;
   grid: Grid.board;
   players : player list;
   remaining_tiles : char list;
@@ -21,4 +22,3 @@ type move = {
 }
 
 val move : state -> move -> state 
-
