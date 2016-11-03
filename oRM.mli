@@ -10,6 +10,3 @@ val get_games : unit -> Game.state list
 
 (* [remove_game id] remove the game associated with [id] from the database *)
 val remove_game : string -> unit
-
-(* [get_players ()] gets the list of players from the database *)
-val get_players: unit -> Game.player list
