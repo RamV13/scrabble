@@ -26,7 +26,7 @@ type state = {
  * the player who performs the move *)
 type move = {
   tiles_placed : (char * (int * int)) list;
-  player_id: int
+  player : int
 }
 
 (* [execute state move] executes a [move] to produce a new game state from the 
