@@ -10,6 +10,12 @@ val is_empty : board -> int->int->bool
 val get_tile : board -> int->int-> char option
 val place : board -> int -> int -> char -> board
 
+type neighbors = {
+  top : char;
+  bottom : char;
+  left : char;
+  right : char;
+}
+
 (*not sure if we'd implement this here or in the game logic*)
-val get_neighbors : borad -> int -> int ->
-  {top : char; bottom: char; left : char; right : char}
+val get_neighbors : board -> int -> int -> neighbors
