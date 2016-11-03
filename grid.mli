@@ -6,8 +6,8 @@ type board = (char option) list list
 type bonus_tiles = int Map.Make(int*int)
 
 
-val is_empty : board -> int->int->bool
-val get_tile : board -> int->int-> char option
+val is_empty : board -> int -> int -> bool
+val get_tile : board -> int -> int -> char option
 val place : board -> int -> int -> char -> board
 
 type neighbors = {
