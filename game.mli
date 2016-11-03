@@ -1,5 +1,6 @@
 
 type player = {
+  player_id : int;
   player_name : string;
   tiles : char list;
   score : int;
