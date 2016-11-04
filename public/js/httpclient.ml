@@ -55,6 +55,8 @@ let exec_async req callback =
     | `GET -> Client.get ~headers:req.headers (Uri.of_string req.url)
     | `POST -> Client.post ~body:(Cohttp_async.Body.of_string req.req_body) 
                            ~headers:req.headers (Uri.of_string req.url)
+    | `PUT -> Client.put ~body:(Cohttp_lwt_body.of_string req.req_body) 
+                         ~headers:req.headers (Uri.of_string req.url)
     | _ -> failwith "Unsupported request method")
   |> upon
   |> fun f -> f res_callback
