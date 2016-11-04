@@ -19,11 +19,13 @@ let to_list = Yojson.Basic.Util.to_list
 (* [to_int] is Yojson.Basic.Util.to_int *)
 let to_int = Yojson.Basic.Util.to_int
 
+let baseURL = "http://128.253.51.200"
+
 let get_game_info _ = 
   {
     headers = Header.init ();
     meth = `GET;
-    url = "http://127.0.0.1:8000/api/games";
+    url = baseURL ^ "/api/games";
     req_body = ""
   }
   |> XHRClient.exec
