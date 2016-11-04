@@ -17,13 +17,6 @@ type response = {
   res_body : string
 }
 
-(* [callback] is a function that processes the contents of a response *)
-(* type callback = response -> unit *)
-
 (* [exec request] performs a synchronous HTTP request with the [request] payload
- * and provides the value of the response data *)
+ * and provides the value of the response data wrapped in an Lwt thread *)
 val exec : request -> response Lwt.t
-
-(* [exec request callback] performs an HTTP request with the [request] payload 
- * and asynchronously sends response data to the [callback] provided *)
-(* val exec_async : request -> callback -> unit *)

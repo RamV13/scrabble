@@ -1,16 +1,7 @@
 
 open Dom
 
-open Cohttp
-open Httpclient
-
-let get_google _ = 
-  Dom_html.window##alert (Js.string "started");
-  {headers=Header.init (); meth=`GET; url="http://www.google.com/"; req_body=""}
-  |> Httpclient.exec
-  |> Lwt.ignore_result;
-  (* |> fun response -> Dom_html.window##alert (Js.string response.res_body) *)
-  Dom_html.window##alert (Js.string "completed")
+open Lwt
 
 (* [fail] is a failure callback *)
 let fail = fun _ -> assert false
@@ -22,6 +13,17 @@ let get_element_by_id id =
 let toggle_join = ref true
 let toggle_create = ref true
 
+let test _ = 
+  (
+  ScrabbleClient.get_game_info ()
+  >>= fun games -> 
+      begin
+        List.fold_left (fun acc elem -> acc + fst elem) 0 games
+        |> fun result -> (* TODO use result *) Lwt.return ()
+      end
+  )
+  |> Lwt.ignore_result
+
 (* [handle_btn_join btn ()] is the callback to handle the click events of the 
  * join button [btn] *)
 let handle_btn_join btn _ = 
@@ -30,7 +32,7 @@ let handle_btn_join btn _ =
   else 
     btn##style##cssText <- Js.string "background: #009688; width: 100px; margin-right: 10px";
   toggle_join := not !toggle_join;
-  get_google ();
+  test ();
   Js._false
 
 (* [handle_btn_create btn ()] is the callback to handle the click events of the 
