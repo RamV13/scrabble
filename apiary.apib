@@ -1,0 +1,172 @@
+FORMAT: 1A
+HOST: http://polls.apiblueprint.org/
+
+# Scrabble
+
+This API outlines the HTTP interface between the server and clients for the CS 3110 final project Scrabble.
+
+## Games [/api/games]
+
+### List All Game IDs and Names [GET]
+
++ Response 200 (application/json)
+
+            [
+                {
+                    "id": 0,
+                    "name": "<GAME_NAME>"
+                },
+                {
+                    "id": 1,
+                    "name": "<GAME_NAME>"
+                }
+            ]
+        
+## Game [/api/game/{id}]
+
+### Get Game State [GET]
+
++ Response 200 (application/json)
+
+            {
+                "id": 0,
+                "name": "<GAME_NAME>",
+                "grid": [
+                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
+                    [...],
+                    [...],
+                    ...
+                ],
+                "players": [
+                    {
+                        "id": 0,
+                        "name": "<PLAYER_NAME>",
+                        "tiles": ['a','b','z',...,'t'],
+                        "score": 0,
+                        "order": 1,
+                        "ai": false
+                    },
+                    ...
+                ],
+                "remainingTiles": ['a','w',...,'f'],
+                "turn": 0
+            }
+
+### Join a Game [POST]
+
++ Request (application/json)
+
+            {
+                "id": 0,
+                "name": "<PLAYER_NAME>",
+            }
+
++ Response 200 (application/json)
+
+            {
+                "playerID": 0,
+                "id": 0,
+                "name": "<GAME_NAME>",
+                "grid": [
+                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
+                    [...],
+                    [...],
+                    ...
+                ],
+                "players": [
+                    {
+                        "id": 0,
+                        "name": "<PLAYER_NAME>",
+                        "tiles": ['a','b','z',...,'t'],
+                        "score": 0,
+                        "order": 1,
+                        "ai": false
+                    },
+                    ...
+                ],
+                "remainingTiles": ['a','w',...,'f'],
+                "turn": 0
+            }
+            
+### Create a Game [PUT]
+
++ Request (application/json)
+
+            {
+                "name": "<PLAYER_NAME>"
+            }
+
++ Response 200 (application/json)
+
+            {
+                "playerID": 0,
+                "id": 1,
+                "name": "<GAME_NAME>",
+                "grid": [
+                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
+                    [...],
+                    [...],
+                    ...
+                ],
+                "players": [
+                    {
+                        "id": 0,
+                        "name": "<PLAYER_NAME>",
+                        "tiles": ['a','b','z',...,'t'],
+                        "score": 0,
+                        "order": 1,
+                        "ai": false
+                    },
+                    ...
+                ],
+                "remainingTiles": ['a','w',...,'f'],
+                "turn": 0
+            }
+
+## Move [/api/move]
+
+### Execute Move [POST]
+
++ Request (application/json)
+
+        {
+            "id": 0,
+            "tilesPlaced": [
+                {
+                    "character": 'a',
+                    "row": 0,
+                    "col": 12
+                },
+                {
+                    "character": 't',
+                    "row": 0,
+                    "col": 13
+                },
+            ]
+        }
+
++ Response 200 (application/json)
+
+            {
+                "id": 0,
+                "name": "<GAME_NAME>",
+                "grid": [
+                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
+                    [...],
+                    [...],
+                    ...
+                ],
+                "players": [
+                    {
+                        "id": 0,
+                        "name": "<PLAYER_NAME>",
+                        "tiles": ['a','b','z',...,'t'],
+                        "score": 0,
+                        "order": 1,
+                        "ai": false
+                    },
+                    ...
+                ],
+                "remainingTiles": ['a','w',...,'f'],
+                "turn": 0
+            }
