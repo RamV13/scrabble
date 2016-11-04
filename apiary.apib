@@ -3,78 +3,170 @@ HOST: http://polls.apiblueprint.org/
 
 # Scrabble
 
-Polls is a simple API allowing consumers to view polls and vote in them.
+This API outlines the HTTP interface between the server and clients for the CS 3110 final project Scrabble.
 
-## Questions Collection [/questions]
+## Games [/api/games]
 
-### List All Questions [GET]
+### List All Game IDs and Names [GET]
 
 + Response 200 (application/json)
 
-        [
+            [
+                {
+                    "id": 0,
+                    "name": "<GAME_NAME>"
+                },
+                {
+                    "id": 1,
+                    "name": "<GAME_NAME>"
+                }
+            ]
+        
+## Game [/api/game/{id}]
+
+### Get Game State [GET]
+
++ Response 200 (application/json)
+
             {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
+                "id": 0,
+                "name": "<GAME_NAME>",
+                "grid": [
+                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
+                    [...],
+                    [...],
+                    ...
+                ],
+                "players": [
                     {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
-                    }
-                ]
+                        "id": 0,
+                        "name": "<PLAYER_NAME>",
+                        "tiles": ['a','b','z',...,'t'],
+                        "score": 0,
+                        "order": 1,
+                        "ai": false
+                    },
+                    ...
+                ],
+                "remainingTiles": ['a','w',...,'f'],
+                "turn": 0
             }
-        ]
 
-### Create a New Question [POST]
+### Join a Game [POST]
 
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
++ Request (application/json)
+
+            {
+                "id": 0,
+                "name": "<PLAYER_NAME>",
+            }
+
++ Response 200 (application/json)
+
+            {
+                "playerID": 0,
+                "id": 0,
+                "name": "<GAME_NAME>",
+                "grid": [
+                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
+                    [...],
+                    [...],
+                    ...
+                ],
+                "players": [
+                    {
+                        "id": 0,
+                        "name": "<PLAYER_NAME>",
+                        "tiles": ['a','b','z',...,'t'],
+                        "score": 0,
+                        "order": 1,
+                        "ai": false
+                    },
+                    ...
+                ],
+                "remainingTiles": ['a','w',...,'f'],
+                "turn": 0
+            }
+            
+### Create a Game [PUT]
+
++ Request (application/json)
+
+            {
+                "name": "<PLAYER_NAME>"
+            }
+
++ Response 200 (application/json)
+
+            {
+                "playerID": 0,
+                "id": 1,
+                "name": "<GAME_NAME>",
+                "grid": [
+                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
+                    [...],
+                    [...],
+                    ...
+                ],
+                "players": [
+                    {
+                        "id": 0,
+                        "name": "<PLAYER_NAME>",
+                        "tiles": ['a','b','z',...,'t'],
+                        "score": 0,
+                        "order": 1,
+                        "ai": false
+                    },
+                    ...
+                ],
+                "remainingTiles": ['a','w',...,'f'],
+                "turn": 0
+            }
+
+## Move [/api/move]
+
+### Execute Move [POST]
 
 + Request (application/json)
 
         {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
+            "id": 0,
+            "tilesPlaced": [
+                {
+                    "character": 'a',
+                    "row": 0,
+                    "col": 12
+                },
+                {
+                    "character": 't',
+                    "row": 0,
+                    "col": 13
+                },
             ]
         }
 
-+ Response 201 (application/json)
-
-    + Headers
-
-            Location: /questions/2
-
-    + Body
++ Response 200 (application/json)
 
             {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
+                "id": 0,
+                "name": "<GAME_NAME>",
+                "grid": [
+                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
+                    [...],
+                    [...],
+                    ...
+                ],
+                "players": [
                     {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
+                        "id": 0,
+                        "name": "<PLAYER_NAME>",
+                        "tiles": ['a','b','z',...,'t'],
+                        "score": 0,
+                        "order": 1,
+                        "ai": false
+                    },
+                    ...
+                ],
+                "remainingTiles": ['a','w',...,'f'],
+                "turn": 0
             }
