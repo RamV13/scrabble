@@ -22,10 +22,10 @@ val place : board -> int -> int -> char -> board
 
 (* [neighbors] contains a set of four tiles adjacent to a central tile *)
 type neighbors = {
-  top : char;
-  bottom : char;
-  left : char;
-  right : char;
+  top : char option;
+  bottom : char option;
+  left : char option;
+  right : char option;
 }
 
 (* [get_neighbors board row col] is the set of four tiles adjacent to the tile
