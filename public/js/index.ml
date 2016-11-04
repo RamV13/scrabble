@@ -1,8 +1,19 @@
 
 open Dom
 
+open Cohttp
+open Httpclient
+
+let get_google _ = 
+  Dom_html.window##alert (Js.string "started");
+  {headers=Header.init (); meth=`GET; url="http://www.google.com/"; req_body=""}
+  |> Httpclient.exec
+  |> Lwt.ignore_result;
+  (* |> fun response -> Dom_html.window##alert (Js.string response.res_body) *)
+  Dom_html.window##alert (Js.string "completed")
+
 (* [fail] is a failure callback *)
-let fail = fun () -> assert false
+let fail = fun _ -> assert false
 
 (* [get_element_by_id id] gets a DOM element by [id] *)
 let get_element_by_id id = 
@@ -19,6 +30,7 @@ let handle_btn_join btn _ =
   else 
     btn##style##cssText <- Js.string "background: #009688; width: 100px; margin-right: 10px";
   toggle_join := not !toggle_join;
+  get_google ();
   Js._false
 
 (* [handle_btn_create btn ()] is the callback to handle the click events of the 
