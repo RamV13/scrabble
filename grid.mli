@@ -2,8 +2,8 @@
 (* [board] is a 2-D list of char options representing the board *)
 type board = (char option) list list
 
-(* [bonus_tiles] is a mapping from coordinates to associated point values *)
-type bonus_tiles = int Map.Make(int*int)
+(* [bonus_tiles] is an association list from coordinates to point values *)
+type bonus_tiles = ((int * int) * int) list
 
 (* [empty] is the empty board *)
 val empty : board
