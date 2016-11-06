@@ -46,21 +46,18 @@ type diff = {
  * The player replaces the computer with the lowest order, and inherits its 
  * tiles, score, and turn. 
  * raise Failure if the game is full of players (non computer) already *)
-let add_player s p_id p_name = 
-  let rec get_new_player players =
-    match players with
-    | h::t -> 
-      if h.ai then {h with player_id=p_id; player_name=p_name; ai=false}
-      else get_new_player t
-    | [] -> failwith "Game is full"
-  in
-  let new_player = get_new_player s.players in
+let add_player s p_id p_n = 
   let rec get_new_players players acc ai_found =
     match players with
     | h::t -> 
-      if h.ai && not ai_found then get_new_players t (acc @ [new_player]) true
-      else get_new_players t (acc @ [h]) ai_found
-    | [] -> acc
+      if h.ai && not ai_found then 
+        let new_player = {h with player_id=p_id; player_name=p_n; ai=false} in
+        get_new_players t (acc @ [new_player]) true
+      else 
+        get_new_players t (acc @ [h]) ai_found
+    | [] -> 
+      if not ai_found then failwith "Game full"
+      else acc
   in
   let new_players = get_new_players s.players [] false in
   {s with players=new_players}
@@ -70,7 +67,21 @@ let add_player s p_id p_name =
  * with a computer that inherits the removed player's tiles, score, turn, and id
  * raises Failure if there is no player in the game with [player_id] *)
 let remove_player s p_id = 
-  failwith "unimplemented"
+  let rec get_new_players players acc pl_found =
+    match players with
+    | h::t ->
+      if h.player_id = p_id then 
+        let new_ai = 
+          {h with player_name="Computer "^(string_of_int h.order); ai=true} in
+        get_new_players t (acc @ [new_ai]) true
+      else
+        get_new_players t (acc @ [h]) pl_found
+    | [] -> 
+      if not pl_found then failwith "Player not found"
+      else acc
+  in
+  let new_players = get_new_players s.players [] false in
+  {s with players=new_players}
 
 (* [get_diff state state] returns the difference [diff] between two game states.
  * requires: The state id and names are equal *)
