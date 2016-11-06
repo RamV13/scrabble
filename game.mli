@@ -43,8 +43,7 @@ type diff = {
 
 (* [add_player state player_id player_name] adds the player with id [player_id]
  * and name [player_name] to the current game [state], and returns the new state
- * The player replaces the computer with the lowest order, and inherits its 
- * tiles, score, and turn. 
+ * The player replaces any computer, and inherits its tiles, score, and turn. 
  * raise Failure if the game is full of players (non computer) already *)
 val add_player : state -> player_id -> player_name -> state
 
