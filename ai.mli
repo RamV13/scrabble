@@ -1,4 +1,3 @@
-open Game
 
 (* [best_move game player] returns the best move for the given player
  * and current board state. *)
