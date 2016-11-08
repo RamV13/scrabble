@@ -1,9 +1,6 @@
 
 (*A node is composed of a character and a map from characters to children nodes*)
-type node = {
-  value : char;
-  children : node Map.make(char)
-}
+type node
 
 val empty : node
 val is_empty : node -> bool
