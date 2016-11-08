@@ -1,9 +1,8 @@
-
 open Cohttp
 
-(* [request] contains HTTP request headers, method (i.e. GET/POST/etc.), url, 
+(* [request] contains HTTP request headers, method (i.e. GET/POST/etc.), url,
  * and string body *)
-type request = { 
+type request = {
   headers : Header.t;
   meth : Code.meth;
   url : string;
