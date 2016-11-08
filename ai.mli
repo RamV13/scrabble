@@ -1,11 +1,8 @@
-
-(* [board_val game] returns the integer value of the board [game] for the
- * player [player]. *)
-val board_val : Game.t -> Player.t -> int
+open Game
 
 (* [best_move game player] returns the best move for the given player
  * and current board state. *)
-val best_move : Game.t -> Player.t -> Game.t
+val best_move : Game.state -> Game.player -> Game.move
 
 (* [word_score word] returns the score for a given word independent of
  * the board being used. *)

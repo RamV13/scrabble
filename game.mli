@@ -9,7 +9,7 @@ type player = {
   ai : bool
 }
 
-(* [state] contains the game's identification information, board, players, 
+(* [state] contains the game's identification information, board, players,
  * remaining tiles (i.e. bag), and turn *)
 type state = {
   id : int;
@@ -43,20 +43,20 @@ type diff = {
 
 (* [add_player state player_id player_name] adds the player with id [player_id]
  * and name [player_name] to the current game [state], and returns the new state
- * The player replaces any computer, and inherits its tiles, score, and turn. 
+ * The player replaces any computer, and inherits its tiles, score, and turn.
  * raise Failure if the game is full of players (non computer) already *)
-val add_player : state -> player_id -> player_name -> state
+val add_player : state -> int -> string -> state
 
 (* [remove_player state player_id] removes the player with id [player_id] from
  * current game [state], and returns the new state. It replaces the old player
  * with a computer that inherits the removed player's tiles, score, turn, and id
  * raises Failure if there is no player in the game with [player_id] *)
-val remove_player : state -> player_id -> state
+val remove_player : state -> int -> state
 
 (* [get_diff state state] returns the difference [diff] between two game states.
  * requires: The state id and names are equal *)
 val get_diff : state -> state -> diff
 
-(* [execute state move] executes a [move] to produce a new game state from the 
+(* [execute state move] executes a [move] to produce a new game state from the
  * previous game state [state] *)
 val execute : state -> move -> state
