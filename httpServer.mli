@@ -4,9 +4,10 @@ open Cohttp
 (* [meth] is a type synonym for HTTP request methods (i.e. GET/POST/etc.) *)
 type meth = Code.meth
 
-(* [request] contains HTTP headers and a string body *)
+(* [request] contains HTTP headers, query parameters, and a string body *)
 type request = { 
   headers : Header.t;
+  params : (string * string) list;
   req_body : string
 }
 
