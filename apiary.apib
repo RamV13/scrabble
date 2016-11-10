@@ -24,6 +24,9 @@ This API outlines the HTTP interface between the server and clients for the CS 3
         
 ## Game [/api/game/{id}]
 
++ Parameters
+    + id - game ID
+
 ### Get Game State [GET]
 
 + Response 200 (application/json)
@@ -129,21 +132,21 @@ This API outlines the HTTP interface between the server and clients for the CS 3
 
 + Request (application/json)
 
-        {
-            "id": 0,
-            "tilesPlaced": [
-                {
-                    "character": 'a',
-                    "row": 0,
-                    "col": 12
-                },
-                {
-                    "character": 't',
-                    "row": 0,
-                    "col": 13
-                },
-            ]
-        }
+            {
+                "id": 0,
+                "tilesPlaced": [
+                    {
+                        "character": 'a',
+                        "row": 0,
+                        "col": 12
+                    },
+                    {
+                        "character": 't',
+                        "row": 0,
+                        "col": 13
+                    },
+                ]
+            }
 
 + Response 200 (application/json)
 
@@ -170,3 +173,13 @@ This API outlines the HTTP interface between the server and clients for the CS 3
                 "remainingTiles": ['a','w',...,'f'],
                 "turn": 0
             }
+            
+## Subscribe [/api/subscribe{?gameID,playerID}]
+
+### Subscribe [GET]
+
++ Parameters
+    + gameID - ID of the game
+    + playerID - ID of the player
+
++ Response 200 (text/event-stream)
