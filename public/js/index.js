@@ -6158,4 +6158,4 @@ a=br(aT(aT(aT(h(LF,0,[0,g],bh(f)),d),e),j))[1];switch(a[0]){case
 2:var
 c=a[1];dv(c,function(a){switch(a[0]){case
 0:return 0;case
-1:return mo(a[1]);default:throw[0,i,y0]}});break;default:throw[0,i,y1]}return eQ});a.onclick=hb(function(b){a.style.cssText=h4[1]?"background: #FF9800; width: 100px":"background: #009688; width: 100px";aB.location.href="https://www.google.com/";h4[1]=1-h4[1];return eQ});h5.onmessage=kO(function(a){aB.alert(a.data);return 0});h5.onerror=kO(function(a){aB.alert(a.data);return h5.close()});return eQ});k2(0);return}}(function(){return this}()));
+1:return mo(a[1]);default:throw[0,i,y0]}});break;default:throw[0,i,y1]}return eQ});a.onclick=hb(function(b){a.style.cssText=h4[1]?"background: #FF9800; width: 100px":"background: #009688; width: 100px";aB.location.href="scrabble.html";h4[1]=1-h4[1];return eQ});h5.onmessage=kO(function(a){aB.alert(a.data);return 0});h5.onerror=kO(function(a){aB.alert(a.data);return h5.close()});return eQ});k2(0);return}}(function(){return this}()));

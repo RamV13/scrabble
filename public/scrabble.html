@@ -1,0 +1,288 @@
+<!DOCTYPE>
+<html>
+  <head>
+    <title>Scrabble</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <!-- MDL Lite -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.2.1/material.teal-indigo.min.css">
+    <script defer src="https://code.getmdl.io/1.2.1/material.min.js"></script>
+
+    <!-- Anonymous Pro Font -->
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Source+Code+Pro" />
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- Scrabble CSS -->
+    <link rel="stylesheet" href="css/scrabble.css">
+
+    <!-- OCaml JS -->
+    <script type="text/javascript" src="js/scrabble.js"></script>
+  </head>
+
+  <body id="body" style="background: #009688">
+
+    <div style="position: absolute;top: 50%;left: 50%;transform: translateX(-50%) translateY(-50%)">
+      <table>
+        <tr>
+          <td class="triple-word">3W</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-word">3W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-word">3W</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+        </tr>
+        <tr>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+        </tr>
+        <tr>
+          <td class="triple-word">3W</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">★</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-word">3W</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+        </tr>
+        <tr>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+        </tr>
+        <tr>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-letter">3L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-word">2W</td>
+          <td>A</td>
+        </tr>
+        <tr>
+          <td class="triple-word">3W</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-word">3W</td>
+          <td>A</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="double-letter">2L</td>
+          <td>A</td>
+          <td>A</td>
+          <td class="triple-word">3W</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+
+</html>
+

@@ -1,0 +1,36 @@
+
+body {
+  font-family: "Source Code Pro";
+}
+
+table {
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+td, th {
+    border: 1px solid #FAFAFA;
+    background: #EFEBE9;
+    padding: 15px;
+    width: 12px;
+    font-size: 12px;
+    line-height: 12px;
+    display: inline-block;
+    text-align: center;
+}
+
+.double-word {
+    background-color:#EF9A9A;
+}
+
+.triple-word {
+    background-color: #EF5350;
+}
+
+.double-letter {
+    background-color: #81D4FA;
+}
+
+.triple-letter {
+    background-color: #039BE5;
+}
