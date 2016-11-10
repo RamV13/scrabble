@@ -1,0 +1,118 @@
+\documentclass[2pt]{journal}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\graphicspath{ {.} }
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+ 
+\urlstyle{same}
+
+\begin{document}
+\noindent
+\LARGE
+\textbf{Milestone 1: Design} \\ \\
+\large
+Justin Parratt (jwp258), Brian Shi (bcs84), Kirk Thaker (kt485), Ram Vellanki (rsv32)
+
+\section{System Description}
+We plan to develop a multiplayer (distributed) Scrabble game that can be played with either human or computer players. \\ \\
+Key features:
+\begin{itemize}
+    \item AI
+    \item GUI
+    \item multiplayer (distributed)
+    \item English (not OCaml) dictionary manipulation using a Trie
+\end{itemize}
+
+We will make a Scrabble game which allows users to play Scrabble, but with added features such as detecting if words are valid or not. We also plan to implement an AI to play words that maximize score according to tile/word bonuses and point values of letters. The AI will also have different levels of difficulty. One way to implement this might be choosing suboptimal words for lower difficulty levels.
+
+These features will be implemented by using a prefix tree because the efficiency of the data structure is especially important for the AI.
+
+For the server-client interface, we will leverage several OCaml packages (listed in the \textbf{External Dependencies} section of this document) to persist data across multiple players and multiple instances of games as well as provide an HTTP interface for multiplayer functionality over the internet. Our server will be exposed over a public IP address such that any system on Cornell's network can access and play our game via our web application.
+
+For the user interface, users should be able to view their current available letters as well as the current board and should be able to perform moves. We plan on implementing a text interface to start with, and upgrading it to a graphical interface if time permits.
+
+With regards to the comment on the usefulness of a trie - we felt that a trie was necessary because the AI would be doing lookup of many words when evaluating potential moves. A trie would also allow the AI to quickly determine what words can be made from an existing word on the board by adding some additional tiles to the end of the word. This is elaborated in more detail in the \textbf{Data} section of this document.
+
+\newpage
+\section{Architecture}
+
+There are three primary components (units of execution) in this system.
+\begin{itemize}
+    \item Server - provides an interface for accessing/modifying game state over HTTP
+    \item Client (Browser) - provides an interface for playing a game through a GUI
+    \item Database - provides a persistent storage mechanism for saving information of multiple games and multiple players
+\end{itemize}
+
+\begin{figure}[h]
+\center
+\includegraphics[scale=0.9]{"Component and Connector Diagram".pdf}
+\caption{Component and Connector Diagram}
+\end{figure}
+
+\newpage
+\section{System Design}
+
+Please see the next page for the module dependency diagram (MDD). \\
+
+\noindent
+\textbf{Grid} - 2-D representation of board characters (including coordinates of score tiles) \\ \\
+\textbf{Dictionary} - English dictionary stored in a data structure (implemented as a Trie) \\ \\
+\textbf{AI} - logic to generate a move based on an input state (uses \textbf{Dictionary} to find a valid move) \\ \\
+\textbf{Game} - logic to perform actions in a game, such as adding/removing players and performing a move (using \textbf{Dictionary} to validate) \\ \\
+\textbf{ORM} (object-relational mapping) - accepts OCaml records and stores them in the appropriate tables of the database using SQLite (i.e. acts as a virtual object database) \\ \\
+\textbf{GUI} - converts GUI input (from the browser) to moves, uses the Client to process those moves, and reflects changes in the GUI by updating a graphical scrabble board (no .mli file provided because it is the entry point of the application) \\ \\
+\textbf{HttpServer} - an abstraction of \textbf{cohttp} for simpler development of HTTP server APIs \\ \\
+\textbf{XHRClient} - an abstraction of \textbf{cohttp} for simpler development of XML HTTP requests \\ \\
+\textbf{Server} - accepts moves in the form of HTTP requests then uses Game to produce a new game state, returns the changes, and saves changes to the database (no .mli file provided because it is the entry point for client requests but see documentation below this list of modules); this module will issue Server-Side Events to clients as a means of more efficient updates for game state \\ \\
+\textbf{ScrabbleClient} - communicates with the Server's HTTP API to join games, create games, retrieve the changes in game state etc. (i.e. serves as an abstraction to make the separation between client and server seamless); this module will also leverage Server-Side Events for more efficient updates of game state \\ \\
+
+In order to provide a more comprehensive design of our HTTP API (specifically the \textbf{Server} module above), we have developed an outline of our initial API design: \url{http://docs.scrabble1.apiary.io}
+
+\begin{figure}[h]
+\center
+\includegraphics[scale=0.9]{"Module Dependency Diagram".pdf}
+\caption{Module Dependency Diagram}
+\end{figure}
+
+\newpage
+
+\section{Module design} The following .mli files have been included: ai.mli, dictionary.mli, game.mli, grid.mli, \\ httpServer.mli, oRM.mli, scrabbleClient.mli, and xHRClient.mli.
+
+\section{Data}
+
+The system will maintain persistent data for game information including its players, remaining tiles, turn counting, and of course the current board state. Here are some of the more intricate details of the data representations.
+
+\begin{itemize}
+    \item Database - information will be stored in SQL tables as relational data
+    \item HTTP API - data will be transferred as JSON
+    \item Dictionary - a trie will contain the dictionary data (the efficiency of this data structure is particularly useful for the AI). Specifically, we will insert the English dictionary into two different tries - one where words are in normal order, and one where words are in backwards order (e.g. OCaml would be inserted into the trie as l-m-a-C-O). The forwards-trie would be used for word validation as well as for the AI to find words where letters can be added onto the end of an existing word. For example, adding ``d'' onto the end of ``dance'' yields the new word ``danced''. The backwards-trie would be used for the AI to find words where letters can be added onto the front of an existing word. For example, adding ``un'' onto the front of ``balanced'' yields the new word ``unbalanced''. This cannot be done with the forwards trie, since it would be very slow to figure out the words that have ``balanced'' at the end.
+\end{itemize}
+
+\section{External dependencies}
+\textbf{OCaml Packages}
+\begin{itemize}
+    \item ounit - for unit testing
+    \item lwt - for concurrent programming
+    \item sqlite3 - for persistent storage of data
+    \item cohttp - for the HTTP client and server
+    \item yojson - for serializing/deserializing data to and from JSON
+    \item js\_of\_ocaml - for developing a browser-compatible GUI
+\end{itemize}
+\textbf{Other Dependencies}
+\begin{itemize}
+    \item Node.js (with npm) - for serving the OCaml GUI (produced by web technologies along with \textbf{js\_of\_ocaml}) and routing HTTP requests to the OCaml server running on a local port (all on a machine on Cornell's network)
+\end{itemize}
+
+\section{Testing plan}
+All the non-web modules (e.g. board, dictionary, ai, and game) will be tested using black-box and glass-box unit tests. To ensure accountability, the black-box tests for a module will be written by someone who did not work on it (i.e. cross-testing). The GUI will be tested by alpha and beta testing including individuals outside of CS 3110. The HttpServer and XHRClient modules will be unit tested against mocked servers or standardized URLs (such as google.com). The remaining modules (e.g. ScrabbleClient, and Server) will be  tested upon integration to the primary system.
+
+\end{document}
+

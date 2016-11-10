@@ -1,4 +1,3 @@
-
 (* [save_board game] saves the [game] to the database *)
 val save_game : Game.state -> unit
 
