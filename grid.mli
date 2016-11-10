@@ -2,7 +2,7 @@
 type board = (char option) list list
 
 (* [bonus_tiles] is an association list from coordinates to point values *)
-type bonus_tiles = ((int * int) * int) list
+val bonus_tiles : ((int * int) * int) list
 
 (* [empty] is the empty board *)
 val empty : board
