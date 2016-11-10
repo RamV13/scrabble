@@ -45,6 +45,7 @@ let handle_btn_create btn _ =
     btn##style##cssText <- Js.string "background: #FF9800; width: 100px"
   else 
     btn##style##cssText <- Js.string "background: #009688; width: 100px";
+  Dom_html.window##location##href <- Js.string "https://www.google.com/";
   toggle_create := not !toggle_create;
   Js._false
 
