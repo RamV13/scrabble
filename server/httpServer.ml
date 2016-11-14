@@ -47,13 +47,13 @@ let callback _ req body =
     let params = 
       List.map (fun query -> ((fst query),List.hd (snd query))) (Uri.query uri)
     in
-    let req_body = 
-      body
-      |> Cohttp_lwt_body.to_string
-      |> Lwt.poll
-      |> fun opt -> match opt with Some value -> value | None -> assert false
-    in
-    {headers;params;req_body} |> List.assoc (meth,Uri.path uri) !server
+    body
+    |> Cohttp_lwt_body.to_string
+    >>= fun req_body -> 
+        begin
+          {headers;params;req_body} 
+          |> List.assoc (meth,Uri.path uri) !server
+        end
   with Not_found -> Server.respond_string ~status:`Not_found ~body:"" ()
 
 let run ?(port=8000) _ = 
