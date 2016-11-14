@@ -19,7 +19,9 @@ let to_list = Yojson.Basic.Util.to_list
 (* [to_int] is Yojson.Basic.Util.to_int *)
 let to_int = Yojson.Basic.Util.to_int
 
-let baseURL = "http://128.253.51.200"
+let baseURL = "http://127.0.0.1" (* "http://128.253.51.200" *)
+
+exception Server_error
 
 let get_game_info _ = 
   {
@@ -60,8 +62,28 @@ let empty_state =
 let join_game id name = 
   Lwt.return empty_state (* TODO *)
 
-let create_game name = 
-  Lwt.return empty_state (* TODO *)
+let create_game player_name game_name = 
+  {
+    headers = Header.init_with "content-type" "application/json";
+    meth = `PUT;
+    url = baseURL ^ "/api/game";
+    req_body = "{\"playerName\":\"" ^ player_name ^ "\", \"gameName\":\"" ^ 
+                game_name ^ "\"}"
+  }
+  |> XHRClient.exec
+  >>= fun res -> 
+      begin
+        (
+        match res.status with
+        | `OK -> empty_state
+        | _ -> 
+          begin
+            Dom_html.window##alert (Js.string "Something went wrong"); 
+            raise Server_error
+          end
+        )
+        |> Lwt.return
+      end
 
 let get_game_state id = 
   Lwt.return empty_state (* TODO *)
