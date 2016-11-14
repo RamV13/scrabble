@@ -1,6 +1,8 @@
 
 (* [Server_error] is an exception that represents errors with the server *)
 exception Server_error
+(* [Full] is an exception raised when full games are attempted to be joined *)
+exception Full
 
 (* [get_game_info ()] gets an association list of game id's to game names and
  * returns the list wrapped in an Lwt thread *)
