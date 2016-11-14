@@ -20,6 +20,21 @@ body {
     text-align: center;
 }
 
+.tiles {
+    position: absolute;
+    margin: 0;
+    top: 50%;
+    left: 10%;
+    transform: translate(-35%, -50%);
+}
+
+.tiles-td {
+    border: 1px solid #FAFAFA;
+    background: #EFEBE9;
+    font-size: 18px;
+    line-height: 18px;
+    text-align: center !important;
+}
 
 .score {
     position: absolute;
