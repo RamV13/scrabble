@@ -15,6 +15,9 @@ let num_player_tiles = 7
 (* [tile_background] is the value of the tile background color *)
 let tile_background = "#EFEBE9"
 
+(* [dark_tile_background] is the value of the dark tile background color *)
+let dark_tile_background = "#D7CCC8"
+
 (* [current_tile] is the current focused tile *)
 let current_tile : Dom_html.element Js.t option ref = ref None
 
@@ -39,7 +42,19 @@ let get_tile row col =
 
 let handle_tile row col _ = 
   (match !current_value with
-  | Some value -> (get_tile row col)##innerHTML <- Js.string value
+  | Some value -> 
+    begin
+      let tile = get_tile row col in
+      let not_bonus = 
+        let regex = Regexp.regexp ".*W|L|★" in
+        match Regexp.string_match regex (Js.to_string tile##innerHTML) 0 with
+        | None -> true
+        | _ -> false
+      in
+      if not_bonus 
+      then tile##style##backgroundColor <- Js.string dark_tile_background;
+      tile##innerHTML <- Js.string value
+    end
   | _ -> ());
   blur_current_tile ();
   (* TODO remove used tile and replace with new tile *)
