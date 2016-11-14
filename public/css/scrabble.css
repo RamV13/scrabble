@@ -3,12 +3,13 @@ body {
   font-family: "Source Code Pro";
 }
 
-table {
+.scrabble-table {
     border-collapse: collapse;
     table-layout: fixed;
+    border: 20px solid rgba(0,0,0,0.6);
 }
 
-td, th {
+.scrabble-td {
     border: 1px solid #FAFAFA;
     background: #EFEBE9;
     padding: 14px;
@@ -17,6 +18,15 @@ td, th {
     line-height: 14px;
     display: inline-block;
     text-align: center;
+}
+
+
+.score {
+    position: absolute;
+    margin: 0;
+    top: 50%;
+    left: 90%;
+    transform: translate(-65%, -50%);
 }
 
 .double-word {
