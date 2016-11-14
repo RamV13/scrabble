@@ -91,7 +91,8 @@ let register_player_tiles () =
   let rec aux row = 
     if row >= 0 then
       begin
-        (get_player_tile row)##onclick <- Dom_html.handler (handle_player_tile row);
+        let tile = get_player_tile row in
+        tile##onclick <- Dom_html.handler (handle_player_tile row);
         aux (row - 1)
       end
   in
