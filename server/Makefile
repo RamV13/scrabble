@@ -11,6 +11,5 @@ $(NAME).byte: $(OBJS)
 		$(OFIND) -c $<
 
 clean:
-	rm *.cm*
-	rm *.byte
-	rm *.js
+		rm *.cm*
+		rm *.byte

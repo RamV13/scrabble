@@ -1,0 +1,3 @@
+rm server.byte
+make
+
