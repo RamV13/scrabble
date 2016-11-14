@@ -28,8 +28,10 @@ let num_players = ref 0
 let cors_control req = 
   let headers = 
     Header.init_with "Access-Control-Allow-Origin" "*" 
-    |> fun header -> Header.add header "Access-Control-Allow-Headers" "content-type"
-    |> fun header -> Header.add header "Access-Control-Allow-Methods" "GET,POST,PUT,OPTIONS"
+    |> fun header -> Header.add header "Access-Control-Allow-Headers" 
+                                       "content-type"
+    |> fun header -> Header.add header "Access-Control-Allow-Methods"
+                                       "GET,POST,PUT,OPTIONS"
   in
   {headers;status=`OK;res_body=""}
 
