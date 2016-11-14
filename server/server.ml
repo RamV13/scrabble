@@ -24,6 +24,15 @@ let games = ref []
 (* [num_players] is the number of players registered since startup *)
 let num_players = ref 0
 
+(* [cors_control req] responds with Access-Control headers to enable CORS *)
+let cors_control req = 
+  let headers = 
+    Header.init_with "Access-Control-Allow-Origin" "*" 
+    |> fun header -> Header.add header "Access-Control-Allow-Headers" "content-type"
+    |> fun header -> Header.add header "Access-Control-Allow-Methods" "GET,POST,PUT,OPTIONS"
+  in
+  {headers;status=`OK;res_body=""}
+
 (* [create_game req] creates a game given the request [req] *)
 let create_game req = 
   let json = Yojson.Basic.from_string req.req_body in
@@ -46,7 +55,10 @@ let create_game req =
     {id=List.length !games;name;grid;players;remaining_tiles;turn=0}
   in
   games := new_game::!games;
-  let headers = Header.init_with "content-type" "application/json" in
+  let headers = 
+    Header.init_with "content-type" "application/json"
+    |> fun header -> Header.add header "Access-Control-Allow-Origin" "*"
+  in
   let res_body = Game.to_json new_game in
   {headers;status=`OK;res_body}
 
@@ -58,6 +70,10 @@ let join_game req =
   let json = Yojson.Basic.from_string req.req_body in
   let id = json |> member "id" |> to_int in
   let player_name = json |> member "name" |> to_string in
+  let default_headers =
+    Header.init_with "content-type" "text/plain"
+    |> fun header -> Header.add header "Access-Control-Allow-Origin" "*"
+  in
   try
     let game = List.find (fun game -> game.id = id) !games in
     let substituted = 
@@ -66,7 +82,10 @@ let join_game req =
     in
     substituted.player_name <- player_name;
     substituted.ai <- false;
-    let headers = Header.init_with "content-type" "application/json" in
+    let headers = 
+      Header.init_with "content-type" "application/json"
+      |> fun header -> Header.add header "Access-Control-Allow-Origin" "*"
+    in
     let res_body = 
       "{\"playerID\":" ^ string_of_int substituted.player_id ^
       Game.to_json game ^ "}"
@@ -74,17 +93,18 @@ let join_game req =
     {headers;status=`OK;res_body}
   with
   | Not_found -> {
-      headers=Header.init_with "content-type" "text/plain";
+      headers=default_headers;
       status=`Not_found;
       res_body="Game with id " ^ string_of_int id ^ " not found"
     }
   | Full -> {
-      headers=Header.init_with "content-type" "text/plain";
+      headers=default_headers;
       status=`Bad_request;
       res_body="Game with id " ^ string_of_int id ^ " is full"
     }
 
 let _ = 
+  HttpServer.add_route (`OPTIONS,"/api/game") cors_control;
   HttpServer.add_route (`PUT,"/api/game") create_game;
   HttpServer.add_route (`POST,"/api/game") join_game;
   HttpServer.run ~port:8000 ()
