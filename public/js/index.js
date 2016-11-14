@@ -5956,7 +5956,7 @@ c=d;continue}};n(0);n(0);var
 KN=[0,function(a){throw[0,k,KM]}];n(0);KN[1]=function(a){var
 c=ka;for(;;){var
 d=kj(KO,c,a);if(0===d)return ge(a);b(a[1],a);var
-c=d;continue}};var
+c=d;continue}};n(0);n(0);var
 ow=function(b){var
 a=yh.getElementById(b.toString());if(a==ew)throw[0,k,KP];return a},hF=[0,1],hG=[0,1];a9.onload=gT(function(c){var
 a=ow(KQ),b=ow(KR);a.onclick=gT(function(b){a.style.cssText=hF[1]?"background: #FF9800; width: 100px; margin-right: 10px":"background: #009688; width: 100px; margin-right: 10px";hF[1]=1-hF[1];return ex});b.onclick=gT(function(a){b.style.cssText=hG[1]?"background: #FF9800; width: 100px":"background: #009688; width: 100px";a9.location.href="scrabble.html";hG[1]=1-hG[1];return ex});return ex});kw(0);return}}(function(){return this}()));
