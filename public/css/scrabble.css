@@ -1,6 +1,7 @@
 
+@media (min-width: 2000em) and (min-height: 2000em)
 body {
-  font-family: "Source Code Pro";
+  font-size: 14px;
 }
 
 .scrabble-table {
@@ -10,12 +11,13 @@ body {
 }
 
 .scrabble-td {
+    font-family: "Source Code Pro";
     border: 1px solid #FAFAFA;
     background: #EFEBE9;
-    padding: 14px;
-    width: 14px;
-    font-size: 14px;
-    line-height: 14px;
+    padding: 0.8vw;
+    width: 1.2vw;
+    font-size: 1.2vw;
+    line-height: 1.2vw;
     display: inline-block;
     text-align: center;
 }
