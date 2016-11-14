@@ -40,15 +40,16 @@ let create_game req =
   let json = Yojson.Basic.from_string req.req_body in
   let player_name = json |> member "playerName" |> to_string in
   let name = json |> member "gameName" |> to_string in
+  let player_id = !num_players in
   let grid = Grid.empty in
   let base_player = 
-    {player_id=(!num_players);player_name="AI";tiles=[];score=0;order=0;ai=true}
+    {player_id;player_name="Computer";tiles=[];score=0;order=0;ai=true}
   in
   let players = 
     [
-      base_player; {base_player with player_id=(!num_players) + 1;order=1};
-      {base_player with player_id=(!num_players) + 2;order=2};
-      {base_player with player_id=(!num_players) + 3;order=3;player_name};
+      base_player; {base_player with player_id=player_id + 1;order=1};
+      {base_player with player_id=player_id + 2;order=2};
+      {base_player with player_id=player_id + 3;order=3;player_name};
     ]
   in
   num_players := !num_players + 4;
