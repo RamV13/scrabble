@@ -7,8 +7,8 @@ OFIND=ocamlfind ocamlc -thread -package js_of_ocaml,js_of_ocaml.syntax,cohttp.lw
 $(NAME).byte: $(OBJS)
 		$(OFIND) -linkpkg -o $@ $(OBJS) $(NAME).ml
 		js_of_ocaml +nat.js $@
-		$(OFIND) -linkpkg -o $(GUI) $(OBJS) $(GUI).ml
-		js_of_ocaml +nat.js $(GUI)
+		$(OFIND) -linkpkg -o $(GUI).byte $(OBJS) $(GUI).ml
+		js_of_ocaml +nat.js $(GUI).byte
 
 %.cmo: %.ml
 		$(OFIND) -c $<i
