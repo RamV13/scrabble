@@ -27,7 +27,8 @@ let current_value : string option ref = ref None
 (* [fail] is a failure callback *)
 let fail = fun _ -> assert false
 
-let blur_current_tile _ = 
+(* [blur_current_tile ()] blurs focus on current tile by resetting its color *)
+let blur_current_tile () = 
   match !current_tile with
   | Some elt -> elt##style##backgroundColor <- Js.string tile_background
   | _ -> ()
@@ -40,6 +41,7 @@ let get_element_by_id id =
 let get_tile row col = 
   get_element_by_id ("grid-" ^ string_of_int row ^ "," ^ string_of_int col)
 
+(* [handle_tile row col] is the callback to handle board tile clicks *)
 let handle_tile row col _ = 
   (match !current_value with
   | Some value -> 
@@ -60,6 +62,7 @@ let handle_tile row col _ =
   (* TODO remove used tile and replace with new tile *)
   Js._false
 
+(* [register_tiles ()] registers the callbacks for all board tiles *)
 let register_tiles () = 
   let rec aux row col = 
     if row >= 0 && col >= 0 then
@@ -71,9 +74,11 @@ let register_tiles () =
   in
   aux (board_dimension - 1) (board_dimension - 1)
 
+(* [get_player_tile row] gets the player tile at the index [row] *)
 let get_player_tile row = 
   get_element_by_id ("tile-" ^ string_of_int row)
 
+(* [handle_player_tile row] is the callback to handle player tile clicks *)
 let handle_player_tile row _ = 
   blur_current_tile ();
   (get_player_tile row)##style##backgroundColor <- Js.string "#fff";
@@ -81,6 +86,7 @@ let handle_player_tile row _ =
   current_value := Some (Js.to_string (get_player_tile row)##innerHTML);
   Js._false
 
+(* [register_player_tiles ()] registers the callbacks for all player tiles *)
 let register_player_tiles () = 
   let rec aux row = 
     if row >= 0 then
@@ -91,6 +97,7 @@ let register_player_tiles () =
   in
   aux (num_player_tiles - 1)
 
+(* [onload] is the callback for when the window is loaded *)
 let onload _ =
   register_tiles ();
   register_player_tiles ();
