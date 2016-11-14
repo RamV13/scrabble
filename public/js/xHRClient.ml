@@ -26,6 +26,8 @@ let exec req =
                          ~headers:req.headers (Uri.of_string req.url)
   | `PUT -> Client.put ~body:(Cohttp_lwt_body.of_string req.req_body) 
                        ~headers:req.headers (Uri.of_string req.url)
+  | `DELETE -> Client.delete ~body:(Cohttp_lwt_body.of_string req.req_body) 
+                             ~headers:req.headers (Uri.of_string req.url)
   | _ -> failwith "Unsupported request method"
   )
   >>= fun (res,body) -> body |> Cohttp_lwt_body.to_string
