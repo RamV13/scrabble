@@ -1,0 +1,3 @@
+rm index.byte
+make
+
