@@ -12,11 +12,22 @@ let board_dimension = 15
 (* [num_player_tiles] is the number of player tiles *)
 let num_player_tiles = 7
 
-(* [current_tile] is the current tile about to be placed *)
-let current_tile : string option ref = ref None
+(* [tile_background] is the value of the tile background color *)
+let tile_background = "#EFEBE9"
+
+(* [current_tile] is the current focused tile *)
+let current_tile : Dom_html.element Js.t option ref = ref None
+
+(* [current_value] is the current tile value about to be placed *)
+let current_value : string option ref = ref None
 
 (* [fail] is a failure callback *)
 let fail = fun _ -> assert false
+
+let blur_current_tile _ = 
+  match !current_tile with
+  | Some elt -> elt##style##backgroundColor <- Js.string tile_background
+  | _ -> ()
 
 (* [get_element_by_id id] gets a DOM element by [id] *)
 let get_element_by_id id = 
@@ -27,9 +38,11 @@ let get_tile row col =
   get_element_by_id ("grid-" ^ string_of_int row ^ "," ^ string_of_int col)
 
 let handle_tile row col _ = 
-  (match !current_tile with
+  (match !current_value with
   | Some value -> (get_tile row col)##innerHTML <- Js.string value
   | _ -> ());
+  blur_current_tile ();
+  (* TODO remove used tile and replace with new tile *)
   Js._false
 
 let register_tiles () = 
@@ -47,8 +60,10 @@ let get_player_tile row =
   get_element_by_id ("tile-" ^ string_of_int row)
 
 let handle_player_tile row _ = 
+  blur_current_tile ();
   (get_player_tile row)##style##backgroundColor <- Js.string "#fff";
-  current_tile := Some (Js.to_string (get_player_tile row)##innerHTML);
+  current_tile := Some (get_player_tile row);
+  current_value := Some (Js.to_string (get_player_tile row)##innerHTML);
   Js._false
 
 let register_player_tiles () = 
