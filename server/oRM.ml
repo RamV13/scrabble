@@ -26,13 +26,13 @@ let sql_of_game game =
 
 (* [game_of_sql sql] is the game value of the SQL string value *)
 let game_of_sql sql = 
-  {id=0;name="";grid=Grid.empty;players=[];remaining_tiles=[];turn=0}
+  {name="";grid=Grid.empty;players=[];remaining_tiles=[];turn=0}
 
 let save_game game = 
   ()
 
 let get_game id = 
-  {id=0;name="";grid=Grid.empty;players=[];remaining_tiles=[];turn=0}
+  {name="";grid=Grid.empty;players=[];remaining_tiles=[];turn=0}
 
 let get_games () = 
   []

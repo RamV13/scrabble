@@ -21,38 +21,22 @@ let to_int = Yojson.Basic.Util.to_int
 
 let baseURL = "http://127.0.0.1" (* "http://128.253.51.200" *)
 
-exception Server_error
-exception Full
+(* [headers] is the default headers for JSON requests *)
+let headers = Header.init_with "content-type" "application/json"
 
-let get_game_info _ = 
-  {
-    headers = Header.init ();
-    meth = `GET;
-    url = baseURL ^ "/api/games";
-    req_body = ""
-  }
-  |> XHRClient.exec
-  >>= fun res -> 
-      begin
-        (
-        match res.status with
-        | `OK ->
-          begin
-            let info_of_json json = 
-              (json |> member "id" |> to_int,json |> member "name" |> to_string)
-            in
-            from_string res.res_body
-            |> to_list
-            |> List.map info_of_json
-          end
-        | _ -> Dom_html.window##alert (Js.string "Failed Request"); []
-        )
-        |> Lwt.return
-      end
+(* [result] contains the resulting value from a request with possible errors *)
+type 'a result = Val of 'a 
+                 | Exists of string
+                 | Not_found of string 
+                 | Full of string 
+                 | Server_error of string
+
+(* [server_error_msg] is the message corresponding to server errors *)
+let server_error_msg =
+  "Something went wrong. Please ensure that the server is running properly."
 
 let empty_state =
   {
-    id = 0;
     name = "";
     grid = Grid.empty;
     players = [];
@@ -60,41 +44,31 @@ let empty_state =
     turn = 0
   }
 
-let join_game id name = 
+let join_game player_name game_name = 
   {
-    headers = Header.init_with "content-type" "application/json";
+    headers;
     meth = `POST;
     url = baseURL ^ "/api/game";
-    req_body = "{\"name\":\"" ^ name ^ "\", \"id\":" ^ string_of_int id ^ "}"
+    req_body = "{\"playerName\":\"" ^ player_name ^ "\", \"gameName\":\"" ^ 
+                game_name ^ "\"}"
   }
   |> XHRClient.exec
   >>= fun res -> 
       begin
         (
         match res.status with
-        | `OK -> empty_state
-        | `Not_found -> 
-          begin
-            Dom_html.window##alert (Js.string res.res_body);
-            raise Not_found
-          end
-        | `Bad_request -> 
-          begin
-            Dom_html.window##alert (Js.string res.res_body);
-            raise Full
-          end
-        | _ -> 
-          begin
-            Dom_html.window##alert (Js.string "Something went wrong");
-            raise Server_error
-          end
+        | `OK -> Val empty_state
+        | `Not_found -> Not_found res.res_body
+        | `Bad_request -> Full res.res_body
+        | `Not_acceptable -> Exists res.res_body
+        | _ -> Server_error server_error_msg
         )
         |> Lwt.return
       end
 
 let create_game player_name game_name = 
   {
-    headers = Header.init_with "content-type" "application/json";
+    headers;
     meth = `PUT;
     url = baseURL ^ "/api/game";
     req_body = "{\"playerName\":\"" ^ player_name ^ "\", \"gameName\":\"" ^ 
@@ -105,18 +79,15 @@ let create_game player_name game_name =
       begin
         (
         match res.status with
-        | `OK -> empty_state
-        | _ -> 
-          begin
-            Dom_html.window##alert (Js.string "Something went wrong");
-            raise Server_error
-          end
+        | `OK -> Val empty_state
+        | `Bad_request -> Exists res.res_body
+        | _ -> Server_error server_error_msg
         )
         |> Lwt.return
       end
 
 let get_game_state id = 
-  Lwt.return empty_state (* TODO *)
+  Lwt.return (Val empty_state) (* TODO *)
 
 let execute_move id move = 
-  Lwt.return empty_state (* TODO *)
+  Lwt.return (Val empty_state) (* TODO *)

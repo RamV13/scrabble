@@ -21,13 +21,38 @@ let to_int = Yojson.Basic.Util.to_int
 (* [games] is the list of games currently running *)
 let games = ref []
 
-(* [num_players] is the number of players registered since startup *)
-let num_players = ref 0
+(* [names_file] is the file containing a list of line separated names *)
+let names_file = "names.txt"
+(* [names] is the list of computer names *)
+let names = ref []
+
+(* [origin] is the allowed origin to request this server *)
+let origin = "*"
+
+(* initialize names *)
+let _ = 
+  let input_channel = open_in names_file in
+  try
+    let rec process_line () = 
+      let line = input_line input_channel in
+      names := line::!names;
+      process_line ()
+    in
+    ignore (process_line ());
+    close_in input_channel
+  with
+  | End_of_file -> close_in input_channel
+  | exc -> close_in_noerr input_channel; raise exc
+
+(* [default_headers] are the set of default headers for plain text responses *)
+let default_headers =
+    Header.init_with "content-type" "text/plain"
+    |> fun header -> Header.add header "Access-Control-Allow-Origin" origin
 
 (* [cors_control req] responds with Access-Control headers to enable CORS *)
 let cors_control req = 
   let headers = 
-    Header.init_with "Access-Control-Allow-Origin" "*" 
+    Header.init_with "Access-Control-Allow-Origin" origin 
     |> fun header -> Header.add header "Access-Control-Allow-Headers" 
                                        "content-type"
     |> fun header -> Header.add header "Access-Control-Allow-Methods"
@@ -35,35 +60,46 @@ let cors_control req =
   in
   {headers;status=`OK;res_body=""}
 
+exception Exists
+
 (* [create_game req] creates a game given the request [req] *)
 let create_game req = 
   let json = Yojson.Basic.from_string req.req_body in
   let player_name = json |> member "playerName" |> to_string in
   let name = json |> member "gameName" |> to_string in
-  let player_id = !num_players in
-  let grid = Grid.empty in
-  let base_player = 
-    {player_id;player_name="Computer";tiles=[];score=0;order=0;ai=true}
-  in
-  let players = 
-    [
-      base_player; {base_player with player_id=player_id + 1;order=1};
-      {base_player with player_id=player_id + 2;order=2};
-      {base_player with player_id=player_id + 3;order=3;player_name};
-    ]
-  in
-  num_players := !num_players + 4;
-  let remaining_tiles = [] in
-  let new_game = 
-    {id=List.length !games;name;grid;players;remaining_tiles;turn=0}
-  in
-  games := new_game::!games;
-  let headers = 
-    Header.init_with "content-type" "application/json"
-    |> fun header -> Header.add header "Access-Control-Allow-Origin" "*"
-  in
-  let res_body = Game.to_json new_game in
-  {headers;status=`OK;res_body}
+  try
+    if List.exists (fun game -> game.name = name) !games then raise Exists;
+    let grid = Grid.empty in
+    let base_player = {player_name="";tiles=[];score=0;order=0;ai=true} in
+    let create_player order = 
+      (* TODO populate tiles *)
+      let player_name = (List.hd !names) ^ " (AI)" in
+      names := List.tl !names;
+      {base_player with player_name;order}
+    in
+    let players = 
+      let rec add_players acc order = 
+        if order < 4 then add_players ((create_player order)::acc) (order + 1)
+        else acc
+      in
+      add_players [{base_player with player_name;ai=false}] 1
+    in
+    (* TODO populate remaining tiles *)
+    let remaining_tiles = [] in
+    let new_game = {name;grid;players;remaining_tiles;turn=0} in
+    games := new_game::!games;
+    let headers = 
+      Header.init_with "content-type" "application/json"
+      |> fun header -> Header.add header "Access-Control-Allow-Origin" origin
+    in
+    let res_body = Game.to_json new_game in
+    {headers;status=`OK;res_body}
+  with
+  | Exists -> {
+      headers=default_headers;
+      status=`Bad_request;
+      res_body="Game with name " ^ name ^ " already exists"
+    }
 
 (* [Full] is an exception that represents a full game *)
 exception Full
@@ -71,14 +107,12 @@ exception Full
 (* [join_game req] joins a player to a game given the request [req] *)
 let join_game req = 
   let json = Yojson.Basic.from_string req.req_body in
-  let id = json |> member "id" |> to_int in
-  let player_name = json |> member "name" |> to_string in
-  let default_headers =
-    Header.init_with "content-type" "text/plain"
-    |> fun header -> Header.add header "Access-Control-Allow-Origin" "*"
-  in
+  let game_name = json |> member "gameName" |> to_string in
+  let player_name = json |> member "playerName" |> to_string in
   try
-    let game = List.find (fun game -> game.id = id) !games in
+    let game = List.find (fun game -> game.name = game_name) !games in
+    if List.exists (fun player -> player.player_name = player_name) game.players
+    then raise Exists;
     let substituted = 
       try List.find (fun player -> player.ai) game.players
       with Not_found -> raise Full
@@ -87,23 +121,26 @@ let join_game req =
     substituted.ai <- false;
     let headers = 
       Header.init_with "content-type" "application/json"
-      |> fun header -> Header.add header "Access-Control-Allow-Origin" "*"
+      |> fun header -> Header.add header "Access-Control-Allow-Origin" origin 
     in
-    let res_body = 
-      "{\"playerID\":" ^ string_of_int substituted.player_id ^
-      Game.to_json game ^ "}"
-    in
+    let res_body = Game.to_json game in
     {headers;status=`OK;res_body}
   with
   | Not_found -> {
       headers=default_headers;
       status=`Not_found;
-      res_body="Game with id " ^ string_of_int id ^ " not found"
+      res_body="Game with name " ^ game_name ^ " not found"
     }
   | Full -> {
       headers=default_headers;
       status=`Bad_request;
-      res_body="Game with id " ^ string_of_int id ^ " is full"
+      res_body="Game with name " ^ game_name ^ " is full"
+    }
+  | Exists -> {
+      headers=default_headers;
+      status=`Not_acceptable;
+      res_body="Player with name " ^ player_name ^ " already exists in game " ^
+                game_name
     }
 
 let _ = 

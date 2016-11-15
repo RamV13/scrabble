@@ -1,7 +1,7 @@
 
 open Dom
-
 open Lwt
+open ScrabbleClient
 
 (* [fail] is a failure callback *)
 let fail = fun _ -> assert false
@@ -10,45 +10,59 @@ let fail = fun _ -> assert false
 let get_element_by_id id = 
   Js.Opt.get Dom_html.document##getElementById (Js.string id) fail
 
-let toggle_join = ref true
-let toggle_create = ref true
+(* [get_input_by_id id] gets a DOM input element by [id] *)
+let get_input_by_id id = 
+  match Dom_html.tagged (get_element_by_id id) with
+  | Dom_html.Input elt -> elt
+  | _ -> raise (Failure ("Element with id " ^ id ^ " is not an input"))
 
 (* 
 let event_source_constructor = Js.Unsafe.global##_EventSource
 let event_source = jsnew event_source_constructor (Js.string "http://127.0.0.1:8000")
-
-let test _ = 
-  (
-  ScrabbleClient.get_game_info ()
-  >>= fun games -> 
-      begin
-        List.fold_left (fun acc elem -> acc + fst elem) 0 games
-        |> fun result -> (* TODO use result *) Lwt.return ()
-      end
-  )
-  |> Lwt.ignore_result
 *)
 
 (* [handle_btn_join btn ()] is the callback to handle the click events of the 
  * join button [btn] *)
 let handle_btn_join btn _ = 
-  if !toggle_join then 
-    btn##style##cssText <- Js.string "background: #FF9800; width: 100px; margin-right: 10px"
-  else 
-    btn##style##cssText <- Js.string "background: #009688; width: 100px; margin-right: 10px";
-  toggle_join := not !toggle_join;
-  (* test (); *)
+  let player_name = Js.to_string (get_input_by_id "text_name")##value in
+  let game_name = Js.to_string (get_input_by_id "text_game")##value in
+  ignore (ScrabbleClient.join_game player_name game_name
+  >>= fun result ->
+      begin
+        (match result with
+        | Val state -> 
+          begin
+            (* TODO save player name and game name in localStorage *)
+            Dom_html.window##location##href <- Js.string "scrabble.html"
+          end
+        | Not_found msg -> Dom_html.window##alert (Js.string msg)
+        | Full msg -> Dom_html.window##alert (Js.string msg)
+        | Exists msg -> Dom_html.window##alert (Js.string msg)
+        | Server_error msg -> Dom_html.window##alert (Js.string msg));
+        Lwt.return ()
+      end);
   Js._false
 
 (* [handle_btn_create btn ()] is the callback to handle the click events of the 
  * create button [btn] *)
 let handle_btn_create btn _ = 
-  if !toggle_create then 
-    btn##style##cssText <- Js.string "background: #FF9800; width: 100px"
-  else 
-    btn##style##cssText <- Js.string "background: #009688; width: 100px";
-  Dom_html.window##location##href <- Js.string "scrabble.html";
-  toggle_create := not !toggle_create;
+  let player_name = Js.to_string (get_input_by_id "text_name")##value in
+  let game_name = Js.to_string (get_input_by_id "text_game")##value in
+  ignore (ScrabbleClient.create_game player_name game_name
+  >>= fun result ->
+      begin
+        (match result with
+        | Val state ->
+          begin
+            (* TODO save player name and game name in localStorage *)
+            Dom_html.window##location##href <- Js.string "scrabble.html"
+          end
+        | Exists msg -> Dom_html.window##alert (Js.string msg)
+        | Server_error msg -> Dom_html.window##alert (Js.string msg)
+        | _ -> assert false
+        );
+        Lwt.return ()
+      end);
   Js._false
 
 let onload _ =
