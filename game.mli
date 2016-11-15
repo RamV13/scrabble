@@ -2,11 +2,11 @@
  * order in the game, and a flag indicating whether this player is an AI *)
 type player = {
   player_id : int;
-  player_name : string;
-  tiles : char list;
-  score : int;
+  mutable player_name : string;
+  mutable tiles : char list;
+  mutable score : int;
   order : int;
-  ai : bool
+  mutable ai : bool
 }
 
 (* [state] contains the game's identification information, board, players,
@@ -14,10 +14,10 @@ type player = {
 type state = {
   id : int;
   name : string;
-  grid: Grid.board;
+  mutable grid: Grid.board;
   players : player list;
-  remaining_tiles : char list;
-  turn: int
+  mutable remaining_tiles : char list;
+  mutable turn: int
 }
 
 (* [move] is a representation of a game move containing an association list of
@@ -60,3 +60,7 @@ val get_diff : state -> state -> diff
 (* [execute state move] executes a [move] to produce a new game state from the
  * previous game state [state] *)
 val execute : state -> move -> state
+
+(* [to_json state] is a json representation of [state] without the outermost
+ * closing braces *)
+val to_json : state -> string
