@@ -45,12 +45,12 @@ type diff = {
  * The player replaces the computer with the lowest order, and inherits its 
  * tiles, score, and turn. 
  * raise Failure if the game is full of players (non computer) already *)
-let add_player s p_id p_n = 
+let add_player s p_n = 
   let rec get_new_players players acc ai_found =
     match players with
     | h::t -> 
       if h.ai && not ai_found then 
-        let new_player = {h with player_id=p_id; player_name=p_n; ai=false} in
+        let new_player = {h with player_name=p_n; ai=false} in
         get_new_players t (acc @ [new_player]) true
       else 
         get_new_players t (acc @ [h]) ai_found
@@ -92,7 +92,30 @@ let get_diff s1 s2 =
 let execute s m =
   failwith "unimplemented"
 
+let char_list_to_json lst =
+  let rec aux l acc =
+    match l with
+    | h::[] -> acc ^ "'" ^ (Char.escaped h) ^ "'"
+    | h::t -> aux t (acc ^ "'" ^ (Char.escaped h) ^ "',")
+    | [] -> acc
+  in
+  "[" ^ aux lst "" ^ "]"
+
+let players_to_json players =
+  let rec aux p acc =
+    match p with
+    | h::[] -> acc ^ "{\"player_name\":\"" ^ h.player_name ^ "\",\"tiles\":" ^ (char_list_to_json h.tiles) 
+      ^ "\"score\": " ^ (string_of_int h.score) ^ ",\"order\": " ^ (string_of_int h.order) ^ ",\"ai\": " 
+      ^ (string_of_bool h.ai) ^"},"
+    | h::t -> aux t (acc ^ "{\"player_name\":\"" ^ h.player_name ^ "\",\"tiles\":" ^ (char_list_to_json h.tiles) 
+      ^ "\"score\": " ^ (string_of_int h.score) ^ ",\"order\": " ^ (string_of_int h.order) ^ ",\"ai\": " 
+      ^ (string_of_bool h.ai) ^"},")
+    | [] -> acc
+  in
+  aux players ""
+
 (* [to_json state] is a json representation of [state] without the outermost
  * closing braces *)
 let to_json state = 
-  failwith "unimplemented"
+  "{\"name\": \"" ^ state.name ^"\",\"grid\": \"\",\"players\":[" ^ (players_to_json state.players) ^ 
+  "],\"remaining_tiles\": " ^ (char_list_to_json state.remaining_tiles) ^ ",\"turn\": " ^ state.turn ^ "}"

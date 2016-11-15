@@ -1,7 +1,6 @@
 (* [player] contains the player's identification information, tiles, score,
  * order in the game, and a flag indicating whether this player is an AI *)
 type player = {
-  player_id : int;
   mutable player_name : string;
   mutable tiles : char list;
   mutable score : int;
@@ -12,7 +11,6 @@ type player = {
 (* [state] contains the game's identification information, board, players,
  * remaining tiles (i.e. bag), and turn *)
 type state = {
-  id : int;
   name : string;
   mutable grid: Grid.board;
   players : player list;
@@ -45,13 +43,13 @@ type diff = {
  * and name [player_name] to the current game [state], and returns the new state
  * The player replaces any computer, and inherits its tiles, score, and turn.
  * raise Failure if the game is full of players (non computer) already *)
-val add_player : state -> int -> string -> state
+val add_player : state -> string -> state
 
 (* [remove_player state player_id] removes the player with id [player_id] from
  * current game [state], and returns the new state. It replaces the old player
  * with a computer that inherits the removed player's tiles, score, turn, and id
  * raises Failure if there is no player in the game with [player_id] *)
-val remove_player : state -> int -> state
+val remove_player : state -> string -> state
 
 (* [get_diff state state] returns the difference [diff] between two game states.
  * requires: The state id and names are equal *)
