@@ -1,8 +1,13 @@
 (* [board] is a 2-D list of char options representing the board *)
 type board = (char option) list list
 
-(* [bonus_tiles] is an association list from coordinates to point values *)
-type bonus_tiles = ((int * int) * int) list
+(* [bonus_letter_tiles] is a list of pairs mapping tiles to letter multipliers,
+  if a tile is not included in this list it has a letter multiplier of 1 *)
+val bonus_letter_tiles : ((int * int) * int) list
+
+(* [bonus_word_tiles] is a list of pairs mapping tiles to word multipliers,
+  if a tile is not included in this list it has a word multipler of 1 *)
+val bonus_word_tiles : ((int * int) * int) list
 
 (* [empty] is the empty board *)
 val empty : board
