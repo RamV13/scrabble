@@ -120,8 +120,7 @@ let players_to_json players =
   in
   aux players ""
 
-(* [to_json state] is a json representation of [state] without the outermost
- * closing braces *)
+(* [to_json state] is a json representation of [state] *)
 let to_json state = 
   "{\"name\": \"" ^ state.name ^ "\",\"grid\": \"\",\"players\":[" ^ 
   (players_to_json state.players) ^ "],\"remaining_tiles\": " ^ 
@@ -151,6 +150,8 @@ let json_players_to_players json_l =
   in
   aux json_l []
 
+(* [from_json Yojson.Basic.json] is a [state] converted from its json 
+ * representation *)
 let from_json json = 
   let n = member "name" json |> to_string in
   let g = member "grid" json |> Grid.from_json in
