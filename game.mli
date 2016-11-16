@@ -31,12 +31,11 @@ type move = {
  * be no difference (in the case of adding/removing players or a failed move) or
  * the move given to a state *)
 type diff = {
-  score_diff : int;
+  score_diff : int list;
   added_tiles : char list;
   removed_tiles : char list;
   turn_diff : int;
-  added_players : player list;
-  removed_players : player list;
+  players_diff : player list
 }
 
 (* [add_player state player_id player_name] adds the player with id [player_id]

@@ -1,7 +1,6 @@
 (* [player] contains the player's identification information, tiles, score,
  * order in the game, and a flag indicating whether this player is an AI *)
 type player = {
-  player_id : int;
   mutable player_name : string;
   mutable tiles : char list;
   mutable score : int;
@@ -12,7 +11,6 @@ type player = {
 (* [state] contains the game's identification information, board, players, 
  * remaining tiles (i.e. bag), and turn *)
 type state = {
-  id : int;
   name : string;
   mutable grid: Grid.board;
   players : player list;
@@ -37,7 +35,7 @@ type diff = {
   added_tiles : char list;
   removed_tiles : char list;
   turn_diff : int;
-  players : player list
+  players_diff : player list
 }
 
 (* [add_player state player_id player_name] adds the player with id [player_id]
@@ -69,7 +67,7 @@ let remove_player s p_id =
   let rec get_new_players players acc pl_found =
     match players with
     | h::t ->
-      if h.player_id = p_id then 
+      if h.player_name = p_id then 
         let new_ai = 
           {h with player_name="Computer "^(string_of_int h.order); ai=true} in
         get_new_players t (acc @ [new_ai]) true
@@ -105,10 +103,10 @@ let players_to_json players =
   let rec aux p acc =
     match p with
     | h::[] -> acc ^ "{\"player_name\":\"" ^ h.player_name ^ "\",\"tiles\":" ^ (char_list_to_json h.tiles) 
-      ^ "\"score\": " ^ (string_of_int h.score) ^ ",\"order\": " ^ (string_of_int h.order) ^ ",\"ai\": " 
-      ^ (string_of_bool h.ai) ^"},"
+      ^ ",\"score\": " ^ (string_of_int h.score) ^ ",\"order\": " ^ (string_of_int h.order) ^ ",\"ai\": " 
+      ^ (string_of_bool h.ai) ^"}"
     | h::t -> aux t (acc ^ "{\"player_name\":\"" ^ h.player_name ^ "\",\"tiles\":" ^ (char_list_to_json h.tiles) 
-      ^ "\"score\": " ^ (string_of_int h.score) ^ ",\"order\": " ^ (string_of_int h.order) ^ ",\"ai\": " 
+      ^ ",\"score\": " ^ (string_of_int h.score) ^ ",\"order\": " ^ (string_of_int h.order) ^ ",\"ai\": " 
       ^ (string_of_bool h.ai) ^"},")
     | [] -> acc
   in
@@ -118,4 +116,4 @@ let players_to_json players =
  * closing braces *)
 let to_json state = 
   "{\"name\": \"" ^ state.name ^"\",\"grid\": \"\",\"players\":[" ^ (players_to_json state.players) ^ 
-  "],\"remaining_tiles\": " ^ (char_list_to_json state.remaining_tiles) ^ ",\"turn\": " ^ state.turn ^ "}"
+  "],\"remaining_tiles\": " ^ (char_list_to_json state.remaining_tiles) ^ ",\"turn\": " ^ (string_of_int state.turn) ^ "}"
