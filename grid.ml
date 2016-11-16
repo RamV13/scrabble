@@ -104,5 +104,5 @@ let rec dejsonify board result = match board with
 |[] -> List.rev(result)
 |h::t -> dejsonify t ((dejsonify_row h) :: result)
 
-let from_json f = let b = Yojson.Basic.from_file f in
-  dejsonify (Yojson.Basic.Util.to_list b) []
+let from_json j = 
+  dejsonify (Yojson.Basic.Util.to_list j) []
