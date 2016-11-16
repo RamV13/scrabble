@@ -35,3 +35,7 @@ type neighbors = {
 (* [get_neighbors board row col] is the set of four tiles adjacent to the tile
  * at the coordinate ([row],[col]) in the [board] *)
 val get_neighbors : board -> int -> int -> neighbors
+
+val to_json : board -> string
+
+val from_json : Yojson.Basic.json -> board
