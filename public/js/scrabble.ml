@@ -1,7 +1,23 @@
 
 open Dom
-
 open Lwt
+open Yojson
+
+(* Yojson aliases *)
+
+(* [from_string] is Yojson.Basic.from_string *)
+let from_string = Yojson.Basic.from_string
+(* [to_string_case] is Yojson.Basic.Util.to_string *)
+let to_string = Yojson.Basic.Util.to_string
+(* [member] is Yojson.Basic.Util.member *)
+let member = Yojson.Basic.Util.member
+(* [to_list] is Yojson.Basic.Util.to_list *)
+let to_list = Yojson.Basic.Util.to_list
+(* [to_int] is Yojson.Basic.Util.to_int *)
+let to_int = Yojson.Basic.Util.to_int
+
+let event_source_constructor = Js.Unsafe.global##_EventSource
+let event_source = jsnew event_source_constructor (Js.string "http://127.0.0.1/api/messaging?gameName=My%20Game") (* TODO retrieve from localStorage *)
 
 (* [board_id] is the HTML id for the board *)
 let board_id = "board"
@@ -36,6 +52,12 @@ let blur_current_tile () =
 (* [get_element_by_id id] gets a DOM element by [id] *)
 let get_element_by_id id = 
   Js.Opt.get Dom_html.document##getElementById (Js.string id) fail
+
+(* [get_input_by_id id] gets a DOM input element by [id] *)
+let get_input_by_id id = 
+  match Dom_html.tagged (get_element_by_id id) with
+  | Dom_html.Input elt -> elt
+  | _ -> raise (Failure ("Element with id " ^ id ^ " is not an input"))
 
 (* [get_tile row col] is the tile at the [row] and [col] in the board *)
 let get_tile row col = 
@@ -98,10 +120,36 @@ let register_player_tiles () =
   in
   aux (num_player_tiles - 1)
 
+let handle_send _ = 
+  let msg = Js.to_string (get_input_by_id "message")##value in
+  let player_name = "Ram" in (* TODO retrieve from localStorage *)
+  let game_name = "My Game" in (* TODO retrieve from localStorage *)
+  (get_input_by_id "message")##value <- Js.string "";
+  ScrabbleClient.send_message player_name game_name msg;
+  Js._false
+
 (* [onload] is the callback for when the window is loaded *)
 let onload _ =
   register_tiles ();
   register_player_tiles ();
+  (get_element_by_id "send")##onclick <- Dom_html.handler handle_send;
+  event_source##onmessage <- Js.wrap_callback (fun e ->
+    let json = 
+      e##data
+      |> Js.to_string
+      |> Yojson.Basic.from_string
+    in
+    let player_name = json |> member "playerName" |> to_string in
+    let msg = json |> member "msg" |> to_string in
+    let current_chat = Js.to_string ((get_element_by_id "chat")##innerHTML) in
+    let new_chat = current_chat ^ "\n" ^ player_name ^ ": " ^ msg in
+    (get_element_by_id "chat")##innerHTML <- Js.string new_chat;
+    ()
+  );
+  event_source##onerror <- Js.wrap_callback (fun e -> 
+    Dom_html.window##alert (e##data);
+    event_source##close ()
+  );
   Js._false
 
 let _ = 

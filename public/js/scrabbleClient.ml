@@ -91,3 +91,14 @@ let get_game_state id =
 
 let execute_move id move = 
   Lwt.return (Val empty_state) (* TODO *)
+
+let send_message player_name game_name msg = 
+  {
+    headers;
+    meth = `POST;
+    url = baseURL ^ "/api/messaging";
+    req_body = "{\"playerName\":\"" ^ player_name ^ "\", \"gameName\":\"" ^ 
+                game_name ^ "\", \"msg\":\"" ^ msg ^ "\"}"
+  }
+  |> XHRClient.exec
+  |> ignore

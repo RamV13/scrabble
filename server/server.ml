@@ -1,5 +1,6 @@
 
 open Cohttp
+open Cohttp_lwt_unix
 open Yojson
 open HttpServer
 
@@ -20,6 +21,9 @@ let to_int = Yojson.Basic.Util.to_int
 
 (* [games] is the list of games currently running *)
 let games = ref []
+
+(* [pushers] is an association list from games to their respective clients *)
+let pushers = ref []
 
 (* [names_file] is the file containing a list of line separated names *)
 let names_file = "names.txt"
@@ -46,8 +50,13 @@ let _ =
 
 (* [default_headers] are the set of default headers for plain text responses *)
 let default_headers =
-    Header.init_with "content-type" "text/plain"
-    |> fun header -> Header.add header "Access-Control-Allow-Origin" origin
+  Header.init_with "content-type" "text/plain"
+  |> fun header -> Header.add header "Access-Control-Allow-Origin" origin
+
+(* [headers] are the default set of headers for JSON responses *)
+let headers = 
+  Header.init_with "content-type" "application/json"
+  |> fun header -> Header.add header "Access-Control-Allow-Origin" origin
 
 (* [cors_control req] responds with Access-Control headers to enable CORS *)
 let cors_control req = 
@@ -88,10 +97,7 @@ let create_game req =
     let remaining_tiles = [] in
     let new_game = {name;grid;players;remaining_tiles;turn=0} in
     games := new_game::!games;
-    let headers = 
-      Header.init_with "content-type" "application/json"
-      |> fun header -> Header.add header "Access-Control-Allow-Origin" origin
-    in
+    pushers := (name,ref [])::!pushers;
     let res_body = Game.to_json new_game in
     {headers;status=`OK;res_body}
   with
@@ -119,10 +125,6 @@ let join_game req =
     in
     substituted.player_name <- player_name;
     substituted.ai <- false;
-    let headers = 
-      Header.init_with "content-type" "application/json"
-      |> fun header -> Header.add header "Access-Control-Allow-Origin" origin 
-    in
     let res_body = Game.to_json game in
     {headers;status=`OK;res_body}
   with
@@ -143,8 +145,61 @@ let join_game req =
                 game_name
     }
 
+(* [subscribe req] registers a client to a game as a receiver of messages *)
+let subscribe req = 
+  try
+    let headers = 
+      Header.init_with "Access-Control-Allow-Origin" "*" 
+      |> fun header -> Header.add header "Access-Control-Allow-Headers" "content-type"
+      |> fun header -> Header.add header "Access-Control-Allow-Methods" "GET"
+      |> fun header -> Header.add header "content-type" "text/event-stream"
+      |> fun header -> Header.add header "cache-control" "no-cache"
+    in
+    let game_name = List.assoc "gameName" req.params in
+    let st,push_st = Lwt_stream.create () in
+    let body = Cohttp_lwt_body.of_stream st in
+    let game_pushers = List.assoc game_name !pushers in
+    game_pushers := push_st::!game_pushers;
+    Server.respond ~headers ~flush:true ~status:`OK ~body ()
+  with 
+  | Not_found -> Server.respond ~headers:default_headers ~status:`Not_found 
+                                ~body:(Cohttp_lwt_body.of_string "") ()
+
+(* [send_message req] sends a message from a player to a game *)
+let send_message req = 
+  let create_msg player_name msg = 
+    let data = [
+      "data: {";
+      Printf.sprintf "data: \"msg\": \"%s\"," msg;
+      Printf.sprintf "data: \"playerName\": \"%s\"" player_name;
+      "data: }"]
+    in
+    let result = 
+      Printf.sprintf "id: %d\r\n%s\r\n\r\n" 0 (String.concat "\r\n" data)
+    in
+    Some result
+  in
+  let json = Yojson.Basic.from_string req.req_body in
+  let game_name = json |> member "gameName" |> to_string in
+  let player_name = json |> member "playerName" |> to_string in
+  let msg = json |> member "msg" |> to_string in
+  try
+    let game_pushers = !(List.assoc game_name !pushers) in
+    List.iter (fun pusher -> pusher (create_msg player_name msg)) game_pushers;
+    {headers;status=`OK;res_body=""}
+  with
+  | Not_found -> {
+      headers=default_headers;
+      status=`Not_found;
+      res_body="Game with name " ^ game_name ^ " not found or player with name "
+                ^ player_name ^ " not found in game"
+    }
+
 let _ = 
   HttpServer.add_route (`OPTIONS,"/api/game") cors_control;
   HttpServer.add_route (`PUT,"/api/game") create_game;
   HttpServer.add_route (`POST,"/api/game") join_game;
+  HttpServer.add_route (`OPTIONS,"/api/messaging") cors_control;
+  HttpServer.add_custom_route (`GET,"/api/messaging") subscribe;
+  HttpServer.add_route (`POST,"/api/messaging") send_message;
   HttpServer.run ~port:8000 ()

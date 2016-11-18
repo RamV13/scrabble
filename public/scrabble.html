@@ -56,6 +56,35 @@
         </table>
     </div>
 
+    <div class="score">
+        <table class="mdl-data-table mdl-js-data-table mdl-shadow--16dp" style="border-radius: 5px">
+          <thead>
+            <tr>
+              <th class="mdl-data-table__cell--non-numeric">Player</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td id="scorename-0" class="mdl-data-table__cell--non-numeric">Computer 1</td>
+              <td id="score-0">0</td>
+            </tr>
+            <tr>
+              <td id="scorename-1" class="mdl-data-table__cell--non-numeric">Computer 2</td>
+              <td id="score-1">0</td>
+            </tr>
+            <tr>
+              <td id="scorename-2" class="mdl-data-table__cell--non-numeric">Computer 3</td>
+              <td id="score-2">0</td>
+            </tr>
+            <tr>
+              <td id="scorename-3" class="mdl-data-table__cell--non-numeric">Computer 4</td>
+              <td id="score-3">0</td>
+            </tr>
+          </tbody>
+        </table>
+    </div>
+
     <div style="position: absolute;top: 50%;left: 50%;transform: translateX(-50%) translateY(-50%)">
       <table id="board" class="scrabble-table mdl-shadow--24dp">
         <tr>
@@ -316,36 +345,24 @@
       </table>
     </div>
 
-    <div class="score">
-        <table class="mdl-data-table mdl-js-data-table mdl-shadow--16dp" style="border-radius: 5px">
-          <thead>
-            <tr>
-              <th class="mdl-data-table__cell--non-numeric">Player</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td id="scorename-0" class="mdl-data-table__cell--non-numeric">Computer 1</td>
-              <td id="score-0">0</td>
-            </tr>
-            <tr>
-              <td id="scorename-1" class="mdl-data-table__cell--non-numeric">Computer 2</td>
-              <td id="score-1">0</td>
-            </tr>
-            <tr>
-              <td id="scorename-2" class="mdl-data-table__cell--non-numeric">Computer 3</td>
-              <td id="score-2">0</td>
-            </tr>
-            <tr>
-              <td id="scorename-3" class="mdl-data-table__cell--non-numeric">Computer 4</td>
-              <td id="score-3">0</td>
-            </tr>
-          </tbody>
-        </table>
+    <div class="chat mdl-card mdl-shadow--2dp">
+        <div class="mdl-card__title">
+          <h2 class="mdl-card__title-text">Chat</h2>
+        </div>
+        <div class="mdl-card__actions mdl-card--border">
+        <div id="chat" class="mdl-card__supporting-text" style="white-space: pre-wrap">
+        </div>
+        <div class="mdl-card__actions mdl-card--border">
+          <div class="mdl-textfield mdl-js-textfield">
+            <input id="message" class="mdl-textfield__input" type="text">
+            <label class="mdl-textfield__label" for="message">Type a message...</label>
+          </div>
+          <button id="send" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+            Send
+          </button>
+        </div>
     </div>
 
   </body>
 
 </html>
-
