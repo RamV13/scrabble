@@ -179,13 +179,16 @@ let send_message req =
     in
     Some result
   in
+  let send_msg pusher player_name msg = 
+    try pusher (create_msg player_name msg) with Unix.Unix_error _ -> ()
+  in
   let json = Yojson.Basic.from_string req.req_body in
   let game_name = json |> member "gameName" |> to_string in
   let player_name = json |> member "playerName" |> to_string in
   let msg = json |> member "msg" |> to_string in
   try
     let game_pushers = !(List.assoc game_name !pushers) in
-    List.iter (fun pusher -> pusher (create_msg player_name msg)) game_pushers;
+    List.iter (fun pusher -> send_msg pusher player_name msg) game_pushers;
     {headers;status=`OK;res_body=""}
   with
   | Not_found -> {
