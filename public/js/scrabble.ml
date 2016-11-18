@@ -16,8 +16,10 @@ let to_list = Yojson.Basic.Util.to_list
 (* [to_int] is Yojson.Basic.Util.to_int *)
 let to_int = Yojson.Basic.Util.to_int
 
-let event_source_constructor = Js.Unsafe.global##_EventSource
-let event_source = jsnew event_source_constructor (Js.string "http://127.0.0.1/api/messaging?gameName=My%20Game") (* TODO retrieve from localStorage *)
+(* [player_name] is the name of the player *)
+let player_name = ref ""
+(* [game_name] is the name of the game *)
+let game_name = ref ""
 
 (* [board_id] is the HTML id for the board *)
 let board_id = "board"
@@ -42,6 +44,17 @@ let current_value : string option ref = ref None
 
 (* [fail] is a failure callback *)
 let fail = fun _ -> assert false
+
+(* [get_info] gets the player name and game name *)
+let get_info () = 
+  let ls = 
+    match (Js.Optdef.to_option Dom_html.window##localStorage) with
+    | Some value -> value
+    | None -> assert false
+  in
+  let get key = Js.Opt.get (ls##getItem (Js.string key)) fail |> Js.to_string in
+  player_name := get "playerName";
+  game_name := get "gameName"
 
 (* [blur_current_tile ()] blurs focus on current tile by resetting its color *)
 let blur_current_tile () = 
@@ -122,34 +135,24 @@ let register_player_tiles () =
 
 let handle_send _ = 
   let msg = Js.to_string (get_input_by_id "message")##value in
-  let player_name = "Ram" in (* TODO retrieve from localStorage *)
-  let game_name = "My Game" in (* TODO retrieve from localStorage *)
   (get_input_by_id "message")##value <- Js.string "";
-  ScrabbleClient.send_message player_name game_name msg;
+  ScrabbleClient.send_message (!player_name) (!game_name) msg;
   Js._false
+
+let message_callback json = 
+  let player_name = json |> member "playerName" |> to_string in
+  let msg = json |> member "msg" |> to_string in
+  let current_chat = Js.to_string ((get_element_by_id "chat")##innerHTML) in
+  let new_chat = current_chat ^ "\n" ^ player_name ^ ": " ^ msg in
+  (get_element_by_id "chat")##innerHTML <- Js.string new_chat
 
 (* [onload] is the callback for when the window is loaded *)
 let onload _ =
+  get_info ();
   register_tiles ();
   register_player_tiles ();
   (get_element_by_id "send")##onclick <- Dom_html.handler handle_send;
-  event_source##onmessage <- Js.wrap_callback (fun e ->
-    let json = 
-      e##data
-      |> Js.to_string
-      |> Yojson.Basic.from_string
-    in
-    let player_name = json |> member "playerName" |> to_string in
-    let msg = json |> member "msg" |> to_string in
-    let current_chat = Js.to_string ((get_element_by_id "chat")##innerHTML) in
-    let new_chat = current_chat ^ "\n" ^ player_name ^ ": " ^ msg in
-    (get_element_by_id "chat")##innerHTML <- Js.string new_chat;
-    ()
-  );
-  event_source##onerror <- Js.wrap_callback (fun e -> 
-    Dom_html.window##alert (e##data);
-    event_source##close ()
-  );
+  ScrabbleClient.subscribe (!game_name) message_callback;
   Js._false
 
 let _ = 

@@ -26,3 +26,7 @@ val execute_move : string -> Game.move -> Game.state result Lwt.t
 (* [send_message player_name game_name msg] sends the message [msg] to the game 
  * with name [game_name] from the player with name [player_name] *)
 val send_message : string -> string -> string -> unit
+
+(* [subscribe game_name calback] subscribes the client to the [game_name] 
+ * event source with the callback [callback] to process received JSON *)
+val subscribe : string -> (Yojson.Basic.json -> unit) -> unit

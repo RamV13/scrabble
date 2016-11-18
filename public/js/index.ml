@@ -16,6 +16,17 @@ let get_input_by_id id =
   | Dom_html.Input elt -> elt
   | _ -> raise (Failure ("Element with id " ^ id ^ " is not an input"))
 
+(* [save_info player_name game_name] saves the [player_name] and [game_name] to
+ * localStorage *)
+let save_info player_name game_name = 
+  let ls = 
+    match (Js.Optdef.to_option Dom_html.window##localStorage) with
+    | Some value -> value
+    | None -> assert false
+  in
+  ls##setItem (Js.string "playerName",Js.string player_name);
+  ls##setItem (Js.string "gameName",Js.string game_name)
+
 (* [handle_btn_join btn ()] is the callback to handle the click events of the 
  * join button [btn] *)
 let handle_btn_join btn _ = 
@@ -27,7 +38,8 @@ let handle_btn_join btn _ =
         (match result with
         | Val state -> 
           begin
-            (* TODO save player name and game name in localStorage *)
+            (* TODO save game state in localStorage *)
+            save_info player_name game_name;
             Dom_html.window##location##href <- Js.string "scrabble.html"
           end
         | Not_found msg -> Dom_html.window##alert (Js.string msg)
@@ -49,7 +61,8 @@ let handle_btn_create btn _ =
         (match result with
         | Val state ->
           begin
-            (* TODO save player name and game name in localStorage *)
+            (* TODO save game state in localStorage *)
+            save_info player_name game_name;
             Dom_html.window##location##href <- Js.string "scrabble.html"
           end
         | Exists msg -> Dom_html.window##alert (Js.string msg)

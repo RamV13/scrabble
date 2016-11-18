@@ -21,6 +21,8 @@ let to_int = Yojson.Basic.Util.to_int
 
 let baseURL = "http://127.0.0.1" (* "http://128.253.51.200" *)
 
+let event_source_constructor = Js.Unsafe.global##_EventSource
+
 (* [headers] is the default headers for JSON requests *)
 let headers = Header.init_with "content-type" "application/json"
 
@@ -102,3 +104,18 @@ let send_message player_name game_name msg =
   }
   |> XHRClient.exec
   |> ignore
+
+let subscribe game_name callback = 
+  let base = Uri.of_string (baseURL ^ "/api/messaging") in
+  let url = Uri.with_query base [("gameName",[game_name])] |> Uri.to_string in
+  let event_source = jsnew event_source_constructor (Js.string url) in
+  event_source##onmessage <- Js.wrap_callback (fun e ->
+    e##data
+    |> Js.to_string
+    |> Yojson.Basic.from_string
+    |> callback
+  );
+  event_source##onerror <- Js.wrap_callback (fun e -> 
+    Dom_html.window##alert (e##data);
+    event_source##close ()
+  )
