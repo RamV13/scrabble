@@ -145,8 +145,8 @@ let join_game req =
                 game_name
     }
 
-(* [subscribe req] registers a client to a game as a receiver of messages *)
-let subscribe req = 
+(* [subscribe_messaging req] registers a client to receive messages *)
+let subscribe_messaging req = 
   try
     let headers = 
       Header.init_with "Access-Control-Allow-Origin" "*" 
@@ -203,6 +203,6 @@ let _ =
   HttpServer.add_route (`PUT,"/api/game") create_game;
   HttpServer.add_route (`POST,"/api/game") join_game;
   HttpServer.add_route (`OPTIONS,"/api/messaging") cors_control;
-  HttpServer.add_custom_route (`GET,"/api/messaging") subscribe;
+  HttpServer.add_custom_route (`GET,"/api/messaging") subscribe_messaging;
   HttpServer.add_route (`POST,"/api/messaging") send_message;
   HttpServer.run ~port:8000 ()

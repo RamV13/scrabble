@@ -105,7 +105,7 @@ let send_message player_name game_name msg =
   |> XHRClient.exec
   |> ignore
 
-let subscribe game_name callback = 
+let subscribe_messaging game_name callback = 
   let base = Uri.of_string (baseURL ^ "/api/messaging") in
   let url = Uri.with_query base [("gameName",[game_name])] |> Uri.to_string in
   let event_source = jsnew event_source_constructor (Js.string url) in

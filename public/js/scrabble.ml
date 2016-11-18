@@ -152,7 +152,7 @@ let onload _ =
   register_tiles ();
   register_player_tiles ();
   (get_element_by_id "send")##onclick <- Dom_html.handler handle_send;
-  ScrabbleClient.subscribe (!game_name) message_callback;
+  ScrabbleClient.subscribe_messaging (!game_name) message_callback;
   Js._false
 
 let _ = 
