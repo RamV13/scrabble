@@ -90,8 +90,8 @@ let rec to_json_helper board result_board : json = match board with
 |[] -> `List (List.rev(result_board))
 |h::t -> to_json_helper t ((jsonify_row h []) :: result_board)
 
-let to_json board f : unit =
-  to_file f (to_json_helper board [])
+let to_json board : string =
+  Yojson.to_string (to_json_helper board [])
 
 let rec row_to_option row result = match row with
 |[] -> List.rev(result)
@@ -104,5 +104,5 @@ let rec dejsonify board result = match board with
 |[] -> List.rev(result)
 |h::t -> dejsonify t ((dejsonify_row h) :: result)
 
-let from_json f = let b = Yojson.Basic.from_file f in
+let from_json s = let b = Yojson.Basic.from_string s in
   dejsonify (Yojson.Basic.Util.to_list b) []
