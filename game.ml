@@ -128,8 +128,8 @@ let to_json state =
   (string_of_int state.turn) ^ "}"
 
 let str_to_c s = 
-  if length s <> 1 then failwith "str_to_char"
-  else get s 0
+  if String.length s <> 1 then failwith "str_to_char"
+  else String.get s 0
 
 let json_players_to_players json_l =
   let rec aux j_l acc = 
@@ -145,7 +145,7 @@ let json_players_to_players json_l =
           ai = member "ai" h |> to_bool;
         } 
       in
-      aux t (new_p @ acc)
+      aux t (new_p :: acc)
     | [] -> acc
   in
   aux json_l []
