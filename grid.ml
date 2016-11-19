@@ -83,15 +83,15 @@ let get_neighbors board x y : neighbors =
 let rec jsonify_row row result : json = match row with
 |[] -> `List (List.rev(result))
 |h::t -> match h with
-  |Some c -> jsonify_row t (`String c :: result)
+  |Some c -> jsonify_row t (`String (Char.escaped c) :: result)
   |None -> jsonify_row t (`String "" :: result)
 
 let rec to_json_helper board result_board : json = match board with
 |[] -> `List (List.rev(result_board))
 |h::t -> to_json_helper t ((jsonify_row h []) :: result_board)
 
-let to_json board f : unit =
-  to_file f (to_json_helper board [])
+let to_json board : string =
+  Yojson.to_string (to_json_helper board [])
 
 let rec row_to_option row result = match row with
 |[] -> List.rev(result)
