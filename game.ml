@@ -1,5 +1,4 @@
 open Yojson.Basic.Util
-open Grid
 
 (* [player] contains the player's identification information, tiles, score,
  * order in the game, and a flag indicating whether this player is an AI *)
@@ -96,8 +95,8 @@ let execute s m =
 let char_list_to_json lst =
   let rec aux l acc =
     match l with
-    | h::[] -> acc ^ "'" ^ (Char.escaped h) ^ "'"
-    | h::t -> aux t (acc ^ "'" ^ (Char.escaped h) ^ "',")
+    | h::[] -> acc ^ "\"" ^ (Char.escaped h) ^ "\""
+    | h::t -> aux t (acc ^ "\"" ^ (Char.escaped h) ^ "\",")
     | [] -> acc
   in
   "[" ^ aux lst "" ^ "]"
@@ -122,7 +121,7 @@ let players_to_json players =
 
 (* [to_json state] is a json representation of [state] *)
 let to_json state = 
-  "{\"name\": \"" ^ state.name ^ "\",\"grid\": \"\",\"players\":[" ^ 
+  "{\"name\": \"" ^ state.name ^ "\",\"grid\":" ^ (Grid.to_json state.grid) ^ ",\"players\":[" ^ 
   (players_to_json state.players) ^ "],\"remaining_tiles\": " ^ 
   (char_list_to_json state.remaining_tiles) ^ ",\"turn\": " ^ 
   (string_of_int state.turn) ^ "}"
@@ -169,3 +168,7 @@ let from_json json =
     remaining_tiles = r;
     turn = t
   }
+
+let _ = 
+  to_json { name = "game"; grid = Grid.empty; players = []; remaining_tiles = ['a'; 'b']; turn = 0}
+  |> Yojson.Basic.from_string |> from_json |> to_json |> print_endline
