@@ -59,7 +59,7 @@ let join_game player_name game_name =
       begin
         (
         match res.status with
-        | `OK -> Val empty_state
+        | `OK -> Val (Game.from_json (Yojson.Basic.from_string res.res_body))
         | `Not_found -> Not_found res.res_body
         | `Bad_request -> Full res.res_body
         | `Not_acceptable -> Exists res.res_body
@@ -81,18 +81,35 @@ let create_game player_name game_name =
       begin
         (
         match res.status with
-        | `OK -> Val empty_state
+        | `OK -> Val (Game.from_json (Yojson.Basic.from_string res.res_body))
         | `Bad_request -> Exists res.res_body
         | _ -> Server_error server_error_msg
         )
         |> Lwt.return
       end
 
-let get_game_state id = 
-  Lwt.return (Val empty_state) (* TODO *)
-
 let execute_move id move = 
-  Lwt.return (Val empty_state) (* TODO *)
+  () (* TODO *)
+
+(* [subscribe endpoint game_name callback] subscribes a callback to a event 
+ * source of the game with name [game_name] associated with an endpoint *)
+let subscribe endpoint game_name callback = 
+  let base = Uri.of_string (baseURL ^ "/api/" ^ endpoint) in
+  let url = Uri.with_query base [("gameName",[game_name])] |> Uri.to_string in
+  let event_source = jsnew event_source_constructor (Js.string url) in
+  event_source##onmessage <- Js.wrap_callback (fun event ->
+    event##data
+    |> Js.to_string
+    |> Yojson.Basic.from_string
+    |> callback
+  );
+  event_source##onerror <- Js.wrap_callback (fun event -> 
+    Dom_html.window##alert (event##data);
+    event_source##close ()
+  )
+
+let subscribe_updates = 
+  subscribe "game"
 
 let send_message player_name game_name msg = 
   {
@@ -105,17 +122,5 @@ let send_message player_name game_name msg =
   |> XHRClient.exec
   |> ignore
 
-let subscribe_messaging game_name callback = 
-  let base = Uri.of_string (baseURL ^ "/api/messaging") in
-  let url = Uri.with_query base [("gameName",[game_name])] |> Uri.to_string in
-  let event_source = jsnew event_source_constructor (Js.string url) in
-  event_source##onmessage <- Js.wrap_callback (fun e ->
-    e##data
-    |> Js.to_string
-    |> Yojson.Basic.from_string
-    |> callback
-  );
-  event_source##onerror <- Js.wrap_callback (fun e -> 
-    Dom_html.window##alert (e##data);
-    event_source##close ()
-  )
+let subscribe_messaging = 
+  subscribe "messaging"

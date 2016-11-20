@@ -1,3 +1,6 @@
+open Yojson
+open Grid
+
 (* [player] contains the player's identification information, tiles, score,
  * order in the game, and a flag indicating whether this player is an AI *)
 type player = {
@@ -58,6 +61,9 @@ val get_diff : state -> state -> diff
  * previous game state [state] *)
 val execute : state -> move -> state
 
-(* [to_json state] is a json representation of [state] without the outermost
- * closing braces *)
+(* [to_json state] is a json representation of [state] as a string *)
 val to_json : state -> string
+
+(* [from_json Yojson.Basic.json] is a [state] converted from its json 
+ * representation *)
+val from_json : Yojson.Basic.json -> state

@@ -21,9 +21,12 @@ let to_int = Yojson.Basic.Util.to_int
 
 (* [games] is the list of games currently running *)
 let games = ref []
-
-(* [pushers] is an association list from games to their respective clients *)
-let pushers = ref []
+(* [game_pushers] is an association list from games to their respective game
+ * related update clients *)
+let game_pushers = ref []
+(* [msg_pushers] is an association list from games to their respective message
+ * clients *)
+let msg_pushers = ref []
 
 (* [names_file] is the file containing a list of line separated names *)
 let names_file = "names.txt"
@@ -69,6 +72,28 @@ let cors_control req =
   in
   {headers;status=`OK;res_body=""}
 
+(* [send_new_score game_name player_name order score] sends an update with a 
+ * JSON payload containg a player name, associated score, and order *)
+let send_new_score game_name player_name order score = 
+  let sendable = 
+    let data = [
+      "data: {";
+      Printf.sprintf "data: \"playerName\": \"%s\"," player_name;
+      Printf.sprintf "data: \"order\": %d," order;
+      Printf.sprintf "data: \"score\": %d" score;
+      "data: }"]
+    in
+    let result = 
+      Printf.sprintf "id: %d\r\n%s\r\n\r\n" 0 (String.concat "\r\n" data)
+    in
+    Some result
+  in
+  let send_update pusher = try pusher sendable with Unix.Unix_error _ -> () in
+  try
+    let pushers = !(List.assoc game_name !game_pushers) in
+    List.iter (fun pusher -> send_update pusher) pushers
+  with Not_found -> assert false
+
 exception Exists
 
 (* [create_game req] creates a game given the request [req] *)
@@ -92,12 +117,14 @@ let create_game req =
         else acc
       in
       add_players [{base_player with player_name;ai=false}] 1
+      |> List.rev
     in
     (* TODO populate remaining tiles *)
     let remaining_tiles = [] in
     let new_game = {name;grid;players;remaining_tiles;turn=0} in
     games := new_game::!games;
-    pushers := (name,ref [])::!pushers;
+    msg_pushers := (name,ref [])::!msg_pushers;
+    game_pushers := (name,ref [])::!game_pushers;
     let res_body = Game.to_json new_game in
     {headers;status=`OK;res_body}
   with
@@ -125,6 +152,7 @@ let join_game req =
     in
     substituted.player_name <- player_name;
     substituted.ai <- false;
+    send_new_score game.name player_name substituted.order substituted.score;
     let res_body = Game.to_json game in
     {headers;status=`OK;res_body}
   with
@@ -145,12 +173,14 @@ let join_game req =
                 game_name
     }
 
-(* [subscribe_messaging req] registers a client to receive messages *)
-let subscribe_messaging req = 
+(* [subscribe main_pushers req] registers a client to recieve game updates
+ * via the [main_pushers] (i.e. game updates or messages) *)
+let subscribe main_pushers req = 
   try
     let headers = 
       Header.init_with "Access-Control-Allow-Origin" "*" 
-      |> fun header -> Header.add header "Access-Control-Allow-Headers" "content-type"
+      |> fun header -> Header.add header "Access-Control-Allow-Headers" 
+                                         "content-type"
       |> fun header -> Header.add header "Access-Control-Allow-Methods" "GET"
       |> fun header -> Header.add header "content-type" "text/event-stream"
       |> fun header -> Header.add header "cache-control" "no-cache"
@@ -158,12 +188,20 @@ let subscribe_messaging req =
     let game_name = List.assoc "gameName" req.params in
     let st,push_st = Lwt_stream.create () in
     let body = Cohttp_lwt_body.of_stream st in
-    let game_pushers = List.assoc game_name !pushers in
-    game_pushers := push_st::!game_pushers;
+    let pushers = List.assoc game_name !main_pushers in
+    pushers := push_st::!pushers;
     Server.respond ~headers ~flush:true ~status:`OK ~body ()
   with 
   | Not_found -> Server.respond ~headers:default_headers ~status:`Not_found 
                                 ~body:(Cohttp_lwt_body.of_string "") ()
+
+(* [subscribe_updates req] registers a client to receive game updates *)
+let subscribe_updates = 
+  subscribe game_pushers
+
+(* [subscribe_messaging req] registers a client to receive messages *)
+let subscribe_messaging = 
+  subscribe msg_pushers
 
 (* [send_message req] sends a message from a player to a game *)
 let send_message req = 
@@ -187,8 +225,8 @@ let send_message req =
   let player_name = json |> member "playerName" |> to_string in
   let msg = json |> member "msg" |> to_string in
   try
-    let game_pushers = !(List.assoc game_name !pushers) in
-    List.iter (fun pusher -> send_msg pusher player_name msg) game_pushers;
+    let pushers = !(List.assoc game_name !msg_pushers) in
+    List.iter (fun pusher -> send_msg pusher player_name msg) pushers;
     {headers;status=`OK;res_body=""}
   with
   | Not_found -> {
@@ -200,6 +238,7 @@ let send_message req =
 
 let _ = 
   HttpServer.add_route (`OPTIONS,"/api/game") cors_control;
+  HttpServer.add_custom_route (`GET,"/api/game") subscribe_updates;
   HttpServer.add_route (`PUT,"/api/game") create_game;
   HttpServer.add_route (`POST,"/api/game") join_game;
   HttpServer.add_route (`OPTIONS,"/api/messaging") cors_control;

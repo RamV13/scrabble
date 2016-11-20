@@ -3,6 +3,8 @@ open Dom
 open Lwt
 open Yojson
 
+open Game
+
 (* Yojson aliases *)
 
 (* [from_string] is Yojson.Basic.from_string *)
@@ -45,14 +47,18 @@ let current_value : string option ref = ref None
 (* [fail] is a failure callback *)
 let fail = fun _ -> assert false
 
-(* [get_info] gets the player name and game name *)
+(* [local_storage] is the localStorage javascript object *)
+let local_storage = 
+  match (Js.Optdef.to_option Dom_html.window##localStorage) with
+  | Some value -> value
+  | None -> assert false
+
+(* [get key] gets the value associated with [key] from localStorage *)
+let get key = 
+  Js.Opt.get (local_storage##getItem (Js.string key)) fail |> Js.to_string
+
+(* [get_info ()] gets the player name and game name from localStorage *)
 let get_info () = 
-  let ls = 
-    match (Js.Optdef.to_option Dom_html.window##localStorage) with
-    | Some value -> value
-    | None -> assert false
-  in
-  let get key = Js.Opt.get (ls##getItem (Js.string key)) fail |> Js.to_string in
   player_name := get "playerName";
   game_name := get "gameName"
 
@@ -133,12 +139,28 @@ let register_player_tiles () =
   in
   aux (num_player_tiles - 1)
 
+(* [init_state ()] initializes the UI components with the information from the 
+ * game state saved in localStorage *)
+let init_state () = 
+  let game_state = 
+    "gameState" |> get |> Yojson.Basic.from_string |> Game.from_json
+  in
+  let set_scoreboard_name player order = 
+    let id = "scorename-" ^ (string_of_int order) in
+    (get_element_by_id id)##innerHTML <- Js.string player.player_name
+  in
+  let count = ref 0 in
+  game_state.players
+  |> List.iter (fun p -> set_scoreboard_name p !count; count := !count + 1)
+
+(* [handle_send ()] is the callback for the send chat button *)
 let handle_send _ = 
   let msg = Js.to_string (get_input_by_id "message")##value in
   (get_input_by_id "message")##value <- Js.string "";
   ScrabbleClient.send_message (!player_name) (!game_name) msg;
   Js._false
 
+(* [message_callback json] is the callback for receiving messages from others *)
 let message_callback json = 
   let player_name = json |> member "playerName" |> to_string in
   let msg = json |> member "msg" |> to_string in
@@ -146,13 +168,37 @@ let message_callback json =
   let new_chat = current_chat ^ "\n" ^ player_name ^ ": " ^ msg in
   (get_element_by_id "chat")##innerHTML <- Js.string new_chat
 
+(* [contains json key] is true only if the [key] is contained in the [json] *)
+let contains json key = 
+  match (json |> member key) with
+  | `Null -> false
+  | _ -> true
+
+(* [update_callback json] is the callback for receiving game updates *)
+let update_callback json = 
+  let set_scoreboard player_name order score = 
+    let name_id = "scorename-" ^ (string_of_int order) in
+    let score_id = "score-" ^ (string_of_int order) in
+    (get_element_by_id name_id)##innerHTML <- Js.string player_name;
+    (get_element_by_id score_id)##innerHTML <- Js.string (string_of_int score)
+  in
+  if contains json "score" then
+    begin
+      let player_name = json |> member "playerName" |> to_string in
+      let order = json |> member "order" |> to_int in
+      let score = json |> member "score" |> to_int in
+      set_scoreboard player_name order score
+    end
+
 (* [onload] is the callback for when the window is loaded *)
 let onload _ =
+  init_state ();
   get_info ();
   register_tiles ();
   register_player_tiles ();
   (get_element_by_id "send")##onclick <- Dom_html.handler handle_send;
   ScrabbleClient.subscribe_messaging (!game_name) message_callback;
+  ScrabbleClient.subscribe_updates (!game_name) update_callback;
   Js._false
 
 let _ = 

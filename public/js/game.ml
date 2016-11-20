@@ -1,3 +1,5 @@
+open Yojson.Basic.Util
+
 (* [player] contains the player's identification information, tiles, score,
  * order in the game, and a flag indicating whether this player is an AI *)
 type player = {
@@ -93,8 +95,8 @@ let execute s m =
 let char_list_to_json lst =
   let rec aux l acc =
     match l with
-    | h::[] -> acc ^ "'" ^ (Char.escaped h) ^ "'"
-    | h::t -> aux t (acc ^ "'" ^ (Char.escaped h) ^ "',")
+    | h::[] -> acc ^ "\"" ^ (Char.escaped h) ^ "\""
+    | h::t -> aux t (acc ^ "\"" ^ (Char.escaped h) ^ "\",")
     | [] -> acc
   in
   "[" ^ aux lst "" ^ "]"
@@ -102,18 +104,67 @@ let char_list_to_json lst =
 let players_to_json players =
   let rec aux p acc =
     match p with
-    | h::[] -> acc ^ "{\"player_name\":\"" ^ h.player_name ^ "\",\"tiles\":" ^ (char_list_to_json h.tiles) 
-      ^ ",\"score\": " ^ (string_of_int h.score) ^ ",\"order\": " ^ (string_of_int h.order) ^ ",\"ai\": " 
-      ^ (string_of_bool h.ai) ^"}"
-    | h::t -> aux t (acc ^ "{\"player_name\":\"" ^ h.player_name ^ "\",\"tiles\":" ^ (char_list_to_json h.tiles) 
-      ^ ",\"score\": " ^ (string_of_int h.score) ^ ",\"order\": " ^ (string_of_int h.order) ^ ",\"ai\": " 
-      ^ (string_of_bool h.ai) ^"},")
+    | h::[] -> 
+      acc ^ "{\"player_name\":\"" ^ h.player_name ^ "\",\"tiles\":" ^ 
+      (char_list_to_json h.tiles) ^ ",\"score\": " ^ (string_of_int h.score) ^ 
+      ",\"order\": " ^ (string_of_int h.order) ^ ",\"ai\": " ^ 
+      (string_of_bool h.ai) ^"}"
+    | h::t -> 
+      (acc ^ "{\"player_name\":\"" ^ h.player_name ^ "\",\"tiles\":" ^ 
+      (char_list_to_json h.tiles) ^ ",\"score\": " ^ (string_of_int h.score) ^ 
+      ",\"order\": " ^ (string_of_int h.order) ^ ",\"ai\": " ^ 
+      (string_of_bool h.ai) ^"},") 
+      |> aux t
     | [] -> acc
   in
   aux players ""
 
-(* [to_json state] is a json representation of [state] without the outermost
- * closing braces *)
+(* [to_json state] is a json representation of [state] *)
 let to_json state = 
-  "{\"name\": \"" ^ state.name ^"\",\"grid\": \"\",\"players\":[" ^ (players_to_json state.players) ^ 
-  "],\"remaining_tiles\": " ^ (char_list_to_json state.remaining_tiles) ^ ",\"turn\": " ^ (string_of_int state.turn) ^ "}"
+  "{\"name\": \"" ^ state.name ^ "\",\"grid\":" ^ (Grid.to_json state.grid) ^ ",\"players\":[" ^ 
+  (players_to_json state.players) ^ "],\"remaining_tiles\": " ^ 
+  (char_list_to_json state.remaining_tiles) ^ ",\"turn\": " ^ 
+  (string_of_int state.turn) ^ "}"
+
+let str_to_c s = 
+  if String.length s <> 1 then failwith "str_to_char"
+  else String.get s 0
+
+let json_players_to_players json_l =
+  let rec aux j_l acc = 
+    match j_l with
+    | h::t -> 
+      let new_p = 
+        {
+          player_name = member "player_name" h |> to_string;
+          tiles = List.map 
+            (fun x -> x |> to_string |> str_to_c) (member "tiles" h |> to_list);
+          score = member "score" h |> to_int;
+          order = member "order" h |> to_int;
+          ai = member "ai" h |> to_bool;
+        } 
+      in
+      aux t (new_p :: acc)
+    | [] -> acc
+  in
+  aux json_l []
+
+(* [from_json Yojson.Basic.json] is a [state] converted from its json 
+ * representation *)
+let from_json json = 
+  let n = member "name" json |> to_string in
+  let g = member "grid" json |> Grid.from_json in
+  let p = member "players" json |> to_list |> json_players_to_players in
+  let r = 
+    member "remaining_tiles" json 
+    |> to_list 
+    |> List.map (fun x -> x |> to_string |> str_to_c) 
+  in
+  let t = member "turn" json |> to_int in
+  {
+    name = n;
+    grid = g;
+    players = p;
+    remaining_tiles = r;
+    turn = t
+  }

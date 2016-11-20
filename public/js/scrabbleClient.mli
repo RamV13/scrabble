@@ -15,18 +15,19 @@ val join_game : string -> string -> Game.state result Lwt.t
  * in an Lwt thread *)
 val create_game : string -> string -> Game.state result Lwt.t
 
-(* [get_game_state name] gets the state of the game with name [name] and wraps 
- * the result in an Lwt thread *)
-val get_game_state : string -> Game.state result Lwt.t
+(* [execute_move name move] executes [move] on the game with name [name] *)
+val execute_move : string -> Game.move -> unit
 
-(* [execute_move name move] executes [move] on the game with name [name] and 
- * wraps the result in an Lwt thread *)
-val execute_move : string -> Game.move -> Game.state result Lwt.t
+(* [subscribe_updates game_name callback] subscribes a client to a [game_name]
+ * event source for game related updates with the callback [callback] to precess
+ * received JSON *)
+val subscribe_updates : string -> (Yojson.Basic.json -> unit) -> unit
 
 (* [send_message player_name game_name msg] sends the message [msg] to the game 
  * with name [game_name] from the player with name [player_name] *)
 val send_message : string -> string -> string -> unit
 
-(* [subscribe_messaging game_name calback] subscribes a client to a [game_name] 
- * event source with the callback [callback] to process received JSON *)
+(* [subscribe_messaging game_name callback] subscribes a client to a [game_name] 
+ * event source for message updates with the callback [callback] to process 
+ * received JSON *)
 val subscribe_messaging : string -> (Yojson.Basic.json -> unit) -> unit

@@ -1,18 +1,22 @@
-
 (* [board] is a 2-D list of char options representing the board *)
 type board = (char option) list list
 
-(* [bonus_tiles] is an association list from coordinates to point values *)
-type bonus_tiles = ((int * int) * int) list
+(* [bonus_letter_tiles] is a list of pairs mapping tiles to letter multipliers,
+  if a tile is not included in this list it has a letter multiplier of 1 *)
+val bonus_letter_tiles : ((int * int) * int) list
+
+(* [bonus_word_tiles] is a list of pairs mapping tiles to word multipliers,
+  if a tile is not included in this list it has a word multipler of 1 *)
+val bonus_word_tiles : ((int * int) * int) list
 
 (* [empty] is the empty board *)
 val empty : board
 
-(* [is_empty board row col] is true if the coordinate ([row],[col] is empty in 
+(* [is_empty board row col] is true if the coordinate ([row],[col] is empty in
  * the [board] *)
 val is_empty : board -> int -> int -> bool
 
-(* [get_tile board row col] is a char option representing the tile at the 
+(* [get_tile board row col] is a char option representing the tile at the
  * coordinate ([row],[col]) in the [board] *)
 val get_tile : board -> int -> int -> char option
 
@@ -31,3 +35,7 @@ type neighbors = {
 (* [get_neighbors board row col] is the set of four tiles adjacent to the tile
  * at the coordinate ([row],[col]) in the [board] *)
 val get_neighbors : board -> int -> int -> neighbors
+
+val to_json : board -> string
+
+val from_json : Yojson.Basic.json -> board
