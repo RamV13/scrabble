@@ -57,10 +57,15 @@ let local_storage =
 let get key = 
   Js.Opt.get (local_storage##getItem (Js.string key)) fail |> Js.to_string
 
+let remove key = 
+  local_storage##removeItem (Js.string key)
+
 (* [get_info ()] gets the player name and game name from localStorage *)
 let get_info () = 
   player_name := get "playerName";
-  game_name := get "gameName"
+  game_name := get "gameName";
+  remove "playerName";
+  remove "gameName"
 
 (* [blur_current_tile ()] blurs focus on current tile by resetting its color *)
 let blur_current_tile () = 
@@ -150,6 +155,7 @@ let init_state () =
     (get_element_by_id id)##innerHTML <- Js.string player.player_name
   in
   let count = ref 0 in
+  remove "gameState";
   game_state.players
   |> List.iter (fun p -> set_scoreboard_name p !count; count := !count + 1)
 
@@ -201,5 +207,10 @@ let onload _ =
   ScrabbleClient.subscribe_updates (!game_name) update_callback;
   Js._false
 
+(* [onbeforeunload] is the callback for when the window is about to be leaved *)
+let onbeforeunload _ = 
+  Js._false
+
 let _ = 
-  Dom_html.window##onload <- Dom_html.handler onload
+  Dom_html.window##onload <- Dom_html.handler onload;
+  Dom_html.window##onbeforeunload <- Dom_html.handler onbeforeunload

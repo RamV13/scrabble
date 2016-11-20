@@ -88,6 +88,17 @@ let create_game player_name game_name =
         |> Lwt.return
       end
 
+let leave_game player_name game_name = 
+  {
+    headers;
+    meth = `DELETE;
+    url = baseURL ^ "/api/game";
+    req_body = "{\"playerName\":\"" ^ player_name ^ "\", \"gameName\":\"" ^ 
+                game_name ^ "\"}"
+  }
+  |> XHRClient.exec
+  |> ignore
+
 let execute_move id move = 
   () (* TODO *)
 
