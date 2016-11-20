@@ -73,6 +73,11 @@ let cors_control req =
   in
   {headers;status=`OK;res_body=""}
 
+(* [send (stream,push) sendable] sends an SSE with a [sendable] payload to a 
+ * client through the [stream] using the [push] function *)
+let send (stream,push) sendable = 
+  if not (Lwt_stream.is_closed stream) then push sendable
+
 (* [send_new_score game_name player_name order score] sends an update with a 
  * JSON payload containg a player name, associated score, and order *)
 let send_new_score game_name player_name order score = 
@@ -89,12 +94,9 @@ let send_new_score game_name player_name order score =
     in
     Some result
   in
-  let send_update (stream,push) = 
-    if not (Lwt_stream.is_closed stream) then push sendable
-  in
   try
     let pushers = !(List.assoc game_name !game_pushers) in
-    List.iter (fun pusher -> send_update pusher) pushers
+    List.iter (fun pusher -> send pusher sendable) pushers
   with Not_found -> assert false
 
 (* [get_info req] gets the player and game names from the request [req] *)
@@ -231,15 +233,12 @@ let send_message req =
     in
     Some result
   in
-  let send_msg (stream,push) player_name msg = 
-    if not (Lwt_stream.is_closed stream) then push (create_msg player_name msg)
-  in
   let json = Yojson.Basic.from_string req.req_body in
   let (player_name,game_name) = get_info req in
   let msg = json |> member "msg" |> to_string in
   try
     let pushers = !(List.assoc game_name !msg_pushers) in
-    List.iter (fun pusher -> send_msg pusher player_name msg) pushers;
+    List.iter (fun pusher -> send pusher (create_msg player_name msg)) pushers;
     {headers;status=`OK;res_body=""}
   with
   | Not_found -> {
