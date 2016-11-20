@@ -35,3 +35,6 @@ val send_message : string -> string -> string -> unit
  * event source for message updates with the callback [callback] to process 
  * received JSON *)
 val subscribe_messaging : string -> (Yojson.Basic.json -> unit) -> unit
+
+(* [close_sources ()] closes the event sources *)
+val close_sources : unit -> unit

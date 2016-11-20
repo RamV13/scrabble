@@ -3,6 +3,7 @@ open Cohttp
 open Cohttp_lwt_unix
 open Yojson
 open HttpServer
+open Lwt
 
 open Game
 
@@ -88,7 +89,9 @@ let send_new_score game_name player_name order score =
     in
     Some result
   in
-  let send_update pusher = try pusher sendable with Lwt_stream.Closed -> () in
+  let send_update (stream,push) = 
+    if not (Lwt_stream.is_closed stream) then push sendable
+  in
   try
     let pushers = !(List.assoc game_name !game_pushers) in
     List.iter (fun pusher -> send_update pusher) pushers
@@ -199,7 +202,8 @@ let subscribe main_pushers req =
     let (st,push_st) = Lwt_stream.create () in
     let body = Cohttp_lwt_body.of_stream st in
     let pushers = List.assoc game_name !main_pushers in
-    pushers := push_st::!pushers;
+    Lwt_stream.closed st >>= (fun () -> print_endline "closed" |> return) |> Lwt_main.run;
+    pushers := (st,push_st)::!pushers;
     Server.respond ~headers ~flush:true ~status:`OK ~body ()
   with 
   | Not_found -> Server.respond ~headers:default_headers ~status:`Not_found 
@@ -227,8 +231,8 @@ let send_message req =
     in
     Some result
   in
-  let send_msg pusher player_name msg = 
-    try pusher (create_msg player_name msg) with Lwt_stream.Closed -> ()
+  let send_msg (stream,push) player_name msg = 
+    if not (Lwt_stream.is_closed stream) then push (create_msg player_name msg)
   in
   let json = Yojson.Basic.from_string req.req_body in
   let (player_name,game_name) = get_info req in

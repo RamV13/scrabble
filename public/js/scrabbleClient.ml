@@ -19,9 +19,14 @@ let to_list = Yojson.Basic.Util.to_list
 (* [to_int] is Yojson.Basic.Util.to_int *)
 let to_int = Yojson.Basic.Util.to_int
 
+(* [baseURL] is the base URL to request to *)
 let baseURL = "http://127.0.0.1" (* "http://128.253.51.200" *)
 
+(* [event_source_constructor] is a function to construct event sources *)
 let event_source_constructor = Js.Unsafe.global##_EventSource
+
+(* [event_sources] is a list event sources *)
+let event_sources = ref []
 
 (* [headers] is the default headers for JSON requests *)
 let headers = Header.init_with "content-type" "application/json"
@@ -108,6 +113,7 @@ let subscribe endpoint game_name callback =
   let base = Uri.of_string (baseURL ^ "/api/" ^ endpoint) in
   let url = Uri.with_query base [("gameName",[game_name])] |> Uri.to_string in
   let event_source = jsnew event_source_constructor (Js.string url) in
+  event_sources := event_source::!event_sources;
   event_source##onmessage <- Js.wrap_callback (fun event ->
     event##data
     |> Js.to_string
@@ -115,7 +121,6 @@ let subscribe endpoint game_name callback =
     |> callback
   );
   event_source##onerror <- Js.wrap_callback (fun event -> 
-    Dom_html.window##alert (event##data);
     event_source##close ()
   )
 
@@ -135,3 +140,6 @@ let send_message player_name game_name msg =
 
 let subscribe_messaging = 
   subscribe "messaging"
+
+let close_sources () = 
+  List.iter (fun event_source -> event_source##close ()) !event_sources

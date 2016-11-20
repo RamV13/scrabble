@@ -209,6 +209,7 @@ let onload _ =
 
 (* [onbeforeunload] is the callback for when the window is about to be leaved *)
 let onbeforeunload _ = 
+  ScrabbleClient.close_sources ();
   Js._false
 
 let _ = 
