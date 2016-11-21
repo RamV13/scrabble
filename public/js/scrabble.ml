@@ -161,10 +161,16 @@ let init_state () =
 
 (* [handle_send ()] is the callback for the send chat button *)
 let handle_send _ = 
-  let msg = Js.to_string (get_input_by_id "message")##value in
-  (get_input_by_id "message")##value <- Js.string "";
-  ScrabbleClient.send_message (!player_name) (!game_name) msg;
+  let input = get_input_by_id "message" in
+  let msg = Js.to_string input##value in
+  input##value <- Js.string "";
+  input##focus ();
+  if msg <> "" then ScrabbleClient.send_message (!player_name) (!game_name) msg;
   Js._false
+
+let handle_input event = 
+  if (event##keyCode = 13) then handle_send ()
+  else Js._false
 
 (* [message_callback json] is the callback for receiving messages from others *)
 let message_callback json = 
@@ -172,7 +178,9 @@ let message_callback json =
   let msg = json |> member "msg" |> to_string in
   let current_chat = Js.to_string ((get_element_by_id "chat")##innerHTML) in
   let new_chat = current_chat ^ "\n" ^ player_name ^ ": " ^ msg in
-  (get_element_by_id "chat")##innerHTML <- Js.string new_chat
+  let chat_window = get_element_by_id "chat" in
+  chat_window##innerHTML <- Js.string new_chat;
+  chat_window##scrollTop <- chat_window##scrollHeight
 
 (* [contains json key] is true only if the [key] is contained in the [json] *)
 let contains json key = 
@@ -203,6 +211,7 @@ let onload _ =
   register_tiles ();
   register_player_tiles ();
   (get_element_by_id "send")##onclick <- Dom_html.handler handle_send;
+  (get_element_by_id "message")##onkeyup <- Dom_html.handler handle_input;
   ScrabbleClient.subscribe_messaging (!game_name) message_callback;
   ScrabbleClient.subscribe_updates (!game_name) update_callback;
   Js._false
