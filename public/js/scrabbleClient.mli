@@ -1,4 +1,6 @@
 
+open Yojson.Basic
+
 (* [result] contains the resulting value from a request with possible errors *)
 type 'a result = Val of 'a 
                  | Exists of string
@@ -22,19 +24,19 @@ val leave_game : string -> string -> unit
 (* [execute_move name move] executes [move] on the game with name [name] *)
 val execute_move : string -> Game.move -> unit
 
-(* [subscribe_updates game_name callback] subscribes a client to a [game_name]
- * event source for game related updates with the callback [callback] to precess
- * received JSON *)
-val subscribe_updates : string -> (Yojson.Basic.json -> unit) -> unit
+(* [subscribe_updates player_name game_name callback] subscribes a client with 
+ * player name [player_name] to a [game_name] event source for game related 
+ * updates with the callback [callback] to precess received JSON *)
+val subscribe_updates : string -> string -> (json -> unit) -> unit
 
 (* [send_message player_name game_name msg] sends the message [msg] to the game 
  * with name [game_name] from the player with name [player_name] *)
 val send_message : string -> string -> string -> unit
 
-(* [subscribe_messaging game_name callback] subscribes a client to a [game_name] 
- * event source for message updates with the callback [callback] to process 
- * received JSON *)
-val subscribe_messaging : string -> (Yojson.Basic.json -> unit) -> unit
+(* [subscribe_messaging player_name game_name callback] subscribes a client with
+ * player name [player_name] to a [game_name] event source for message updates 
+ * with the callback [callback] to process received JSON *)
+val subscribe_messaging : string -> string -> (json -> unit) -> unit
 
 (* [close_sources ()] closes the event sources *)
 val close_sources : unit -> unit

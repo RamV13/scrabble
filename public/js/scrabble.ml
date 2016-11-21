@@ -172,8 +172,8 @@ let handle_input event =
   if (event##keyCode = 13) then handle_send ()
   else Js._false
 
-(* [message_callback json] is the callback for receiving messages from others *)
-let message_callback json = 
+(* [handle_message json] is the callback for receiving messages from others *)
+let handle_message json = 
   let player_name = json |> member "playerName" |> to_string in
   let msg = json |> member "msg" |> to_string in
   let current_chat = Js.to_string ((get_element_by_id "chat")##innerHTML) in
@@ -188,8 +188,8 @@ let contains json key =
   | `Null -> false
   | _ -> true
 
-(* [update_callback json] is the callback for receiving game updates *)
-let update_callback json = 
+(* [handle_update json] is the callback for receiving game updates *)
+let handle_update json = 
   let set_scoreboard player_name order score = 
     let name_id = "scorename-" ^ (string_of_int order) in
     let score_id = "score-" ^ (string_of_int order) in
@@ -212,14 +212,14 @@ let onload _ =
   register_player_tiles ();
   (get_element_by_id "send")##onclick <- Dom_html.handler handle_send;
   (get_element_by_id "message")##onkeyup <- Dom_html.handler handle_input;
-  ScrabbleClient.subscribe_messaging (!game_name) message_callback;
-  ScrabbleClient.subscribe_updates (!game_name) update_callback;
+  ScrabbleClient.subscribe_messaging (!player_name) (!game_name) handle_message;
+  ScrabbleClient.subscribe_updates (!player_name) (!game_name) handle_update;
   Js._false
 
 (* [onbeforeunload] is the callback for when the window is about to be leaved *)
 let onbeforeunload _ = 
   ScrabbleClient.close_sources ();
-  Js._false
+  Js._true
 
 let _ = 
   Dom_html.window##onload <- Dom_html.handler onload;

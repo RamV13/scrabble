@@ -73,10 +73,19 @@ let cors_control req =
   in
   {headers;status=`OK;res_body=""}
 
-(* [send (stream,push) sendable] sends an SSE with a [sendable] payload to a 
- * client through the [stream] using the [push] function *)
-let send (stream,push) sendable = 
-  if not (Lwt_stream.is_closed stream) then push sendable
+(* [send main_pushers game_name sendable] sends an SSE with a [sendable] payload
+ * to all valid clients of the game [game_name] in the [main_pushers] list *)
+let send main_pushers game_name sendable = 
+  let pushers = List.assoc game_name !main_pushers in
+  let game = List.find (fun game -> game.name = game_name) !games in
+  let is_valid (player_name,_,_) = 
+    List.exists (fun player -> player.player_name = player_name) game.players
+  in
+  pushers := List.filter is_valid !pushers;
+  let send_downstream (_,stream,push) = 
+    if not (Lwt_stream.is_closed stream) then push sendable
+  in
+  List.iter send_downstream !pushers
 
 (* [send_new_score game_name player_name order score] sends an update with a 
  * JSON payload containg a player name, associated score, and order *)
@@ -95,8 +104,7 @@ let send_new_score game_name player_name order score =
     Some result
   in
   try
-    let pushers = !(List.assoc game_name !game_pushers) in
-    List.iter (fun pusher -> send pusher sendable) pushers
+    send game_pushers game_name sendable
   with Not_found -> assert false
 
 (* [get_info req] gets the player and game names from the request [req] *)
@@ -201,10 +209,11 @@ let subscribe main_pushers req =
       |> fun header -> Header.add header "cache-control" "no-cache"
     in
     let game_name = List.assoc "gameName" req.params in
+    let player_name = List.assoc "playerName" req.params in
     let (st,push_st) = Lwt_stream.create () in
     let body = Cohttp_lwt_body.of_stream st in
     let pushers = List.assoc game_name !main_pushers in
-    pushers := (st,push_st)::!pushers;
+    pushers := (player_name,st,push_st)::!pushers;
     Server.respond ~headers ~flush:true ~status:`OK ~body ()
   with 
   | Not_found -> Server.respond ~headers:default_headers ~status:`Not_found 
@@ -236,8 +245,7 @@ let send_message req =
   let (player_name,game_name) = get_info req in
   let msg = json |> member "msg" |> to_string in
   try
-    let pushers = !(List.assoc game_name !msg_pushers) in
-    List.iter (fun pusher -> send pusher (create_msg player_name msg)) pushers;
+    send msg_pushers game_name (create_msg player_name msg);
     {headers;status=`OK;res_body=""}
   with
   | Not_found -> {

@@ -107,11 +107,16 @@ let leave_game player_name game_name =
 let execute_move id move = 
   () (* TODO *)
 
-(* [subscribe endpoint game_name callback] subscribes a callback to a event 
- * source of the game with name [game_name] associated with an endpoint *)
-let subscribe endpoint game_name callback = 
+(* [subscribe endpoint player_name game_name callback] subscribes a callback for
+ * a player with name [player_name] an event source of the game with name 
+ * [game_name] associated with an endpoint
+ *)
+let subscribe endpoint player_name game_name callback = 
   let base = Uri.of_string (baseURL ^ "/api/" ^ endpoint) in
-  let url = Uri.with_query base [("gameName",[game_name])] |> Uri.to_string in
+  let url = 
+    Uri.with_query base [("gameName",[game_name]); ("playerName",[player_name])]
+    |> Uri.to_string
+  in
   let event_source = jsnew event_source_constructor (Js.string url) in
   event_sources := event_source::!event_sources;
   event_source##onmessage <- Js.wrap_callback (fun event ->
