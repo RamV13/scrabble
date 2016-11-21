@@ -38,22 +38,22 @@ let save_game game_state =
 let handle_btn_join btn _ = 
   let player_name = Js.to_string (get_input_by_id "text_name")##value in
   let game_name = Js.to_string (get_input_by_id "text_game")##value in
-  ignore (ScrabbleClient.join_game player_name game_name
-  >>= fun result ->
-      begin
-        (match result with
-        | Val state -> 
-          begin
-            save_info player_name game_name;
-            save_game state;
-            Dom_html.window##location##href <- Js.string "scrabble.html"
-          end
-        | Not_found msg -> Dom_html.window##alert (Js.string msg)
-        | Full msg -> Dom_html.window##alert (Js.string msg)
-        | Exists msg -> Dom_html.window##alert (Js.string msg)
-        | Server_error msg -> Dom_html.window##alert (Js.string msg));
-        Lwt.return ()
-      end);
+  ScrabbleClient.join_game player_name game_name >>= (fun result ->
+    begin
+      (match result with
+      | Val state -> 
+        begin
+          save_info player_name game_name;
+          save_game state;
+          Dom_html.window##location##href <- Js.string "scrabble.html"
+        end
+      | Not_found msg -> Dom_html.window##alert (Js.string msg)
+      | Full msg -> Dom_html.window##alert (Js.string msg)
+      | Exists msg -> Dom_html.window##alert (Js.string msg)
+      | Server_error msg -> Dom_html.window##alert (Js.string msg));
+      return ()
+    end)
+  |> ignore;
   Js._false
 
 (* [handle_btn_create btn ()] is the callback to handle the click events of the 
@@ -61,22 +61,22 @@ let handle_btn_join btn _ =
 let handle_btn_create btn _ = 
   let player_name = Js.to_string (get_input_by_id "text_name")##value in
   let game_name = Js.to_string (get_input_by_id "text_game")##value in
-  ignore (ScrabbleClient.create_game player_name game_name
-  >>= fun result ->
-      begin
-        (match result with
-        | Val state ->
-          begin
-            save_info player_name game_name;
-            save_game state;
-            Dom_html.window##location##href <- Js.string "scrabble.html"
-          end
-        | Exists msg -> Dom_html.window##alert (Js.string msg)
-        | Server_error msg -> Dom_html.window##alert (Js.string msg)
-        | _ -> assert false
-        );
-        Lwt.return ()
-      end);
+  ScrabbleClient.create_game player_name game_name >>= (fun result ->
+    begin
+      (match result with
+      | Val state ->
+        begin
+          save_info player_name game_name;
+          save_game state;
+          Dom_html.window##location##href <- Js.string "scrabble.html"
+        end
+      | Exists msg -> Dom_html.window##alert (Js.string msg)
+      | Server_error msg -> Dom_html.window##alert (Js.string msg)
+      | _ -> assert false
+      );
+      Lwt.return ()
+    end)
+  |> ignore;
   Js._false
 
 (* [onload ()] is the callback for when the window is loaded *)
