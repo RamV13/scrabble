@@ -204,7 +204,6 @@ let subscribe main_pushers req =
     let (st,push_st) = Lwt_stream.create () in
     let body = Cohttp_lwt_body.of_stream st in
     let pushers = List.assoc game_name !main_pushers in
-    Lwt_stream.closed st >>= (fun () -> print_endline "closed" |> return) |> Lwt_main.run;
     pushers := (st,push_st)::!pushers;
     Server.respond ~headers ~flush:true ~status:`OK ~body ()
   with 
