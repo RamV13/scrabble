@@ -23,39 +23,6 @@
 
   <body id="body" style="background: #009688">
 
-    <div class="tiles">
-        <table class="mdl-data-table mdl-js-data-table mdl-shadow--16dp" style="border-radius: 2px">
-          <thead>
-            <tr>
-              <th class="mdl-data-table__cell--non-numeric">Tiles</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td id="tile-0" class="tiles-td">&nbsp;</td>
-            </tr>
-            <tr>
-              <td id="tile-1" class="tiles-td">&nbsp;</td>
-            </tr>
-            <tr>
-              <td id="tile-2" class="tiles-td">&nbsp;</td>
-            </tr>
-            <tr>
-              <td id="tile-3" class="tiles-td">&nbsp;</td>
-            </tr>
-            <tr>
-              <td id="tile-4" class="tiles-td">&nbsp;</td>
-            </tr>
-            <tr>
-              <td id="tile-5" class="tiles-td">&nbsp;</td>
-            </tr>
-            <tr>
-              <td id="tile-6" class="tiles-td">&nbsp;</td>
-            </tr>
-          </tbody>
-        </table>
-    </div>
-
     <div class="score">
         <table class="mdl-data-table mdl-js-data-table mdl-shadow--16dp" style="border-radius: 5px">
           <thead>
@@ -83,6 +50,31 @@
             </tr>
           </tbody>
         </table>
+    </div>
+
+    <div class="tiles mdl-card mdl-shadow--16dp">
+        <div class="mdl-card__title">
+          <h2 class="mdl-card__title-text">Tiles</h2>
+        </div>
+        <div class="mdl-card__actions mdl-card--border"></div>
+        <table class="tiles-table mdl-data-table mdl-js-data-table mdl-shadow--4dp">
+          <tbody>
+            <tr>
+              <td id="tile-0" class="tiles-td">&nbsp;</td>
+              <td id="tile-1" class="tiles-td">&nbsp;</td>
+              <td id="tile-2" class="tiles-td">&nbsp;</td>
+              <td id="tile-3" class="tiles-td">&nbsp;</td>
+              <td id="tile-4" class="tiles-td">&nbsp;</td>
+              <td id="tile-5" class="tiles-td">&nbsp;</td>
+              <td id="tile-6" class="tiles-td">&nbsp;</td>
+            </tr>
+          </tbody>
+        </table>
+        <center class="mdl-card__actions mdl-card--border">
+          <button id="submit" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+            Submit
+          </button>
+        </center>
     </div>
 
     <div style="position: absolute;top: 50%;left: 50%;transform: translateX(-50%) translateY(-50%)">
@@ -345,11 +337,11 @@
       </table>
     </div>
 
-    <div class="chat mdl-card mdl-shadow--2dp">
+    <div class="chat mdl-card mdl-shadow--16dp">
         <div class="mdl-card__title">
           <h2 class="mdl-card__title-text">Chat</h2>
         </div>
-        <div class="mdl-card__actions mdl-card--border">
+        <div class="mdl-card__actions mdl-card--border"></div>
         <div id="chat" class="mdl-card__supporting-text" style="white-space: pre-wrap">
         </div>
         <div class="mdl-card__actions mdl-card--border">

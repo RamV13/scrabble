@@ -25,14 +25,23 @@ body {
 .tiles {
     position: absolute;
     margin: 0;
-    top: 50%;
-    left: 20%;
+    top: 60%;
+    left: 13%;
     transform: translate(-50%, -50%);
+}
+
+.tiles-table {
+    margin-left: 6px;
+    margin-bottom: 20px;
+    border-radius: 2px;
 }
 
 .tiles-td {
     border: 1px solid #FAFAFA;
     background: #EFEBE9;
+    box-sizing: initial !important;
+    padding: 16px !important;
+    width: 0.8vw !important;
     font-size: 18px;
     line-height: 18px;
     text-align: center !important;
@@ -41,8 +50,8 @@ body {
 .score {
     position: absolute;
     margin: 0;
-    top: 50%;
-    left: 8%;
+    top: 20%;
+    left: 13%;
     transform: translate(-50%, -50%);
 }
 
