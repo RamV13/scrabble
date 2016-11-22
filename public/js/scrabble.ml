@@ -23,6 +23,9 @@ let player_name = ref ""
 (* [game_name] is the name of the game *)
 let game_name = ref ""
 
+(* [loaded] is a boolean flag to indicate if the page is fresh *)
+let loaded = ref false
+
 (* [board_id] is the HTML id for the board *)
 let board_id = "board"
 
@@ -54,6 +57,10 @@ let local_storage =
 let get key = 
   Js.Opt.get (local_storage##getItem (Js.string key)) fail |> Js.to_string
 
+let set key value = 
+  local_storage##setItem (Js.string key,Js.string value)
+
+(* [remove key] removes the pair associated with [key] from localStorage *)
 let remove key = 
   local_storage##removeItem (Js.string key)
 
@@ -233,7 +240,8 @@ let handle_update json =
 let onload _ =
   (try
     init_state ();
-    get_info ()
+    get_info ();
+    loaded := true
   with _ -> Dom_html.window##location##href <- Js.string "index.html");
   register_tiles ();
   register_player_tiles ();
@@ -246,8 +254,12 @@ let onload _ =
 
 (* [onunload] is the callback for when the window is about to be leaved *)
 let onunload _ = 
-  ScrabbleClient.leave_game (!player_name) (!game_name);
-  ScrabbleClient.close_sources ();
+  if !loaded then
+    begin
+      ScrabbleClient.leave_game (!player_name) (!game_name);
+      ScrabbleClient.close_sources ();
+      loaded := false
+    end;
   Js._false
 
 let _ = 
