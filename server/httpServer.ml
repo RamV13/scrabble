@@ -57,6 +57,7 @@ let callback _ req body =
   with Not_found -> Server.respond_string ~status:`Not_found ~body:"" ()
 
 let run ?(port=8000) _ = 
+  Lwt.async_exception_hook := ignore;
   Server.create ~mode:(`TCP (`Port port)) (Server.make ~callback ())
   |> Lwt_main.run
   |> ignore
