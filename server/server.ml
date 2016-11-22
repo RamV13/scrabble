@@ -69,7 +69,7 @@ let cors_control req =
     |> fun header -> Header.add header "Access-Control-Allow-Headers" 
                                        "content-type"
     |> fun header -> Header.add header "Access-Control-Allow-Methods"
-                                       "GET,POST,PUT,OPTIONS"
+                                       "GET,POST,PUT,DELETE,OPTIONS"
   in
   {headers;status=`OK;res_body=""}
 
