@@ -101,7 +101,7 @@ let leave_game player_name game_name =
     req_body = "{\"playerName\":\"" ^ player_name ^ "\", \"gameName\":\"" ^ 
                 game_name ^ "\"}"
   }
-  |> XHRClient.exec
+  |> XHRClient.exec_sync
   |> ignore
 
 let execute_move id move = 

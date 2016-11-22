@@ -18,7 +18,7 @@ val join_game : string -> string -> Game.state result Lwt.t
 val create_game : string -> string -> Game.state result Lwt.t
 
 (* [leave_game player_name game_name] removes the player with name [player_name]
- * from the game with the name [game_name] *)
+ * from the game with the name [game_name] synchronously *)
 val leave_game : string -> string -> unit
 
 (* [execute_move name move] executes [move] on the game with name [name] *)

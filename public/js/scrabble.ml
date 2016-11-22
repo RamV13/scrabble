@@ -159,6 +159,10 @@ let init_state () =
   game_state.players
   |> List.iter (fun p -> set_scoreboard_name p !count; count := !count + 1)
 
+(* [handle_submit ()] is the callback for the submit game button *)
+let handle_submit _ = 
+  Js._false
+
 (* [handle_send ()] is the callback for the send chat button *)
 let handle_send _ = 
   let input = get_input_by_id "message" in
@@ -210,6 +214,7 @@ let onload _ =
   get_info ();
   register_tiles ();
   register_player_tiles ();
+  (get_element_by_id "submit")##onclick <- Dom_html.handler handle_submit;
   (get_element_by_id "send")##onclick <- Dom_html.handler handle_send;
   (get_element_by_id "message")##onkeyup <- Dom_html.handler handle_input;
   ScrabbleClient.subscribe_messaging (!player_name) (!game_name) handle_message;
@@ -218,8 +223,9 @@ let onload _ =
 
 (* [onbeforeunload] is the callback for when the window is about to be leaved *)
 let onbeforeunload _ = 
+  ScrabbleClient.leave_game (!player_name) (!game_name);
   ScrabbleClient.close_sources ();
-  Js._true
+  Js._false
 
 let _ = 
   Dom_html.window##onload <- Dom_html.handler onload;

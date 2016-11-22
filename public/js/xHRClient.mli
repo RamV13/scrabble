@@ -17,6 +17,10 @@ type response = {
   res_body : string
 }
 
-(* [exec request] performs a synchronous HTTP request with the [request] payload
- * and provides the value of the response data wrapped in an Lwt thread *)
+(* [exec request] performs an asynchronous HTTP request with the [request] 
+ * payload and provides the response data wrapped in an Lwt thread *)
 val exec : request -> response Lwt.t
+
+(* [exec_sync request] performs a synchronous HTTP request with the [request]
+ * payload and provides the response data wrapped in an Lwt thread *)
+val exec_sync : request -> response Lwt.t
