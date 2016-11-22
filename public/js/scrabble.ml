@@ -41,9 +41,6 @@ let dark_tile_background = "#D7CCC8"
 (* [current_tile] is the current focused tile *)
 let current_tile : Dom_html.element Js.t option ref = ref None
 
-(* [current_value] is the current tile value about to be placed *)
-let current_value : string option ref = ref None
-
 (* [fail] is a failure callback *)
 let fail = fun _ -> assert false
 
@@ -67,10 +64,27 @@ let get_info () =
   remove "playerName";
   remove "gameName"
 
-(* [blur_current_tile ()] blurs focus on current tile by resetting its color *)
-let blur_current_tile () = 
+(* [current_value ()] gets the current value of the current tile if selected *)
+let current_value () = 
+  match !current_tile with
+  | Some elt -> Some (Js.to_string elt##innerHTML)
+  | _ -> None
+
+(* [blur_current_tile ()] blurs focus on the current selected player tile *)
+let blur_current_tile () =
   match !current_tile with
   | Some elt -> elt##style##backgroundColor <- Js.string tile_background
+  | _ -> ()
+
+(* [reset_current_tile ()] resets the current tile *)
+let reset_current_tile () = 
+  match !current_tile with
+  | Some elt -> 
+    begin
+      blur_current_tile (); 
+      elt##innerHTML <- Js.string "";
+      current_tile := None
+    end
   | _ -> ()
 
 (* [get_element_by_id id] gets a DOM element by [id] *)
@@ -89,7 +103,7 @@ let get_tile row col =
 
 (* [handle_tile row col] is the callback to handle board tile clicks *)
 let handle_tile row col _ = 
-  (match !current_value with
+  (match current_value () with
   | Some value -> 
     begin
       let tile = get_tile row col in
@@ -99,12 +113,16 @@ let handle_tile row col _ =
         | None -> true
         | _ -> false
       in
-      if not_bonus 
-      then tile##style##backgroundColor <- Js.string dark_tile_background;
-      tile##innerHTML <- Js.string value
+      let filled = String.length (Js.to_string tile##innerHTML) = 1 in
+      if not filled then
+        begin
+          if not_bonus
+          then tile##style##backgroundColor <- Js.string dark_tile_background;
+          tile##innerHTML <- Js.string value;
+          reset_current_tile ()
+        end
     end
   | _ -> ());
-  blur_current_tile ();
   (* TODO remove used tile and replace with new tile *)
   Js._false
 
@@ -127,9 +145,12 @@ let get_player_tile row =
 (* [handle_player_tile row] is the callback to handle player tile clicks *)
 let handle_player_tile row _ = 
   blur_current_tile ();
-  (get_player_tile row)##style##backgroundColor <- Js.string "#fff";
-  current_tile := Some (get_player_tile row);
-  current_value := Some (Js.to_string (get_player_tile row)##innerHTML);
+  let new_value = Js.to_string (get_player_tile row)##innerHTML in
+  if new_value <> "" then
+    begin
+      (get_player_tile row)##style##backgroundColor <- Js.string "#fff";
+      current_tile := Some (get_player_tile row)
+    end;
   Js._false
 
 (* [register_player_tiles ()] registers the callbacks for all player tiles *)
