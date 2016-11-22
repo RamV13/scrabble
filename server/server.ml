@@ -194,6 +194,7 @@ let leave_game req =
   let json = Yojson.Basic.from_string req.req_body in
   let game_name = json |> member "gameName" |> to_string in
   let player_name = json |> member "playerName" |> to_string in
+  print_endline (player_name ^ " is leaving " ^ game_name);
   {headers;status=`OK;res_body=""}
 
 (* [subscribe main_pushers req] registers a client to recieve game updates
