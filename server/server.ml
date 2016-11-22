@@ -201,7 +201,7 @@ let leave_game req =
 let subscribe main_pushers req = 
   try
     let headers = 
-      Header.init_with "Access-Control-Allow-Origin" "*" 
+      Header.init_with "Access-Control-Allow-Origin" origin 
       |> fun header -> Header.add header "Access-Control-Allow-Headers" 
                                          "content-type"
       |> fun header -> Header.add header "Access-Control-Allow-Methods" "GET"
