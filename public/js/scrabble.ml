@@ -18,6 +18,8 @@ let to_list = Yojson.Basic.Util.to_list
 (* [to_int] is Yojson.Basic.Util.to_int *)
 let to_int = Yojson.Basic.Util.to_int
 
+(* [cur_player] is the current player *)
+let cur_player = ref {player_name="";tiles=[];score=0;order=0;ai=false}
 (* [player_name] is the name of the player *)
 let player_name = ref ""
 (* [game_name] is the name of the game *)
@@ -31,18 +33,18 @@ let board_id = "board"
 
 (* [board_dimension] is the dimension of the board *)
 let board_dimension = 15
-
 (* [num_player_tiles] is the number of player tiles *)
 let num_player_tiles = 7
 
 (* [tile_background] is the value of the tile background color *)
 let tile_background = "#EFEBE9"
-
 (* [dark_tile_background] is the value of the dark tile background color *)
 let dark_tile_background = "#D7CCC8"
 
 (* [current_tile] is the current focused tile *)
 let current_tile : Dom_html.element Js.t option ref = ref None
+(* [placed_tiles] is the current list of placed tiles as an association list *)
+let placed_tiles : ((int * int) * char) list ref = ref []
 
 (* [fail] is a failure callback *)
 let fail = fun _ -> assert false
@@ -67,9 +69,7 @@ let remove key =
 (* [get_info ()] gets the player name and game name from localStorage *)
 let get_info () = 
   player_name := get "playerName";
-  game_name := get "gameName";
-  remove "playerName";
-  remove "gameName"
+  game_name := get "gameName"
 
 (* [current_value ()] gets the current value of the current tile if selected *)
 let current_value () = 
@@ -126,6 +126,7 @@ let handle_tile row col _ =
           if not_bonus
           then tile##style##backgroundColor <- Js.string dark_tile_background;
           tile##innerHTML <- Js.string value;
+          placed_tiles := ((row,col),value.[0])::!placed_tiles;
           reset_current_tile ()
         end
     end
@@ -172,6 +173,31 @@ let register_player_tiles () =
   in
   aux (num_player_tiles - 1)
 
+(* [reset_player_tiles ()] resets player tiles based on the current player *)
+let reset_player_tiles () = 
+  let reset_tile row col = 
+    let tile = get_tile row col in
+    let not_bonus = 
+      (Js.to_string tile##style##backgroundColor) = "rgb(215, 204, 200)"
+    in
+    if not_bonus
+    then tile##style##backgroundColor <- Js.string tile_background;
+    tile##innerHTML <- Js.string "&nbsp;"
+  in
+  List.iter (fun ((row,col),_) -> reset_tile row col) !placed_tiles;
+  placed_tiles := [];
+  let rec aux row = 
+    if row >= 0 then
+      begin
+        let tile = get_player_tile row in
+        (* TODO retrieve from real players' tiles *)
+        let value = "A" in (* Char.escaped (List.nth (!cur_player).tiles row) in *)
+        tile##innerHTML <- Js.string value;
+        aux (row - 1)
+      end
+  in
+  aux (num_player_tiles - 1)
+
 (* [init_state ()] initializes the UI components with the information from the 
  * game state saved in localStorage *)
 let init_state () = 
@@ -185,7 +211,13 @@ let init_state () =
   let count = ref 0 in
   remove "gameState";
   game_state.players
-  |> List.iter (fun p -> set_scoreboard_name p !count; count := !count + 1)
+  |> List.iter (fun p -> set_scoreboard_name p !count; count := !count + 1);
+  let player = 
+    game_state.players
+    |> List.find (fun player -> player.player_name = (!player_name))
+  in
+  cur_player := player;
+  reset_player_tiles ()
 
 (* [handle_submit ()] is the callback for the submit button of the game *)
 let handle_submit _ = 
@@ -193,6 +225,7 @@ let handle_submit _ =
 
 (* [handle_reset ()] is the callback for the reset button of the game *)
 let handle_reset _ = 
+  reset_player_tiles ();
   Js._false
 
 (* [handle_send ()] is the callback for the send chat button *)
@@ -243,8 +276,10 @@ let handle_update json =
 (* [onload] is the callback for when the window is loaded *)
 let onload _ =
   (try
-    init_state ();
     get_info ();
+    init_state ();
+    remove "playerName";
+    remove "gameName";
     loaded := true
   with _ -> Dom_html.window##location##href <- Js.string "index.html");
   register_tiles ();
