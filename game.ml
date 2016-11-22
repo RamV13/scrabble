@@ -43,6 +43,26 @@ type diff = {
   players_diff : player list
 }
 
+(* for initializing names to be used in create game *)
+(* [names_file] is the file containing a list of line separated names *)
+let names_file = "names.txt"
+(* [names] is the list of computer names *)
+let names = ref []
+
+let init_names () = 
+  let input_channel = open_in names_file in
+  try
+    let rec process_line () = 
+      let line = input_line input_channel in
+      names := line::!names;
+      process_line ()
+    in
+    ignore (process_line ());
+    close_in input_channel
+  with
+  | End_of_file -> close_in input_channel
+  | exc -> close_in_noerr input_channel; raise exc
+
 let create_bag () = 
   (* todo this is off *)
   [
@@ -94,24 +114,15 @@ let add_player s p_n =
  * current game [state], and returns the new state. It replaces the old player
  * with a computer that inherits the removed player's tiles, score, turn, and id
  * raises Failure if there is no player in the game with [player_id] *)
-let remove_player s p_n = 
-  (* let rec get_new_players players acc pl_found =
-    match players with
-    | h::t ->
-      if h.player_name = p_id then 
-        let new_ai = 
-          {h with player_name="Computer "^(string_of_int h.order); ai=true} in
-        get_new_players t (acc @ [new_ai]) true
-      else
-        get_new_players t (acc @ [h]) pl_found
-    | [] -> 
-      if not pl_found then failwith "Player not found"
-      else acc
+let remove_player (s : state) (p_n : string) : (string * int) = 
+  let substituted = 
+    try List.find (fun player -> player.player_name = p_n) s.players
+    with Not_found -> assert false
   in
-  let new_players = get_new_players s.players [] false in
-  {s with players=new_players}
-  *)
-  failwith "unimplemented"
+  substituted.player_name <- ((List.hd !names) ^ " (AI)");
+  names := List.tl !names;
+  substituted.ai <- false;
+  (substituted.player_name,substituted.order)
 
 (* [execute state move] executes a [move] to produce a new game state from the 
  * previous game state [state] *)
@@ -194,20 +205,6 @@ let from_json json =
     remaining_tiles = r;
     turn = t
   }
-(* for testing *)
-(* 
-let _ = 
-  to_json { name = "game"; grid = Grid.empty; players = []; remaining_tiles = ['a'; 'b']; turn = 0}
-  |> Yojson.Basic.from_string |> from_json |> to_json |> print_endline
-*)
-
-(* COPIED STUFF *)
-
-(* for initializing names to be used in create game *)
-(* [names_file] is the file containing a list of line separated names *)
-let names_file = "names.txt"
-(* [names] is the list of computer names *)
-let names = ref []
 
 (* given bag and n # of tiles to take, return tiles taken and new bag *)
 let take_tiles bag num_to_take = 
@@ -231,20 +228,6 @@ let take_tiles bag num_to_take =
       aux (t::tiles) bag' (n - 1)
   in
   aux [] bag num_to_take
-
-let init_names () = 
-  let input_channel = open_in names_file in
-  try
-    let rec process_line () = 
-      let line = input_line input_channel in
-      names := line::!names;
-      process_line ()
-    in
-    ignore (process_line ());
-    close_in input_channel
-  with
-  | End_of_file -> close_in input_channel
-  | exc -> close_in_noerr input_channel; raise exc
 
 let create_game p_n g_n = 
   let grid = Grid.empty in
@@ -278,6 +261,11 @@ let move_from_json j =
 
 let _ = 
   init_names ();
-  create_game "Brian" "mygame" |> to_json |> print_endline
+  (* create_game "Brian" "mygame" |> to_json |> print_endline *)
+  let game = create_game "Brian" "mygame" in 
+  let x = add_player game "Ram" in 
+  let y = remove_player game "Brian" in 
+  game |> to_json |> print_endline
+
 
 
