@@ -231,8 +231,10 @@ let handle_update json =
 
 (* [onload] is the callback for when the window is loaded *)
 let onload _ =
-  init_state ();
-  get_info ();
+  (try
+    init_state ();
+    get_info ()
+  with _ -> Dom_html.window##location##href <- Js.string "index.html");
   register_tiles ();
   register_player_tiles ();
   (get_element_by_id "submit")##onclick <- Dom_html.handler handle_submit;
@@ -242,12 +244,12 @@ let onload _ =
   ScrabbleClient.subscribe_updates (!player_name) (!game_name) handle_update;
   Js._false
 
-(* [onbeforeunload] is the callback for when the window is about to be leaved *)
-let onbeforeunload _ = 
+(* [onunload] is the callback for when the window is about to be leaved *)
+let onunload _ = 
   ScrabbleClient.leave_game (!player_name) (!game_name);
   ScrabbleClient.close_sources ();
   Js._false
 
 let _ = 
   Dom_html.window##onload <- Dom_html.handler onload;
-  Dom_html.window##onbeforeunload <- Dom_html.handler onbeforeunload
+  Dom_html.window##onunload <- Dom_html.handler onunload
