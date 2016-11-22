@@ -221,6 +221,7 @@ let init_state () =
 
 (* [handle_submit ()] is the callback for the submit button of the game *)
 let handle_submit _ = 
+  (* TODO send up diff tiles from `placed_tiles` *)
   Js._false
 
 (* [handle_reset ()] is the callback for the reset button of the game *)
