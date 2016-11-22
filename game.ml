@@ -13,7 +13,7 @@ type player = {
   mutable ai : bool
 }
 
-(* [state] contains the game's identification information, board, players, 
+(* [state] contains the game's identification information, board, players,
  * remaining tiles (i.e. bag), and turn *)
 type state = {
   name : string;
@@ -27,8 +27,8 @@ type state = {
  * characters to be placed in specific coordinates as well as the player id of
  * the player who performs the move *)
 type move = {
-  tiles_placed : (char * (int * int)) list;
-  player : int
+  tiles_placed : ((int * int) * char) list;
+  player : string
 }
 
 (* [diff] is a representation of the difference between two game states. There
@@ -36,10 +36,8 @@ type move = {
  * be no difference (in the case of adding/removing players or a failed move) or
  * the move given to a state *)
 type diff = {
-  score_diff : int list;
-  added_tiles : char list;
-  removed_tiles : char list;
-  turn_diff : int;
+  board_diff : ((int * int) * char) list;
+  new_turn_val : int;
   players_diff : player list
 }
 
@@ -127,7 +125,16 @@ let remove_player (s : state) (p_n : string) : (string * int) =
 (* [execute state move] executes a [move] to produce a new game state from the 
  * previous game state [state] *)
 let execute s m =
-  failwith "unimplemented"
+  let tiles_pl = m.tiles_placed in
+  let p_n = m.player in
+  let substituted = 
+    try List.find (fun player -> player.player_name = p_n) s.players
+    with Not_found -> assert false
+  in
+  substituted.score <- (substituted.score + 1);
+  s.turn <- ((s.turn + 1) mod 4);
+  (* later: player diff sometimes is just empty *)
+  {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [substituted]}
 
 let char_list_to_json lst =
   let rec aux l acc =
