@@ -1,3 +1,5 @@
+open Yojson
+
 type board = (char option) list list
 
 type neighbors = {
@@ -77,3 +79,30 @@ let get_neighbors board x y : neighbors =
    bottom = get_tile board (x+1) y;
    left = get_tile board x (y-1);
    right = get_tile board x (y+1)}
+
+let rec jsonify_row row result : json = match row with
+|[] -> `List (List.rev(result))
+|h::t -> match h with
+  |Some c -> jsonify_row t (`String (Char.escaped c) :: result)
+  |None -> jsonify_row t (`String "" :: result)
+
+let rec to_json_helper board result_board : json = match board with
+|[] -> `List (List.rev(result_board))
+|h::t -> to_json_helper t ((jsonify_row h []) :: result_board)
+
+let to_json board : string =
+  Yojson.to_string (to_json_helper board [])
+
+let rec row_to_option row result = match row with
+|[] -> List.rev(result)
+|h::t -> if Yojson.Basic.Util.to_string h = "" then row_to_option t (None :: result)
+  else row_to_option t ((Some (String.get (Yojson.Basic.Util.to_string h) 0)) :: result)
+
+let dejsonify_row row = row_to_option (Yojson.Basic.Util.to_list row) []
+
+let rec dejsonify board result = match board with
+|[] -> List.rev(result)
+|h::t -> dejsonify t ((dejsonify_row h) :: result)
+
+let from_json j = 
+  dejsonify (Yojson.Basic.Util.to_list j) []
