@@ -123,7 +123,7 @@ let remove_player (s : state) (p_n : string) : (string * int) =
   in
   substituted.player_name <- ((List.hd !names) ^ " (AI)");
   names := List.tl !names;
-  substituted.ai <- false;
+  substituted.ai <- true;
   (substituted.player_name,substituted.order)
 
 (* [execute state move] executes a [move] to produce a new game state from the 
@@ -301,10 +301,10 @@ let json_tp_to_tp tiles_placed =
   let rec aux tp acc = 
     match tp with
     | h::t -> 
-      let x = member "x" h |> to_int in
-      let y = member "y" h |> to_int in
-      let c = member "char" h |> to_string |> str_to_c in
-      aux t (((x,y),c)::acc)
+      let row = member "row" h |> to_int in
+      let col = member "col" h |> to_int in
+      let value = member "value" h |> to_string |> str_to_c in
+      aux t (((row,col),value)::acc)
     | [] -> acc
   in
   aux tiles_placed []
