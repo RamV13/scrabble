@@ -19,6 +19,9 @@ val mem: string -> t -> bool
 (*[is_leaf] returns whether or not a given string is fully extended*)
 val is_leaf : string -> t -> bool
 
+(*[is_valid_word] returns whether or not a given string is a valid word*)
+val is_valid_word : string -> t -> bool
+
 (*[extenstions] returns all possible extentions of an input string*)
 val extensions : string -> t -> string list
 
