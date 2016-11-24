@@ -260,19 +260,52 @@ let create_game p_n g_n =
   in
   {name=g_n; grid; players=List.rev players; remaining_tiles=new_bag; turn=0}
 
+let board_diff_to_json board_diff = 
+  let rec aux bd acc = 
+    match bd with 
+    | ((x,y),c)::[] -> 
+      acc ^ "{\"x\":" ^ (string_of_int x) ^ ",\"y\":" ^ (string_of_int y) ^ 
+      ",\"char\":\"" ^ (Char.escaped c) ^ "\"}"
+    | ((x,y),c)::t -> 
+      (acc ^ "{\"x\":" ^ (string_of_int x) ^ ",\"y\":" ^ (string_of_int y) ^ 
+      ",\"char\":\"" ^ (Char.escaped c) ^ "\"},")
+      |> aux t
+    | [] -> acc
+  in
+  aux board_diff ""
+
 let diff_to_json d = 
-  "hi"
+  "{\"board_diff\": [" ^ (board_diff_to_json d.board_diff) ^ 
+  "],\"new_turn_val\": " ^ (string_of_int d.new_turn_val) ^ 
+  ",\"players_diff\": [" ^ (players_to_json d.players_diff) ^ "]}"
 
 let move_from_json j = 
   failwith "unimplemented"
 
 let _ = 
-  init_names ();
+  (*init_names ();
   (* create_game "Brian" "mygame" |> to_json |> print_endline *)
   let game = create_game "Brian" "mygame" in 
   let x = add_player game "Ram" in 
   let y = remove_player game "Brian" in 
-  game |> to_json |> print_endline
+  game |> to_json |> print_endline *)
+  let p = 
+    {
+      player_name = "Brian";
+      tiles = ['a';'b';'c';'d';'e';'f';'g'];
+      score = 100;
+      order = 2;
+      ai = false
+    }
+  in
+  let x = 
+    {
+      board_diff = [((0,0),'a');((1,1),'e')];
+      new_turn_val = 3;
+      players_diff = [p]
+    }
+  in
+  print_endline (diff_to_json x)
 
 
 
