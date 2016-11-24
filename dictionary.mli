@@ -27,3 +27,8 @@ val extensions : string -> t -> string list
 
 (*[make] is a function which accepts a string and returns a completed trie*)
 val make : string -> t
+
+(*[dict_from_file] takes in the name of a file and returns a pair of
+  dictionaries created from the file. The first dictionary is the set of
+  forward words, the second dictionary is the set of backward words*)
+val dict_from_file : string -> t * t
