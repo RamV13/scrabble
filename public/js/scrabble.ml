@@ -232,7 +232,8 @@ let handle_reset _ =
 (* [handle_send ()] is the callback for the send chat button *)
 let handle_send _ = 
   let input = get_input_by_id "message" in
-  let msg = Js.to_string input##value in
+  let json = Js.to_string (Json.output input##value) in
+  let msg = String.sub json 1 ((String.length json) - 2) in
   input##value <- Js.string "";
   input##focus ();
   if msg <> "" then ScrabbleClient.send_message (!player_name) (!game_name) msg;

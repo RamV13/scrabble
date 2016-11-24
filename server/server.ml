@@ -231,9 +231,10 @@ let subscribe_messaging =
 (* [send_message req] sends a message from a player to a game *)
 let send_message req = 
   let create_msg player_name msg = 
+    let escaped_msg = String.escaped msg in
     let data = [
       "data: {";
-      Printf.sprintf "data: \"msg\": \"%s\"," msg;
+      Printf.sprintf "data: \"msg\": \"%s\"," escaped_msg;
       Printf.sprintf "data: \"playerName\": \"%s\"" player_name;
       "data: }"]
     in
