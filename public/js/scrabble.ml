@@ -109,28 +109,30 @@ let get_input_by_id id =
 let get_tile row col = 
   get_element_by_id ("grid-" ^ string_of_int row ^ "," ^ string_of_int col)
 
+(* [place_tile row col value] places a letter [value] on the board tile at the
+ * [row] and [col] coordinates *)
+let place_tile row col value = 
+  let tile = get_tile row col in
+  let check_tile ((r,c),_) = r = row && c = col in
+  let is_bonus = 
+    List.exists check_tile Grid.bonus_letter_tiles ||
+    List.exists check_tile Grid.bonus_word_tiles
+  in
+  let filled = String.length (Js.to_string tile##innerHTML) = 1 in
+  if not filled then
+    begin
+      if not is_bonus
+      then tile##style##backgroundColor <- Js.string dark_tile_background;
+      tile##innerHTML <- Js.string value;
+      let upper = value.[0] |> Char.uppercase_ascii in
+      placed_tiles := ((row,col),upper)::!placed_tiles;
+      reset_current_tile ()
+    end
+
 (* [handle_tile row col] is the callback to handle board tile clicks *)
 let handle_tile row col _ = 
   (match current_value () with
-  | Some value -> 
-    begin
-      let tile = get_tile row col in
-      let check_tile ((r,c),_) = r = row && c = col in
-      let is_bonus = 
-        List.exists check_tile Grid.bonus_letter_tiles ||
-        List.exists check_tile Grid.bonus_word_tiles
-      in
-      let filled = String.length (Js.to_string tile##innerHTML) = 1 in
-      if not filled then
-        begin
-          if not is_bonus
-          then tile##style##backgroundColor <- Js.string dark_tile_background;
-          tile##innerHTML <- Js.string value;
-          let upper = value.[0] |> Char.uppercase_ascii in
-          placed_tiles := ((row,col),upper)::!placed_tiles;
-          reset_current_tile ()
-        end
-    end
+  | Some value -> place_tile row col value
   | _ -> ());
   (* TODO remove used tile and replace with new tile *)
   Js._false
@@ -177,17 +179,12 @@ let register_player_tiles () =
 (* [reset_player_tiles ()] resets player tiles based on the current player *)
 let reset_player_tiles () = 
   let reset_tile row col = 
-    let tile = get_tile row col in
     let check_tile ((r,c),_) = r = row && c = col in
     let is_bonus = 
       List.exists check_tile Grid.bonus_letter_tiles ||
       List.exists check_tile Grid.bonus_word_tiles
     in
-    if not is_bonus then
-      begin
-        tile##style##backgroundColor <- Js.string tile_background;
-        tile##innerHTML <- Js.string "&nbsp;"
-      end
+    if not is_bonus then place_tile row col "&nbsp;"
     else
       begin
         let second = 
@@ -201,8 +198,8 @@ let reset_player_tiles () =
           |> string_of_int
         in
         if row = (board_dimension - 1) / 2 && col = (board_dimension - 1) / 2
-        then tile##innerHTML <- Js.string "★"
-        else tile##innerHTML <- Js.string (bonus ^ second)
+        then place_tile row col "★"
+        else place_tile row col (bonus ^ second)
       end
   in
   List.iter (fun ((row,col),_) -> reset_tile row col) !placed_tiles;
@@ -259,8 +256,7 @@ let handle_submit _ =
     end
   )
   |> ignore;
-  (* TODO send up move json by move-ifying `placed_tiles` and handle
-   * bad request response to display invalid move *)
+  reset_player_tiles ();
   Js._false
 
 (* [handle_reset ()] is the callback for the reset button of the game *)
@@ -325,8 +321,11 @@ let handle_update json =
     end
   else if contains json "board_diff" then
     begin
-      (* TODO parse diff and use for UI updates *)
-      Dom_html.window##alert (Js.string (Yojson.Basic.to_string json))
+      let diff = Game.diff_from_json json in
+      let update_tile ((row,col),value) = 
+        place_tile row col (Char.escaped value)
+      in
+      List.iter update_tile diff.board_diff
     end
 
 (* [onload] is the callback for when the window is loaded *)
