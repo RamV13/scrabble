@@ -277,12 +277,12 @@ let create_game p_n g_n =
 let board_diff_to_json board_diff = 
   let rec aux bd acc = 
     match bd with 
-    | ((x,y),c)::[] -> 
-      acc ^ "{\"x\":" ^ (string_of_int x) ^ ",\"y\":" ^ (string_of_int y) ^ 
-      ",\"char\":\"" ^ (Char.escaped c) ^ "\"}"
-    | ((x,y),c)::t -> 
-      (acc ^ "{\"x\":" ^ (string_of_int x) ^ ",\"y\":" ^ (string_of_int y) ^ 
-      ",\"char\":\"" ^ (Char.escaped c) ^ "\"},")
+    | ((row,col),value)::[] -> 
+      acc ^ "{\"row\":" ^ (string_of_int row) ^ ",\"col\":" ^ (string_of_int col) ^ 
+      ",\"value\":\"" ^ (Char.escaped value) ^ "\"}"
+    | ((row,col),value)::t -> 
+      (acc ^ "{\"row\":" ^ (string_of_int row) ^ ",\"y\":" ^ (string_of_int col) ^ 
+      ",\"value\":\"" ^ (Char.escaped value) ^ "\"},")
       |> aux t
     | [] -> acc
   in
