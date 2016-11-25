@@ -114,19 +114,19 @@ let handle_tile row col _ =
   | Some value -> 
     begin
       let tile = get_tile row col in
-      let not_bonus = 
-        let regex = Regexp.regexp ".*W|L|★" in
-        match Regexp.string_match regex (Js.to_string tile##innerHTML) 0 with
-        | None -> true
-        | _ -> false
+      let check_tile ((r,c),_) = r = row && c = col in
+      let is_bonus = 
+        List.exists check_tile Grid.bonus_letter_tiles ||
+        List.exists check_tile Grid.bonus_word_tiles
       in
       let filled = String.length (Js.to_string tile##innerHTML) = 1 in
       if not filled then
         begin
-          if not_bonus
+          if not is_bonus
           then tile##style##backgroundColor <- Js.string dark_tile_background;
           tile##innerHTML <- Js.string value;
-          placed_tiles := ((row,col),value.[0])::!placed_tiles;
+          let upper = value.[0] |> Char.uppercase_ascii in
+          placed_tiles := ((row,col),upper)::!placed_tiles;
           reset_current_tile ()
         end
     end
@@ -177,23 +177,46 @@ let register_player_tiles () =
 let reset_player_tiles () = 
   let reset_tile row col = 
     let tile = get_tile row col in
-    let not_bonus = 
-      (Js.to_string tile##style##backgroundColor) = "rgb(215, 204, 200)"
+    let check_tile ((r,c),_) = r = row && c = col in
+    let is_bonus = 
+      List.exists check_tile Grid.bonus_letter_tiles ||
+      List.exists check_tile Grid.bonus_word_tiles
     in
-    if not_bonus
-    then tile##style##backgroundColor <- Js.string tile_background;
-    tile##innerHTML <- Js.string "&nbsp;"
+    if not is_bonus then
+      begin
+        tile##style##backgroundColor <- Js.string tile_background;
+        tile##innerHTML <- Js.string "&nbsp;"
+      end
+    else
+      begin
+        let second = 
+          if List.exists check_tile Grid.bonus_letter_tiles then "L" else "W"
+        in
+        let bonus = 
+          List.filter check_tile Grid.bonus_letter_tiles @
+          List.filter check_tile Grid.bonus_word_tiles
+          |> List.hd
+          |> snd
+          |> string_of_int
+        in
+        if row = (board_dimension - 1) / 2 && col = (board_dimension - 1) / 2
+        then tile##innerHTML <- Js.string "★"
+        else tile##innerHTML <- Js.string (bonus ^ second)
+      end
   in
   List.iter (fun ((row,col),_) -> reset_tile row col) !placed_tiles;
   placed_tiles := [];
-  let rec aux row = 
-    if row >= 0 then
+  let rec aux col = 
+    if col >= 0 then
       begin
-        let tile = get_player_tile row in
-        (* TODO retrieve from real players' tiles *)
-        let value = "A" in (* Char.escaped (List.nth (!cur_player).tiles row) in *)
+        let tile = get_player_tile col in
+        let value = 
+          List.nth (!cur_player).tiles col
+          |> Char.uppercase_ascii
+          |> Char.escaped
+        in
         tile##innerHTML <- Js.string value;
-        aux (row - 1)
+        aux (col - 1)
       end
   in
   aux (num_player_tiles - 1)
@@ -221,7 +244,9 @@ let init_state () =
 
 (* [handle_submit ()] is the callback for the submit button of the game *)
 let handle_submit _ = 
-  (* TODO send up diff tiles from `placed_tiles` *)
+  let move = {tiles_placed=(!placed_tiles);player=(!cur_player).player_name} in
+  (* TODO send up move json by move-ifying `placed_tiles` and handle
+   * bad request response to display invalid move *)
   Js._false
 
 (* [handle_reset ()] is the callback for the reset button of the game *)
@@ -267,12 +292,27 @@ let handle_update json =
     (get_element_by_id name_id)##innerHTML <- Js.string player_name;
     (get_element_by_id score_id)##innerHTML <- Js.string (string_of_int score)
   in
+  let add_new_player player_name order = 
+    let name_id = "scorename-" ^ (string_of_int order) in
+    (get_element_by_id name_id)##innerHTML <- Js.string player_name
+  in
   if contains json "score" then
     begin
       let player_name = json |> member "playerName" |> to_string in
       let order = json |> member "order" |> to_int in
       let score = json |> member "score" |> to_int in
       set_scoreboard player_name order score
+    end
+  else if contains json "order" then
+    begin
+      let player_name = json|> member "playerName" |> to_string in
+      let order = json |> member "order" |> to_int in
+      add_new_player player_name order
+    end
+  else if contains json "board_diff" then
+    begin
+      (* TODO parse diff and use for UI updates *)
+      Dom_html.window##alert (Js.string (Yojson.Basic.to_string json))
     end
 
 (* [onload] is the callback for when the window is loaded *)

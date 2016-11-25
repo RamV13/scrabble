@@ -103,9 +103,36 @@ let send_new_score game_name player_name order score =
     in
     Some result
   in
-  try
-    send game_pushers game_name sendable
-  with Not_found -> assert false
+  try send game_pushers game_name sendable with Not_found -> assert false
+
+(* [send_new_player game_name player_name order] sends an update with a JSON
+ * payload containing a player name and order *)
+let send_new_player game_name player_name order = 
+  let sendable = 
+    let data = [
+      "data: {";
+      Printf.sprintf "data: \"playerName\": \"%s\"," player_name;
+      Printf.sprintf "data: \"order\": %d" order;
+      "data: }"]
+    in
+    let result = 
+      Printf.sprintf "id: %d\r\n%s\r\n\r\n" 0 (String.concat "\r\n" data)
+    in
+    Some result
+  in
+  try send game_pushers game_name sendable with Not_found -> assert false
+
+(* [send_diff game_name diff_string] sends an update with a JSON payload 
+ * containing a diff represented as a string *)
+let send_diff game_name diff_string = 
+  let sendable = 
+    let data = [Printf.sprintf "data: %s" diff_string] in
+    let result = 
+      Printf.sprintf "id: %d\r\n%s\r\n\r\n" 0 (String.concat "\r\n" data)
+    in
+    Some result
+  in
+  try send game_pushers game_name sendable with Not_found -> assert false
 
 (* [get_info req] gets the player and game names from the request [req] *)
 let get_info req = 
@@ -121,25 +148,7 @@ let create_game req =
   let (player_name,game_name) = get_info req in
   try
     if List.exists (fun game -> game.name = game_name) !games then raise Exists;
-    let grid = Grid.empty in
-    let base_player = {player_name="";tiles=[];score=0;order=0;ai=true} in
-    let create_player order = 
-      (* TODO populate tiles *)
-      let player_name = (List.hd !names) ^ " (AI)" in
-      names := List.tl !names;
-      {base_player with player_name;order}
-    in
-    let players = 
-      let rec add_players acc order = 
-        if order < 4 then add_players ((create_player order)::acc) (order + 1)
-        else acc
-      in
-      add_players [{base_player with player_name;ai=false}] 1
-      |> List.rev
-    in
-    (* TODO populate remaining tiles *)
-    let remaining_tiles = [] in
-    let new_game = {name=game_name;grid;players;remaining_tiles;turn=0} in
+    let new_game = Game.create_game player_name game_name in
     games := new_game::!games;
     msg_pushers := (game_name,ref [])::!msg_pushers;
     game_pushers := (game_name,ref [])::!game_pushers;
@@ -162,13 +171,8 @@ let join_game req =
     let game = List.find (fun game -> game.name = game_name) !games in
     if List.exists (fun player -> player.player_name = player_name) game.players
     then raise Exists;
-    let substituted = 
-      try List.find (fun player -> player.ai) game.players
-      with Not_found -> raise Full
-    in
-    substituted.player_name <- player_name;
-    substituted.ai <- false;
-    send_new_score game.name player_name substituted.order substituted.score;
+    let order = Game.add_player game player_name in
+    send_new_player game.name player_name order;
     let res_body = Game.to_json game in
     {headers;status=`OK;res_body}
   with
@@ -191,11 +195,28 @@ let join_game req =
 
 (* [leave_game req] removes a player from a game given the request [req] *)
 let leave_game req = 
+  let (player_name,game_name) = get_info req in
+  let game = List.find (fun game -> game.name = game_name) !games in
+  let (player_name,order) = Game.remove_player game player_name in
+  send_new_player game_name player_name order;
+  {headers;status=`OK;res_body=""}
+
+(* [execute_move req] performs a move on a game given the request [req] *)
+let execute_move req = 
   let json = Yojson.Basic.from_string req.req_body in
   let game_name = json |> member "gameName" |> to_string in
-  let player_name = json |> member "playerName" |> to_string in
-  print_endline (player_name ^ " is leaving " ^ game_name);
-  {headers;status=`OK;res_body=""}
+  let game = List.find (fun game -> game.name = game_name) !games in
+  let move = json |> member "move" |> Game.move_from_json in
+  try 
+    let diff_string = Game.execute game move |> Game.diff_to_json in
+    send_diff game_name diff_string;
+    {headers;status=`OK;res_body=""}
+  with
+  | FailedMove -> {
+      headers=default_headers;
+      status=`Bad_request;
+      res_body="Invalid move"
+  }
 
 (* [subscribe main_pushers req] registers a client to recieve game updates
  * via the [main_pushers] (i.e. game updates or messages) *)
@@ -258,11 +279,13 @@ let send_message req =
     }
 
 let _ = 
+  Game.init_names ();
   HttpServer.add_route (`OPTIONS,"/api/game") cors_control;
   HttpServer.add_custom_route (`GET,"/api/game") subscribe_updates;
   HttpServer.add_route (`PUT,"/api/game") create_game;
   HttpServer.add_route (`POST,"/api/game") join_game;
   HttpServer.add_route (`DELETE,"/api/game") leave_game;
+  HttpServer.add_route (`POST,"/api/move") execute_move;
   HttpServer.add_route (`OPTIONS,"/api/messaging") cors_control;
   HttpServer.add_custom_route (`GET,"/api/messaging") subscribe_messaging;
   HttpServer.add_route (`POST,"/api/messaging") send_message;
