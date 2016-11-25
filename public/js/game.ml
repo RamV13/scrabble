@@ -97,6 +97,56 @@ let str_to_c s =
   if String.length s <> 1 then failwith "str_to_char"
   else String.get s 0
 
+(* given bag and n # of tiles to take, return tiles taken and new bag. helper
+ * function for create_game *)
+let take_tiles bag num_to_take = 
+  let take_tile bag index = 
+    let count = ref 0 in
+    let (tile, new_bag) = List.fold_left 
+      (fun (t,b) c -> 
+        if !count = index && t = None then (Some c,b)
+        else (count := !count + 1; (t, c::b)))
+      (None,[]) bag
+    in
+    match tile with 
+    | None -> assert false
+    | Some t -> (t,List.rev new_bag)
+  in
+  Random.self_init ();
+  let rec aux tiles b n =
+    if n = 0 then (tiles,b)
+    else 
+      let (t,bag') = take_tile b (Random.int (List.length b)) in 
+      aux (t::tiles) bag' (n - 1)
+  in
+  aux [] bag num_to_take
+
+(* creates a new game given a new player name [p_n] and game name [g_n]. will
+ * randomly assign AI names and distribute tiles to everyone *)
+let create_game p_n g_n = 
+  let grid = Grid.empty in
+  let bag = create_bag () in
+  let base_player = {player_name=""; tiles=[]; score=0; order=0; ai=true} in
+  let create_ai order bag =
+    let player_name = (List.hd !names) ^ " (AI)" in
+    names := List.tl !names;
+    let (tiles,bag') = take_tiles bag 7 in 
+    ({base_player with player_name; order; tiles}, bag')
+  in
+  let (players,new_bag) = 
+    let rec add_players acc order b = 
+      if order < 4 then 
+        let (new_player,b') = create_ai order b in
+        add_players (new_player::acc) (order + 1) b'
+      else (acc,b)
+    in
+    let (human_tiles,bag') = take_tiles bag 7 in
+    add_players 
+      [{base_player with player_name = p_n; ai=false; tiles = human_tiles}] 
+      1 bag'
+  in
+  {name=g_n; grid; players=List.rev players; remaining_tiles=new_bag; turn=0}
+
 (* [add_player state player_id player_name] adds the player with name 
  * [player_name] to the current game [state], and returns the turn order that
  * the player was added to (i.e. the turn of the AI who the player replaced).
@@ -140,8 +190,11 @@ let execute s m =
   (* later: player diff sometimes is just empty *)
   {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [substituted]}
 
-(* =========================================================================
- * following are all for to_json *)
+(* ===========================================================================
+ * JSON methods below *)
+
+(* converts a character list to its json representation. helper function for 
+ * state_to_json *)
 let char_list_to_json lst =
   let rec aux l acc =
     match l with
@@ -151,6 +204,9 @@ let char_list_to_json lst =
   in
   "[" ^ aux lst "" ^ "]"
 
+(* converts a list of players to its json representation. players are 
+ * represented with json objects. helper function for state_to_json and 
+ * diff_to_json *)
 let players_to_json players =
   let rec aux p acc =
     match p with
@@ -170,16 +226,14 @@ let players_to_json players =
   aux players ""
 
 (* [to_json state] is a json representation of [state] *)
-let to_json state = 
+let state_to_json state = 
   "{\"name\": \"" ^ state.name ^ "\",\"grid\":" ^ (Grid.to_json state.grid) ^ 
   ",\"players\":[" ^ (players_to_json state.players) ^ "],\"remaining_tiles\": " 
   ^ (char_list_to_json state.remaining_tiles) ^ ",\"turn\": " ^ 
   (string_of_int state.turn) ^ "}"
 
-(* to_json done
- * ========================================================================== 
- * the following are for from_json *)
-
+(* converts json list of players to list of players. helper function for 
+ * state_from_json and diff_from_json *)
 let json_players_to_players json_l =
   let rec aux j_l acc = 
     match j_l with
@@ -201,7 +255,7 @@ let json_players_to_players json_l =
 
 (* [from_json Yojson.Basic.json] is a [state] converted from its json 
  * representation *)
-let from_json json = 
+let state_from_json json = 
   let n = member "name" json |> to_string in
   let g = member "grid" json |> Grid.from_json in
   let p = member "players" json |> to_list |> json_players_to_players in
@@ -219,61 +273,9 @@ let from_json json =
     turn = t
   }
 
-(* from_json done
- * ===========================================================
- * following are for create_game *)
-
-(* given bag and n # of tiles to take, return tiles taken and new bag *)
-let take_tiles bag num_to_take = 
-  let take_tile bag index = 
-    let count = ref 0 in
-    let (tile, new_bag) = List.fold_left 
-      (fun (t,b) c -> 
-        if !count = index && t = None then (Some c,b)
-        else (count := !count + 1; (t, c::b)))
-      (None,[]) bag
-    in
-    match tile with 
-    | None -> assert false
-    | Some t -> (t,List.rev new_bag)
-  in
-  Random.self_init ();
-  let rec aux tiles b n =
-    if n = 0 then (tiles,b)
-    else 
-      let (t,bag') = take_tile b (Random.int (List.length b)) in 
-      aux (t::tiles) bag' (n - 1)
-  in
-  aux [] bag num_to_take
-
-let create_game p_n g_n = 
-  let grid = Grid.empty in
-  let bag = create_bag () in
-  let base_player = {player_name=""; tiles=[]; score=0; order=0; ai=true} in
-  let create_ai order bag =
-    let player_name = (List.hd !names) ^ " (AI)" in
-    names := List.tl !names;
-    let (tiles,bag') = take_tiles bag 7 in 
-    ({base_player with player_name; order; tiles}, bag')
-  in
-  let (players,new_bag) = 
-    let rec add_players acc order b = 
-      if order < 4 then 
-        let (new_player,b') = create_ai order b in
-        add_players (new_player::acc) (order + 1) b'
-      else (acc,b)
-    in
-    let (human_tiles,bag') = take_tiles bag 7 in
-    add_players 
-      [{base_player with player_name = p_n; ai=false; tiles = human_tiles}] 
-      1 bag'
-  in
-  {name=g_n; grid; players=List.rev players; remaining_tiles=new_bag; turn=0}
-
-(* create_game done
- * ========================================================================
- * following is for diff_to_json *)
-
+(* converts a board_diff or tiles_placed to json object. It can be used for both
+ * because both are list of ((int,int),char). helper function for diff_to_json
+ * and move_to_json *)
 let board_diff_to_json board_diff = 
   let rec aux bd acc = 
     match bd with 
@@ -288,15 +290,8 @@ let board_diff_to_json board_diff =
   in
   aux board_diff ""
 
-let diff_to_json d = 
-  "{\"board_diff\": [" ^ (board_diff_to_json d.board_diff) ^ 
-  "],\"new_turn_val\": " ^ (string_of_int d.new_turn_val) ^ 
-  ",\"players_diff\": [" ^ (players_to_json d.players_diff) ^ "]}"
-
-(* diff_to_json done
- * ======================================================================
- * following is for move_from_json *)
-
+(* converts json representation of tiles placed to list of positions and chars.
+ * helper function for move_from_json and diff_from_json *)
 let json_tp_to_tp tiles_placed = 
   let rec aux tp acc = 
     match tp with
@@ -309,12 +304,30 @@ let json_tp_to_tp tiles_placed =
   in
   aux tiles_placed []
 
+(* convert diff to its json representation *)
+let diff_to_json d = 
+  "{\"board_diff\": [" ^ (board_diff_to_json d.board_diff) ^ 
+  "],\"new_turn_val\": " ^ (string_of_int d.new_turn_val) ^ 
+  ",\"players_diff\": [" ^ (players_to_json d.players_diff) ^ "]}"
+
+let diff_from_json json = 
+  let b = member "board_diff" json |> to_list |> json_tp_to_tp in
+  let t = member "new_turn_val" json |> to_int in
+  let p = member "players_diff" json |> to_list |> json_players_to_players in
+  {board_diff = b; new_turn_val = t; players_diff = p}
+
+(* converts a move to its json representation *)
+let move_to_json m = 
+  "{\"tilesPlaced\": [" ^ (board_diff_to_json m.tiles_placed) ^ 
+  "], \"playerName\": \"" ^ m.player ^ "\"}"
+
+(* converts json to its move representation *)
 let move_from_json json = 
   let p = member "playerName" json |> to_string in
   let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
   {player = p; tiles_placed = tp}
 
-(* let _ = 
+let _ = 
   (*init_names ();
   (* create_game "Brian" "mygame" |> to_json |> print_endline *)
   let game = create_game "Brian" "mygame" in 
@@ -337,7 +350,15 @@ let move_from_json json =
       players_diff = [p]
     }
   in
-  let rec string_of_my_list lst = 
+  let m = 
+    {
+      tiles_placed = [((2,2),'a');((1,1),'e')];
+      player = "Russell"
+    }
+  in
+  print_endline (m |> move_to_json);
+  (* print_endline (x |> diff_to_json |> Yojson.Basic.from_string |> diff_from_json |> diff_to_json); *)
+  (*let rec string_of_my_list lst = 
     let rec aux l acc = 
       match l with 
       | ((x,y),c)::t -> aux t (acc ^ "((" ^ (string_of_int x) ^ "," ^ (string_of_int y) ^ ")," ^ (Char.escaped c) ^ ");")
@@ -350,7 +371,7 @@ let move_from_json json =
   let move = move_from_json (Yojson.Basic.from_string json) in
   print_endline (move.player);
   print_endline (string_of_my_list [((0,0),'a');((1,1),'b')]);
-  print_endline (move.tiles_placed |> string_of_my_list) *)
+  print_endline (move.tiles_placed |> string_of_my_list)*)
 
 
 
