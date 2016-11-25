@@ -97,6 +97,14 @@ let reset_current_tile () =
     end
   | _ -> ()
 
+(* [notify msg] displays a snackbar notification with a [msg] body *)
+let notify msg = 
+  " var notification = document.querySelector('.mdl-js-snackbar');
+    notification.MaterialSnackbar.showSnackbar({message: \"" ^ msg ^ "\"});
+  "
+  |> Js.Unsafe.eval_string
+  |> ignore
+
 (* [get_element_by_id id] gets a DOM element by [id] *)
 let get_element_by_id id = 
   Js.Opt.get Dom_html.document##getElementById (Js.string id) fail
@@ -275,7 +283,7 @@ let handle_submit _ =
       (
         match result with
         | Success -> ()
-        | Failed msg -> Dom_html.window##alert (Js.string msg)
+        | Failed msg -> notify msg
         | Server_error msg -> Dom_html.window##alert (Js.string msg)
         | _ -> assert false
       );
@@ -356,8 +364,12 @@ let handle_update json =
       List.iter update_tile diff.board_diff;
       placed_tiles := [];
       turn := diff.new_turn_val;
-      if (!cur_player).order = diff.new_turn_val then enable_controls () 
-      else disable_controls ()
+      if (!cur_player).order <> diff.new_turn_val then disable_controls () 
+      else
+        begin
+          enable_controls ();
+          notify "It's your turn!"
+        end
     end
 
 (* [onload] is the callback for when the window is loaded *)

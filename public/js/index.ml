@@ -33,6 +33,14 @@ let save_game game_state =
   let json = Game.state_to_json game_state in
   local_storage##setItem (Js.string "gameState",Js.string json)
 
+(* [notify msg] displays a snackbar notification with a [msg] body *)
+let notify msg = 
+  " var notification = document.querySelector('.mdl-js-snackbar');
+    notification.MaterialSnackbar.showSnackbar({message: \"" ^ msg ^ "\"});
+  "
+  |> Js.Unsafe.eval_string
+  |> ignore
+
 (* [handle_btn_join btn ()] is the callback to handle the click events of the 
  * join button [btn] *)
 let handle_btn_join btn _ = 
@@ -48,9 +56,9 @@ let handle_btn_join btn _ =
           save_game state;
           Dom_html.window##location##href <- Js.string "scrabble.html"
         end
-      | Not_found msg -> Dom_html.window##alert (Js.string msg)
-      | Full msg -> Dom_html.window##alert (Js.string msg)
-      | Exists msg -> Dom_html.window##alert (Js.string msg)
+      | Not_found msg -> notify msg
+      | Full msg -> notify msg
+      | Exists msg -> notify msg
       | Server_error msg -> Dom_html.window##alert (Js.string msg)
       | _ -> assert false
       );
@@ -74,7 +82,7 @@ let handle_btn_create btn _ =
           save_game state;
           Dom_html.window##location##href <- Js.string "scrabble.html"
         end
-      | Exists msg -> Dom_html.window##alert (Js.string msg)
+      | Exists msg -> notify msg
       | Server_error msg -> Dom_html.window##alert (Js.string msg)
       | _ -> assert false
       );
