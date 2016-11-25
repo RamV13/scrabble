@@ -173,7 +173,7 @@ let remove_player (s : state) (p_n : string) : (string * int) =
   in
   substituted.player_name <- ((List.hd !names) ^ " (AI)");
   names := List.tl !names;
-  substituted.ai <- false;
+  substituted.ai <- true;
   (substituted.player_name,substituted.order)
 
 (* [execute state move] executes a [move] to produce a new game state from the 
@@ -279,12 +279,12 @@ let state_from_json json =
 let board_diff_to_json board_diff = 
   let rec aux bd acc = 
     match bd with 
-    | ((x,y),c)::[] -> 
-      acc ^ "{\"x\":" ^ (string_of_int x) ^ ",\"y\":" ^ (string_of_int y) ^ 
-      ",\"char\":\"" ^ (Char.escaped c) ^ "\"}"
-    | ((x,y),c)::t -> 
-      (acc ^ "{\"x\":" ^ (string_of_int x) ^ ",\"y\":" ^ (string_of_int y) ^ 
-      ",\"char\":\"" ^ (Char.escaped c) ^ "\"},")
+    | ((row,col),value)::[] -> 
+      acc ^ "{\"row\":" ^ (string_of_int row) ^ ",\"col\":" ^ (string_of_int col) ^ 
+      ",\"value\":\"" ^ (Char.escaped value) ^ "\"}"
+    | ((row,col),value)::t -> 
+      (acc ^ "{\"row\":" ^ (string_of_int row) ^ ",\"col\":" ^ (string_of_int col) ^ 
+      ",\"value\":\"" ^ (Char.escaped value) ^ "\"},")
       |> aux t
     | [] -> acc
   in
@@ -296,10 +296,10 @@ let json_tp_to_tp tiles_placed =
   let rec aux tp acc = 
     match tp with
     | h::t -> 
-      let x = member "x" h |> to_int in
-      let y = member "y" h |> to_int in
-      let c = member "char" h |> to_string |> str_to_c in
-      aux t (((x,y),c)::acc)
+      let row = member "row" h |> to_int in
+      let col = member "col" h |> to_int in
+      let value = member "value" h |> to_string |> str_to_c in
+      aux t (((row,col),value)::acc)
     | [] -> acc
   in
   aux tiles_placed []
@@ -323,8 +323,8 @@ let move_to_json m =
 
 (* converts json to its move representation *)
 let move_from_json json = 
-  let p = member "player" json |> to_string in
-  let tp = member "tiles_placed" json |> to_list |> json_tp_to_tp in
+  let p = member "playerName" json |> to_string in
+  let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
   {player = p; tiles_placed = tp}
 
 let _ = 
