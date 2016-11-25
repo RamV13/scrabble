@@ -281,7 +281,7 @@ let board_diff_to_json board_diff =
       acc ^ "{\"row\":" ^ (string_of_int row) ^ ",\"col\":" ^ (string_of_int col) ^ 
       ",\"value\":\"" ^ (Char.escaped value) ^ "\"}"
     | ((row,col),value)::t -> 
-      (acc ^ "{\"row\":" ^ (string_of_int row) ^ ",\"y\":" ^ (string_of_int col) ^ 
+      (acc ^ "{\"row\":" ^ (string_of_int row) ^ ",\"col\":" ^ (string_of_int col) ^ 
       ",\"value\":\"" ^ (Char.escaped value) ^ "\"},")
       |> aux t
     | [] -> acc
