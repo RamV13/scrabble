@@ -314,7 +314,15 @@ let move_from_json json =
   let tp = member "tiles_placed" json |> to_list |> json_tp_to_tp in
   {player = p; tiles_placed = tp}
 
-(* let _ = 
+(* ==========================================================================*)
+
+let diff_from_json json = 
+  let b = member "board_diff" json |> to_list |> json_tp_to_tp in
+  let t = member "new_turn_val" json |> to_int in
+  let p = member "players_diff" json |> to_list |> json_players_to_players in
+  {board_diff = b; new_turn_val = t; players_diff = p}
+
+let _ = 
   (*init_names ();
   (* create_game "Brian" "mygame" |> to_json |> print_endline *)
   let game = create_game "Brian" "mygame" in 
@@ -337,7 +345,8 @@ let move_from_json json =
       players_diff = [p]
     }
   in
-  let rec string_of_my_list lst = 
+  print_endline (x |> diff_to_json |> Yojson.Basic.from_string |> diff_from_json |> diff_to_json);
+  (*let rec string_of_my_list lst = 
     let rec aux l acc = 
       match l with 
       | ((x,y),c)::t -> aux t (acc ^ "((" ^ (string_of_int x) ^ "," ^ (string_of_int y) ^ ")," ^ (Char.escaped c) ^ ");")
@@ -350,7 +359,7 @@ let move_from_json json =
   let move = move_from_json (Yojson.Basic.from_string json) in
   print_endline (move.player);
   print_endline (string_of_my_list [((0,0),'a');((1,1),'b')]);
-  print_endline (move.tiles_placed |> string_of_my_list) *)
+  print_endline (move.tiles_placed |> string_of_my_list)*)
 
 
 
