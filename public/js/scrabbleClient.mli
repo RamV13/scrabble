@@ -6,7 +6,9 @@ type 'a result = Val of 'a
                  | Exists of string
                  | Not_found of string 
                  | Full of string 
+                 | Failed of string
                  | Server_error of string
+                 | Success
 
 (* [join_game player_name game_name] joins the player with name [player_name] to
  * the game with the name [game_name] and wraps the result in an Lwt thread *)
@@ -21,8 +23,9 @@ val create_game : string -> string -> Game.state result Lwt.t
  * from the game with the name [game_name] synchronously *)
 val leave_game : string -> string -> unit
 
-(* [execute_move name move] executes [move] on the game with name [name] *)
-val execute_move : string -> Game.move -> unit
+(* [execute_move game_name move] executes [move] on the game with name 
+ * [game_name] and updates are sent to all clients of the game accordingly *)
+val execute_move : string -> Game.move -> 'a result Lwt.t
 
 (* [subscribe_updates player_name game_name callback] subscribes a client with 
  * player name [player_name] to a [game_name] event source for game related 

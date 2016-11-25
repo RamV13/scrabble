@@ -36,7 +36,9 @@ type 'a result = Val of 'a
                  | Exists of string
                  | Not_found of string 
                  | Full of string 
+                 | Failed of string
                  | Server_error of string
+                 | Success
 
 (* [server_error_msg] is the message corresponding to server errors *)
 let server_error_msg =
@@ -104,8 +106,25 @@ let leave_game player_name game_name =
   |> XHRClient.exec_sync
   |> ignore
 
-let execute_move id move = 
-  () (* TODO *)
+let execute_move game_name move = 
+  {
+    headers;
+    meth = `POST;
+    url = baseURL ^ "/api/move";
+    req_body = "{\"gameName\":\"" ^ game_name ^ "\", \"move\":" ^ 
+                Game.move_to_json move ^ "}"
+  }
+  |> XHRClient.exec
+  >>= fun res ->
+      begin
+        (
+        match res.status with
+        | `OK -> Success
+        | `Bad_request -> Failed res.res_body
+        | _ -> Server_error server_error_msg
+        )
+        |> Lwt.return
+      end
 
 (* [subscribe endpoint player_name game_name callback] subscribes a callback for
  * a player with name [player_name] an event source of the game with name 

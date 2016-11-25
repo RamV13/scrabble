@@ -1,6 +1,7 @@
 
 open Dom
 open Lwt
+open ScrabbleClient
 open Yojson
 
 open Game
@@ -245,6 +246,19 @@ let init_state () =
 (* [handle_submit ()] is the callback for the submit button of the game *)
 let handle_submit _ = 
   let move = {tiles_placed=(!placed_tiles);player=(!cur_player).player_name} in
+  ScrabbleClient.execute_move (!game_name) move >>= (fun result ->
+    begin
+      (
+        match result with
+        | Success -> ()
+        | Failed msg -> Dom_html.window##alert (Js.string msg)
+        | Server_error msg -> Dom_html.window##alert (Js.string msg)
+        | _ -> assert false
+      );
+      Lwt.return ()
+    end
+  )
+  |> ignore;
   (* TODO send up move json by move-ifying `placed_tiles` and handle
    * bad request response to display invalid move *)
   Js._false
@@ -280,7 +294,7 @@ let handle_message json =
 
 (* [contains json key] is true only if the [key] is contained in the [json] *)
 let contains json key = 
-  match (json |> member key) with
+  match member key json with
   | `Null -> false
   | _ -> true
 

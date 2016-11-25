@@ -40,7 +40,8 @@ let handle_btn_join btn _ =
   let game_name = Js.to_string (get_input_by_id "text_game")##value in
   ScrabbleClient.join_game player_name game_name >>= (fun result ->
     begin
-      (match result with
+      (
+      match result with
       | Val state -> 
         begin
           save_info player_name game_name;
@@ -50,7 +51,9 @@ let handle_btn_join btn _ =
       | Not_found msg -> Dom_html.window##alert (Js.string msg)
       | Full msg -> Dom_html.window##alert (Js.string msg)
       | Exists msg -> Dom_html.window##alert (Js.string msg)
-      | Server_error msg -> Dom_html.window##alert (Js.string msg));
+      | Server_error msg -> Dom_html.window##alert (Js.string msg)
+      | _ -> assert false
+      );
       return ()
     end)
   |> ignore;
@@ -63,7 +66,8 @@ let handle_btn_create btn _ =
   let game_name = Js.to_string (get_input_by_id "text_game")##value in
   ScrabbleClient.create_game player_name game_name >>= (fun result ->
     begin
-      (match result with
+      (
+      match result with
       | Val state ->
         begin
           save_info player_name game_name;

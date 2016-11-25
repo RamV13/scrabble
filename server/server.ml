@@ -265,6 +265,7 @@ let _ =
   HttpServer.add_route (`PUT,"/api/game") create_game;
   HttpServer.add_route (`POST,"/api/game") join_game;
   HttpServer.add_route (`DELETE,"/api/game") leave_game;
+  HttpServer.add_route (`OPTIONS,"/api/move") cors_control;
   HttpServer.add_route (`POST,"/api/move") execute_move;
   HttpServer.add_route (`OPTIONS,"/api/messaging") cors_control;
   HttpServer.add_custom_route (`GET,"/api/messaging") subscribe_messaging;
