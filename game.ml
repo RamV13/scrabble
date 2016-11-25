@@ -318,8 +318,8 @@ let diff_from_json json =
 
 (* converts a move to its json representation *)
 let move_to_json m = 
-  "{\"tiles_placed\": [" ^ (board_diff_to_json m.tiles_placed) ^ 
-  "], \"player\": \"" ^ m.player ^ "\"}"
+  "{\"tilesPlaced\": [" ^ (board_diff_to_json m.tiles_placed) ^ 
+  "], \"playerName\": \"" ^ m.player ^ "\"}"
 
 (* converts json to its move representation *)
 let move_from_json json = 
