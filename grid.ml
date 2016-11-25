@@ -33,7 +33,7 @@ let bonus_word_tiles = [((0,0),3);((0,7),3);((0,14),3);
                         ((2,2),2);((2,12),2);
                         ((3,3),2);((3,11),2);
                         ((4,4),2);((4,10),2);
-                        ((7,7),2);
+                        ((7,0),3);((7,7),2);((7,14),3);
                         ((10,4),2);((10,10),2);
                         ((11,3),2);((11,11),2);
                         ((12,2),2);((12,12),2);
@@ -83,7 +83,7 @@ let get_neighbors board x y : neighbors =
 let rec jsonify_row row result : json = match row with
 |[] -> `List (List.rev(result))
 |h::t -> match h with
-  |Some c -> jsonify_row t (`String c :: result)
+  |Some c -> jsonify_row t (`String (Char.escaped c) :: result)
   |None -> jsonify_row t (`String "" :: result)
 
 let rec to_json_helper board result_board : json = match board with
@@ -104,5 +104,5 @@ let rec dejsonify board result = match board with
 |[] -> List.rev(result)
 |h::t -> dejsonify t ((dejsonify_row h) :: result)
 
-let from_json s = let b = Yojson.Basic.from_string s in
-  dejsonify (Yojson.Basic.Util.to_list b) []
+let from_json j = 
+  dejsonify (Yojson.Basic.Util.to_list j) []
