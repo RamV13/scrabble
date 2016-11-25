@@ -30,7 +30,7 @@ let save_info player_name game_name =
 
 (* [save_game game_state] saves the game state [game_state] in local storage *)
 let save_game game_state = 
-  let json = Game.to_json game_state in
+  let json = Game.state_to_json game_state in
   local_storage##setItem (Js.string "gameState",Js.string json)
 
 (* [handle_btn_join btn ()] is the callback to handle the click events of the 

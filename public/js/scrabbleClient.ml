@@ -64,7 +64,7 @@ let join_game player_name game_name =
       begin
         (
         match res.status with
-        | `OK -> Val (Game.from_json (Yojson.Basic.from_string res.res_body))
+        | `OK -> Val (state_from_json (Yojson.Basic.from_string res.res_body))
         | `Not_found -> Not_found res.res_body
         | `Bad_request -> Full res.res_body
         | `Not_acceptable -> Exists res.res_body
@@ -86,7 +86,7 @@ let create_game player_name game_name =
       begin
         (
         match res.status with
-        | `OK -> Val (Game.from_json (Yojson.Basic.from_string res.res_body))
+        | `OK -> Val (state_from_json (Yojson.Basic.from_string res.res_body))
         | `Bad_request -> Exists res.res_body
         | _ -> Server_error server_error_msg
         )

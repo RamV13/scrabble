@@ -225,7 +225,7 @@ let reset_player_tiles () =
  * game state saved in localStorage *)
 let init_state () = 
   let game_state = 
-    "gameState" |> get |> Yojson.Basic.from_string |> Game.from_json
+    "gameState" |> get |> Yojson.Basic.from_string |> Game.state_from_json
   in
   let set_scoreboard_name player order = 
     let id = "scorename-" ^ (string_of_int order) in

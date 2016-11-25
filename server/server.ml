@@ -29,28 +29,8 @@ let game_pushers = ref []
  * clients *)
 let msg_pushers = ref []
 
-(* [names_file] is the file containing a list of line separated names *)
-let names_file = "names.txt"
-(* [names] is the list of computer names *)
-let names = ref []
-
 (* [origin] is the allowed origin to request this server *)
 let origin = "*"
-
-(* initialize names *)
-let _ = 
-  let input_channel = open_in names_file in
-  try
-    let rec process_line () = 
-      let line = input_line input_channel in
-      names := line::!names;
-      process_line ()
-    in
-    ignore (process_line ());
-    close_in input_channel
-  with
-  | End_of_file -> close_in input_channel
-  | exc -> close_in_noerr input_channel; raise exc
 
 (* [default_headers] are the set of default headers for plain text responses *)
 let default_headers =
@@ -152,7 +132,7 @@ let create_game req =
     games := new_game::!games;
     msg_pushers := (game_name,ref [])::!msg_pushers;
     game_pushers := (game_name,ref [])::!game_pushers;
-    let res_body = Game.to_json new_game in
+    let res_body = Game.state_to_json new_game in
     {headers;status=`OK;res_body}
   with
   | Exists -> {
@@ -173,7 +153,7 @@ let join_game req =
     then raise Exists;
     let order = Game.add_player game player_name in
     send_new_player game.name player_name order;
-    let res_body = Game.to_json game in
+    let res_body = Game.state_to_json game in
     {headers;status=`OK;res_body}
   with
   | Not_found -> {
