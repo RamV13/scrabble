@@ -152,7 +152,6 @@ let handle_tile row col _ =
   (match current_value () with
   | Some value -> place_tile row col value
   | _ -> ());
-  (* TODO remove used tile and replace with new tile *)
   Js._false
 
 (* [register_tiles ()] registers the callbacks for all board tiles *)
@@ -349,6 +348,7 @@ let handle_update json =
     end
   else if contains json "board_diff" then
     begin
+      (* TODO handle player diff *)
       let diff = Game.diff_from_json json in
       let update_tile ((row,col),value) = 
         place_tile row col (Char.escaped value)
