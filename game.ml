@@ -310,8 +310,8 @@ let json_tp_to_tp tiles_placed =
   aux tiles_placed []
 
 let move_from_json json = 
-  let p = member "player" json |> to_string in
-  let tp = member "tiles_placed" json |> to_list |> json_tp_to_tp in
+  let p = member "playerName" json |> to_string in
+  let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
   {player = p; tiles_placed = tp}
 
 (* let _ = 
