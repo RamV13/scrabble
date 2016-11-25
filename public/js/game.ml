@@ -333,7 +333,7 @@ let _ =
   let game = create_game "Brian" "mygame" in 
   let x = add_player game "Ram" in 
   let y = remove_player game "Brian" in 
-  game |> to_json |> print_endline *)
+  game |> to_json |> print_endline 
   let p = 
     {
       player_name = "Brian";
