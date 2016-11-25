@@ -25,6 +25,8 @@ let cur_player = ref {player_name="";tiles=[];score=0;order=0;ai=false}
 let player_name = ref ""
 (* [game_name] is the name of the game *)
 let game_name = ref ""
+(* [turn] is the current turn of the game *)
+let turn = ref 0
 
 (* [loaded] is a boolean flag to indicate if the page is fresh *)
 let loaded = ref false
@@ -105,6 +107,22 @@ let get_input_by_id id =
   | Dom_html.Input elt -> elt
   | _ -> raise (Failure ("Element with id " ^ id ^ " is not an input"))
 
+(* [get_button_by_id id] gets a DOM button element by [id] *)
+let get_button_by_id id = 
+  match Dom_html.tagged (get_element_by_id id) with
+  | Dom_html.Button elt -> elt
+  | _ -> raise (Failure ("Element with id " ^ id ^ " is not a button"))
+
+(* [enable_controls ()] enables the "Submit", "Reset", and tile buttons *)
+let enable_controls () = 
+  (get_button_by_id "submit")##disabled <- Js._false;
+  (get_button_by_id "reset")##disabled <- Js._false
+
+(* [disable_controls ()] disables the "Submit", "Reset", and tile buttons *)
+let disable_controls () = 
+  (get_button_by_id "submit")##disabled <- Js._true;
+  (get_button_by_id "reset")##disabled <- Js._true
+
 (* [get_tile row col] is the tile at the [row] and [col] in the board *)
 let get_tile row col = 
   get_element_by_id ("grid-" ^ string_of_int row ^ "," ^ string_of_int col)
@@ -155,12 +173,15 @@ let get_player_tile row =
 
 (* [handle_player_tile row] is the callback to handle player tile clicks *)
 let handle_player_tile row _ = 
-  blur_current_tile ();
-  let new_value = Js.to_string (get_player_tile row)##innerHTML in
-  if new_value <> "" then
+  if (!cur_player).order = !turn then
     begin
-      (get_player_tile row)##style##backgroundColor <- Js.string "#fff";
-      current_tile := Some (get_player_tile row)
+      blur_current_tile ();
+      let new_value = Js.to_string (get_player_tile row)##innerHTML in
+      if new_value <> "" then
+        begin
+          (get_player_tile row)##style##backgroundColor <- Js.string "#fff";
+          current_tile := Some (get_player_tile row)
+        end
     end;
   Js._false
 
@@ -179,12 +200,17 @@ let register_player_tiles () =
 (* [reset_player_tiles ()] resets player tiles based on the current player *)
 let reset_player_tiles () = 
   let reset_tile row col = 
+    let tile = get_tile row col in
     let check_tile ((r,c),_) = r = row && c = col in
     let is_bonus = 
       List.exists check_tile Grid.bonus_letter_tiles ||
       List.exists check_tile Grid.bonus_word_tiles
     in
-    if not is_bonus then place_tile row col "&nbsp;"
+    if not is_bonus then
+      begin
+        tile##style##backgroundColor <- Js.string tile_background;
+        tile##innerHTML <- Js.string "&nbsp;"
+      end
     else
       begin
         let second = 
@@ -198,8 +224,8 @@ let reset_player_tiles () =
           |> string_of_int
         in
         if row = (board_dimension - 1) / 2 && col = (board_dimension - 1) / 2
-        then place_tile row col "★"
-        else place_tile row col (bonus ^ second)
+        then tile##innerHTML <- Js.string "★"
+        else tile##innerHTML <- Js.string (bonus ^ second)
       end
   in
   List.iter (fun ((row,col),_) -> reset_tile row col) !placed_tiles;
@@ -238,6 +264,8 @@ let init_state () =
     |> List.find (fun player -> player.player_name = (!player_name))
   in
   cur_player := player;
+  turn := game_state.turn;
+  if player.order <> game_state.turn then disable_controls ();
   reset_player_tiles ()
 
 (* [handle_submit ()] is the callback for the submit button of the game *)
@@ -325,7 +353,11 @@ let handle_update json =
       let update_tile ((row,col),value) = 
         place_tile row col (Char.escaped value)
       in
-      List.iter update_tile diff.board_diff
+      List.iter update_tile diff.board_diff;
+      placed_tiles := [];
+      turn := diff.new_turn_val;
+      if (!cur_player).order = diff.new_turn_val then enable_controls () 
+      else disable_controls ()
     end
 
 (* [onload] is the callback for when the window is loaded *)
