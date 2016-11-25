@@ -75,6 +75,10 @@ val from_json : Yojson.Basic.json -> state
 (* json representation of a diff *)
 val diff_to_json : diff -> string
 
+val diff_from_json : Yojson.Baslic.json -> diff
+
+val move_to_json : move -> string
+
 (* move converted from its json representation *)
 val move_from_json : Yojson.Basic.json -> move
 
