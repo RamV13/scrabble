@@ -1,7 +1,7 @@
 open Yojson.Basic.Util
 
 exception Full
-exception FailedMove
+exception FailedMove of string
 
 (* [player] contains the player's identification information, tiles, score,
  * order in the game, and a flag indicating whether this player is an AI *)
@@ -40,6 +40,8 @@ type diff = {
   new_turn_val : int;
   players_diff : player list
 }
+
+type direction = Vertical | Horizontal
 
 (* for initializing names to be used in create game *)
 (* [names_file] is the file containing a list of line separated names *)
@@ -176,19 +178,103 @@ let remove_player (s : state) (p_n : string) : (string * int) =
   substituted.ai <- true;
   (substituted.player_name,substituted.order)
 
+(* execute =================================================================*)
+
+(* TODO these can be optimized into just one function that takes in direction *)
+let get_vert_prefix board ((row,col),tile) =
+  let rec go_up (x,y) acc = 
+    let top_neighbor = (Grid.get_neighbors board x y).top in
+    match top_neighbor with
+    | Some c -> go_up (x,y - 1) ((Char.escaped c) ^ acc)
+    | None -> acc
+  in
+  go_up (row,col) ""
+
+let get_vert_suffix board ((row,col),tile) = 
+  let rec go_down (x,y) acc = 
+    let bot_neighbor = (Grid.get_neighbors board x y).bottom in
+    match bot_neighbor with
+    | Some c -> go_down (x,y + 1) (acc ^ (Char.escaped c))
+    | None -> acc
+  in
+  go_down (row,col) ""
+
+let get_horiz_prefix board ((row,col),tile) = 
+  let rec go_left (x,y) acc = 
+    let l_neighbor = (Grid.get_neighbors board x y).left in
+    match l_neighbor with
+    | Some c -> go_left (x - 1,y) ((Char.escaped c) ^ acc)
+    | None -> acc
+  in
+  go_left (row,col) ""
+
+let get_horiz_suffix board ((row,col),tile) = 
+  let rec go_right (x,y) acc = 
+    let r_neighbor = (Grid.get_neighbors board x y).right in
+    match r_neighbor with
+    | Some c -> go_right (x + 1,y) (acc ^ (Char.escaped c))
+    | None -> acc
+  in
+  go_right (row,col) ""
+
+let rec get_words board tp dir = 
+  match dir with
+  | Horizontal -> get_words_horiz board tp
+  | Vertical -> get_words_vert board tp
+
+and get_words_horiz b tp = 
+  let words = List.fold_left 
+    (fun acc ((x,y),c) -> 
+      let new_w = (get_vert_prefix b ((x,y),c)) ^ (Char.escaped c) ^ (get_vert_suffix b ((x,y),c)) in
+      new_w::acc)
+    [] tp
+  in
+  let prefix = get_horiz_prefix b (List.hd tp) in
+  let suffix = get_horiz_suffix b (List.hd (List.rev tp)) in
+  let h_word = prefix ^ (List.fold_left (fun acc ((_,_),c) -> acc ^ (Char.escaped c)) "" tp) ^ suffix in
+  h_word::words
+
+and get_words_vert b tp = 
+  let words = List.fold_left 
+    (fun acc ((x,y),c) -> 
+      let new_w = (get_horiz_prefix b ((x,y),c)) ^ (Char.escaped c) ^ (get_horiz_suffix b ((x,y),c)) in
+      new_w::acc)
+    [] tp
+  in
+  let prefix = get_vert_prefix b (List.hd tp) in
+  let suffix = get_vert_suffix b (List.hd (List.rev tp)) in
+  let v_word = prefix ^ (List.fold_left (fun acc ((_,_),c) -> acc ^ (Char.escaped c)) "" tp) ^ suffix in
+  v_word::words
+  
+(* get the direction a word was placed in *)
+let get_word_dir tp = 
+  let ((x0,y0),c0) = try (List.hd tp) with _ -> assert false in
+  let vert = List.fold_left (fun acc ((x,y),c) -> acc && x=x0) true tp in
+  let horiz = List.fold_left (fun acc ((x,y),c) -> acc && y=y0) true tp in
+  match vert,horiz with
+  | false, false -> 
+    raise (FailedMove "tiles must be placed horizontally or vertically")
+  | true, _ -> Vertical
+  | false, true -> Horizontal
+
 (* [execute state move] executes a [move] to produce a new game state from the 
  * previous game state [state] *)
 let execute s m =
   let tiles_pl = m.tiles_placed in
   let p_n = m.player in
-  let substituted = 
-    try List.find (fun player -> player.player_name = p_n) s.players
+  let cur_p = 
+    try List.find (fun p -> p.player_name = p_n) s.players
     with Not_found -> assert false
   in
-  substituted.score <- (substituted.score + 1);
-  s.turn <- ((s.turn + 1) mod 4);
-  (* later: player diff sometimes is just empty *)
-  {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [substituted]}
+  assert (cur_p.order = s.turn);
+  let words = get_words s.grid tiles_pl (get_word_dir tiles_pl) in
+  if List.fold_left (fun acc w -> acc && Dictionary.mem w) true words then
+    let calc_score = 1 in
+    substituted.score <- (substituted.score + calc_score);
+    s.turn <- ((s.turn + 1) mod 4);
+    {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [substituted]}
+  else
+    raise (FailedMove "an illegimate word was formed")
 
 (* ===========================================================================
  * JSON methods below *)
