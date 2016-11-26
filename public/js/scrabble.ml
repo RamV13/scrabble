@@ -43,6 +43,8 @@ let num_player_tiles = 7
 let tile_background = "#EFEBE9"
 (* [dark_tile_background] is the value of the dark tile background color *)
 let dark_tile_background = "#D7CCC8"
+(* [score_name_color] is the value of the highlighted score name color *)
+let score_name_color = "#FF7043"
 
 (* [current_tile] is the current focused tile *)
 let current_tile : Dom_html.element Js.t option ref = ref None
@@ -130,6 +132,16 @@ let enable_controls () =
 let disable_controls () = 
   (get_button_by_id "submit")##disabled <- Js._true;
   (get_button_by_id "reset")##disabled <- Js._true
+
+(* [highlight_score_name order] highlights the score name at [order] *)
+let highlight_score_name order = 
+  let id = "scorename-" ^ (string_of_int order) in
+  (get_element_by_id id)##style##color <- Js.string score_name_color
+
+(* [reset_score_name order] resets the score name at [order] *)
+let reset_score_name order = 
+  let id = "scorename-" ^ (string_of_int order) in
+  (get_element_by_id id)##style##color <- Js.string "#000"
 
 (* [get_tile row col] is the tile at the [row] and [col] in the board *)
 let get_tile row col = 
@@ -272,6 +284,7 @@ let init_state () =
   in
   cur_player := player;
   turn := game_state.turn;
+  highlight_score_name game_state.turn;
   if player.order <> game_state.turn then disable_controls ();
   reset_player_tiles ()
 
@@ -362,6 +375,8 @@ let handle_update json =
           cur_player := player;
           reset_player_tiles ()
         end;
+      reset_score_name !turn;
+      highlight_score_name diff.new_turn_val;
       turn := diff.new_turn_val;
       if (!cur_player).order <> !turn then disable_controls () 
       else
