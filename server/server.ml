@@ -42,6 +42,10 @@ let headers =
   Header.init_with "content-type" "application/json"
   |> fun header -> Header.add header "Access-Control-Allow-Origin" origin
 
+(* [server_error_msg] is the default message for extraneous server errors *)
+let server_error_msg = 
+  "Something went wrong. Please check the status of the server"
+
 (* [cors_control req] responds with Access-Control headers to enable CORS *)
 let cors_control req = 
   let headers = 
@@ -120,7 +124,12 @@ let create_game req =
   | Exists -> {
       headers=default_headers;
       status=`Bad_request;
-      res_body="Game with name " ^ game_name ^ " already exists"
+      res_body="Game with name '" ^ game_name ^ "' already exists"
+    }
+  | _ -> {
+      headers=default_headers;
+      status=`Internal_server_error;
+      res_body=server_error_msg
     }
 
 (* [Full] is an exception that represents a full game *)
@@ -141,35 +150,47 @@ let join_game req =
   | Not_found -> {
       headers=default_headers;
       status=`Not_found;
-      res_body="Game with name " ^ game_name ^ " not found"
+      res_body="Game with name '" ^ game_name ^ "' not found"
     }
   | Full -> {
       headers=default_headers;
       status=`Bad_request;
-      res_body="Game with name " ^ game_name ^ " is full"
+      res_body="Game with name '" ^ game_name ^ "' is full"
     }
   | Exists -> {
       headers=default_headers;
       status=`Not_acceptable;
-      res_body="Player with name " ^ player_name ^ " already exists in game " ^
-                game_name
+      res_body="Player with name '" ^ player_name ^ "' already exists in " ^
+               "game with name '" ^ game_name ^ "'"
+    }
+  | _ -> {
+      headers=default_headers;
+      status=`Internal_server_error;
+      res_body=server_error_msg
     }
 
 (* [leave_game req] removes a player from a game given the request [req] *)
 let leave_game req = 
-  let (player_name,game_name) = get_info req in
-  let game = List.find (fun game -> game.name = game_name) !games in
-  let (player_name,order) = Game.remove_player game player_name in
-  send_new_player game_name player_name order;
-  {headers;status=`OK;res_body=""}
+  try
+    let (player_name,game_name) = get_info req in
+    let game = List.find (fun game -> game.name = game_name) !games in
+    let (player_name,order) = Game.remove_player game player_name in
+    send_new_player game_name player_name order;
+    {headers;status=`OK;res_body=""}
+  with
+  | _ -> {
+      headers=default_headers;
+      status=`Internal_server_error;
+      res_body=server_error_msg
+    }
 
 (* [execute_move req] performs a move on a game given the request [req] *)
 let execute_move req = 
-  let json = Yojson.Basic.from_string req.req_body in
-  let game_name = json |> member "gameName" |> to_string in
-  let game = List.find (fun game -> game.name = game_name) !games in
-  let move = json |> member "move" |> Game.move_from_json in
   try 
+    let json = Yojson.Basic.from_string req.req_body in
+    let game_name = json |> member "gameName" |> to_string in
+    let game = List.find (fun game -> game.name = game_name) !games in
+    let move = json |> member "move" |> Game.move_from_json in
     let diff_string = Game.execute game move |> Game.diff_to_json in
     send_diff game_name diff_string;
     {headers;status=`OK;res_body=""}
@@ -178,7 +199,12 @@ let execute_move req =
       headers=default_headers;
       status=`Bad_request;
       res_body="Invalid move"
-  }
+    }
+  | _ -> {
+      headers=default_headers;
+      status=`Internal_server_error;
+      res_body=server_error_msg
+    }
 
 (* [subscribe main_pushers req] registers a client to recieve game updates
  * via the [main_pushers] (i.e. game updates or messages) *)
@@ -202,6 +228,8 @@ let subscribe main_pushers req =
   with 
   | Not_found -> Server.respond ~headers:default_headers ~status:`Not_found 
                                 ~body:(Cohttp_lwt_body.of_string "") ()
+  | _ -> Server.respond ~headers:default_headers ~status:`Internal_server_error
+                        ~body:(Cohttp_lwt_body.of_string server_error_msg) ()
 
 (* [subscribe_updates req] registers a client to receive game updates *)
 let subscribe_updates = 
@@ -236,8 +264,13 @@ let send_message req =
   | Not_found -> {
       headers=default_headers;
       status=`Not_found;
-      res_body="Game with name " ^ game_name ^ " not found or player with name "
-                ^ player_name ^ " not found in game"
+      res_body="Game with name '" ^ game_name ^ "' not found or player with " ^ 
+               "name '" ^ player_name ^ "' not found in game"
+    }
+  | _ -> {
+      headers=default_headers;
+      status=`Internal_server_error;
+      res_body=server_error_msg
     }
 
 let _ = 
