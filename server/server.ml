@@ -67,24 +67,6 @@ let send main_pushers game_name sendable =
   in
   List.iter send_downstream !pushers
 
-(* [send_new_score game_name player_name order score] sends an update with a 
- * JSON payload containg a player name, associated score, and order *)
-let send_new_score game_name player_name order score = 
-  let sendable = 
-    let data = [
-      "data: {";
-      Printf.sprintf "data: \"playerName\": \"%s\"," player_name;
-      Printf.sprintf "data: \"order\": %d," order;
-      Printf.sprintf "data: \"score\": %d" score;
-      "data: }"]
-    in
-    let result = 
-      Printf.sprintf "id: %d\r\n%s\r\n\r\n" 0 (String.concat "\r\n" data)
-    in
-    Some result
-  in
-  try send game_pushers game_name sendable with Not_found -> assert false
-
 (* [send_new_player game_name player_name order] sends an update with a JSON
  * payload containing a player name and order *)
 let send_new_player game_name player_name order = 

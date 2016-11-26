@@ -174,32 +174,32 @@ let register_tiles () =
   in
   aux (board_dimension - 1) (board_dimension - 1)
 
-(* [get_player_tile row] gets the player tile at the index [row] *)
-let get_player_tile row = 
-  get_element_by_id ("tile-" ^ string_of_int row)
+(* [get_player_tile col] gets the player tile at the index [col] *)
+let get_player_tile col = 
+  get_element_by_id ("tile-" ^ string_of_int col)
 
-(* [handle_player_tile row] is the callback to handle player tile clicks *)
-let handle_player_tile row _ = 
+(* [handle_player_tile col] is the callback to handle player tile clicks *)
+let handle_player_tile col _ = 
   if (!cur_player).order = !turn then
     begin
       blur_current_tile ();
-      let new_value = Js.to_string (get_player_tile row)##innerHTML in
+      let new_value = Js.to_string (get_player_tile col)##innerHTML in
       if new_value <> "" then
         begin
-          (get_player_tile row)##style##backgroundColor <- Js.string "#fff";
-          current_tile := Some (get_player_tile row)
+          (get_player_tile col)##style##backgroundColor <- Js.string "#fff";
+          current_tile := Some (get_player_tile col)
         end
     end;
   Js._false
 
 (* [register_player_tiles ()] registers the callbacks for all player tiles *)
 let register_player_tiles () = 
-  let rec aux row = 
-    if row >= 0 then
+  let rec aux col = 
+    if col >= 0 then
       begin
-        let tile = get_player_tile row in
-        tile##onclick <- Dom_html.handler (handle_player_tile row);
-        aux (row - 1)
+        let tile = get_player_tile col in
+        tile##onclick <- Dom_html.handler (handle_player_tile col);
+        aux (col - 1)
       end
   in
   aux (num_player_tiles - 1)
@@ -331,40 +331,39 @@ let contains json key =
 
 (* [handle_update json] is the callback for receiving game updates *)
 let handle_update json = 
-  let set_scoreboard player_name order score = 
-    let name_id = "scorename-" ^ (string_of_int order) in
-    let score_id = "score-" ^ (string_of_int order) in
-    (get_element_by_id name_id)##innerHTML <- Js.string player_name;
-    (get_element_by_id score_id)##innerHTML <- Js.string (string_of_int score)
-  in
-  let add_new_player player_name order = 
-    let name_id = "scorename-" ^ (string_of_int order) in
-    (get_element_by_id name_id)##innerHTML <- Js.string player_name
-  in
-  if contains json "score" then
+  if contains json "order" then
     begin
-      let player_name = json |> member "playerName" |> to_string in
-      let order = json |> member "order" |> to_int in
-      let score = json |> member "score" |> to_int in
-      set_scoreboard player_name order score
-    end
-  else if contains json "order" then
-    begin
+      let add_new_player player_name order = 
+        let name_id = "scorename-" ^ (string_of_int order) in
+        let prev_name = Js.to_string (get_element_by_id name_id)##innerHTML in
+        (get_element_by_id name_id)##innerHTML <- Js.string player_name;
+        notify (prev_name ^ " left, " ^ player_name ^ " joined")
+      in
       let player_name = json|> member "playerName" |> to_string in
       let order = json |> member "order" |> to_int in
       add_new_player player_name order
     end
   else if contains json "board_diff" then
     begin
-      (* TODO handle player diff *)
       let diff = Game.diff_from_json json in
+      let player = List.hd diff.players_diff in (* TODO convert to one player *)
       let update_tile ((row,col),value) = 
         place_tile row col (Char.escaped value)
       in
       List.iter update_tile diff.board_diff;
       placed_tiles := [];
+      let set_scoreboard order score = 
+        let score_id = "score-" ^ (string_of_int order) in
+        (get_element_by_id score_id)##innerHTML <- Js.string (string_of_int score)
+      in
+      set_scoreboard player.order player.score;
+      if (!cur_player).order = player.order then 
+        begin
+          cur_player := player;
+          reset_player_tiles ()
+        end;
       turn := diff.new_turn_val;
-      if (!cur_player).order <> diff.new_turn_val then disable_controls () 
+      if (!cur_player).order <> !turn then disable_controls () 
       else
         begin
           enable_controls ();
