@@ -44,7 +44,7 @@ let tile_background = "#EFEBE9"
 (* [dark_tile_background] is the value of the dark tile background color *)
 let dark_tile_background = "#D7CCC8"
 (* [score_name_color] is the value of the highlighted score name color *)
-let score_name_color = "#FF7043"
+let score_name_color = "#EF5350"
 
 (* [current_tile] is the current focused tile *)
 let current_tile : Dom_html.element Js.t option ref = ref None
