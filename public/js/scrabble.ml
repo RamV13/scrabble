@@ -126,12 +126,16 @@ let get_button_by_id id =
 (* [enable_controls ()] enables the "Submit", "Reset", and tile buttons *)
 let enable_controls () = 
   (get_button_by_id "submit")##disabled <- Js._false;
-  (get_button_by_id "reset")##disabled <- Js._false
+  (get_button_by_id "reset")##disabled <- Js._false;
+  (get_button_by_id "pass")##disabled <- Js._false;
+  (get_button_by_id "replace")##disabled <- Js._false
 
 (* [disable_controls ()] disables the "Submit", "Reset", and tile buttons *)
 let disable_controls () = 
   (get_button_by_id "submit")##disabled <- Js._true;
-  (get_button_by_id "reset")##disabled <- Js._true
+  (get_button_by_id "reset")##disabled <- Js._true;
+  (get_button_by_id "pass")##disabled <- Js._true;
+  (get_button_by_id "replace")##disabled <- Js._true
 
 (* [highlight_score_name order] highlights the score name at [order] *)
 let highlight_score_name order = 
@@ -290,7 +294,37 @@ let init_state () =
 
 (* [handle_submit ()] is the callback for the submit button of the game *)
 let handle_submit _ = 
-  let move = {tiles_placed=(!placed_tiles);player=(!cur_player).player_name} in
+  if List.length !placed_tiles > 0 then
+    begin
+      let move = 
+        {tiles_placed=(!placed_tiles);player=(!cur_player).player_name}
+      in
+      ScrabbleClient.execute_move (!game_name) move >>= (fun result ->
+        begin
+          (
+            match result with
+            | Success -> ()
+            | Failed msg -> notify msg
+            | Server_error msg -> Dom_html.window##alert (Js.string msg)
+            | _ -> assert false
+          );
+          Lwt.return ()
+        end
+      )
+      |> ignore;
+      reset_player_tiles ()
+    end
+  else notify "No tiles placed!";
+  Js._false
+
+(* [handle_reset ()] is the callback for the reset button of the game *)
+let handle_reset _ = 
+  reset_player_tiles ();
+  Js._false
+
+(* [handle_pass ()] is the callback for the pass button of the game *)
+let handle_pass _ = 
+  let move = {tiles_placed=[];player=(!cur_player).player_name} in
   ScrabbleClient.execute_move (!game_name) move >>= (fun result ->
     begin
       (
@@ -307,9 +341,9 @@ let handle_submit _ =
   reset_player_tiles ();
   Js._false
 
-(* [handle_reset ()] is the callback for the reset button of the game *)
-let handle_reset _ = 
-  reset_player_tiles ();
+(* [handle_replace ()] is the callback for the replace button of the game *)
+let handle_replace _ = 
+  (* TODO *)
   Js._false
 
 (* [handle_send ()] is the callback for the send chat button *)
@@ -399,6 +433,8 @@ let onload _ =
   register_player_tiles ();
   (get_element_by_id "submit")##onclick <- Dom_html.handler handle_submit;
   (get_element_by_id "reset")##onclick <- Dom_html.handler handle_reset;
+  (get_element_by_id "pass")##onclick <- Dom_html.handler handle_pass;
+  (get_element_by_id "replace")##onclick <- Dom_html.handler handle_replace;
   (get_element_by_id "send")##onclick <- Dom_html.handler handle_send;
   (get_element_by_id "message")##onkeyup <- Dom_html.handler handle_input;
   ScrabbleClient.subscribe_messaging (!player_name) (!game_name) handle_message;
