@@ -219,8 +219,14 @@ let get_horiz_suffix board ((row,col),tile) =
 
 let rec get_words board tp dir = 
   match dir with
-  | Horizontal -> get_words_horiz board tp
-  | Vertical -> get_words_vert board tp
+  | Horizontal -> 
+    let t = 
+      List.sort (fun ((x1,_),_) ((x2,_),_) -> Pervasives.compare x1 x2) tp in
+    get_words_horiz board t
+  | Vertical -> 
+    let t = 
+      List.sort (fun ((_,y1),_) ((_,y2),_) -> Pervasives.compare y1 y2) tp in
+    get_words_vert board t
 
 and get_words_horiz b tp = 
   let words = List.fold_left 
@@ -269,10 +275,14 @@ let execute s m =
   assert (cur_p.order = s.turn);
   let words = get_words s.grid tiles_pl (get_word_dir tiles_pl) in
   if List.fold_left (fun acc w -> acc && Dictionary.mem w) true words then
+    begin
+    (* place tiles *)
+    List.iter (fun ((x,y),c) -> s.grid <- (Grid.place s.grid x y c);) tiles_pl;
     let calc_score = 1 in
     substituted.score <- (substituted.score + calc_score);
     s.turn <- ((s.turn + 1) mod 4);
     {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [substituted]}
+    end
   else
     raise (FailedMove "an illegimate word was formed")
 
