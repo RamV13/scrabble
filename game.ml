@@ -63,9 +63,18 @@ let init_names () =
   | End_of_file -> close_in input_channel
   | exc -> close_in_noerr input_channel; raise exc
 
+let tile_values = 
+  [('e',1);('a',1);('i',1);('o',1);('n',1);('r',1);('t',1);('l',1);('s',1);('u',1);
+   ('d',2);('g',2);
+   ('b',3);('c',3);('m',3);('p',3);
+   ('f',4);('h',4);('v',4);('w',4);('y',4);
+   ('k',5);
+   ('j',8);('x',8);
+   ('q',10);('z',10);
+   ('?',0)]
+
 let create_bag () = 
-  [
-    'a';'a';'a';'a';'a';'a';'a';'a';'a';
+  [ 'a';'a';'a';'a';'a';'a';'a';'a';'a';
     'b';'b';
     'c';'c';
     'd';'d';'d';'d';
@@ -91,8 +100,7 @@ let create_bag () =
     'x';
     'y';'y';
     'z';
-    '?';'?'
-  ]
+    '?';'?']
 
 (* convert a string of length 1 to character *)
 let str_to_c s = 
