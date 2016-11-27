@@ -273,6 +273,15 @@ let get_word_dir tp =
   | true, _ -> Vertical
   | false, true -> Horizontal
 
+let calc_score board tp dir = 
+  match dir with
+  | Horizontal ->
+  | Vertical ->
+
+and calc_score_horiz board tp = 
+
+and calc_score_vert board tp = 
+
 (* [execute state move] executes a [move] to produce a new game state from the 
  * previous game state [state] *)
 let execute s m =
