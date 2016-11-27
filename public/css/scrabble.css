@@ -111,3 +111,40 @@ body {
     color: #009688;
     background-color: lightgrey;
 }
+
+.tile-values {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    top: 85%;
+    left: 7.5%;
+    min-height: 0 !important;
+    height: 5%;
+    width: 10%;
+}
+
+.tile-values-label {
+    top: 0;
+    padding-top: 0;
+    margin-top: 0;
+    color: #009688;
+    cursor: pointer;
+}
+
+.tile-values-label:hover {
+    background-color: lightgrey;
+}
+
+.tile-values-tooltip {
+    position: fixed !important;
+    top: 56% !important;
+}
+
+.tile-values-td {
+    padding-right: 15px;
+    color: #fff;
+}
+
+.num {
+    text-align: center;
+}

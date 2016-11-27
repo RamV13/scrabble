@@ -144,7 +144,8 @@ let dialog col =
         current = null;
       }
       dialog.close();
-    });"
+    });
+  "
   |> Js.Unsafe.eval_string
   |> ignore
 
