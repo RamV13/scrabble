@@ -86,3 +86,28 @@ body {
 .triple-letter {
     background-color: #039BE5;
 }
+
+.alphabet {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    width:80%;
+    text-align:center;
+}
+
+.alphabet li {
+    margin: 0;
+    padding: 0;
+    border: 1px solid lightgrey;
+    font-size: 20px;
+    color: black;
+    display: inline-block;
+    box-sizing: border-box;
+    width: 10%;
+}
+
+.alphabet li:hover {
+    color: #009688;
+    background-color: lightgrey;
+}

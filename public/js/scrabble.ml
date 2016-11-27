@@ -107,6 +107,47 @@ let notify msg =
   |> Js.Unsafe.eval_string
   |> ignore
 
+(* [dialog col] displays a dialog for selecting a wildcard tile letter value *)
+let dialog col = 
+  " var dialog = document.querySelector('dialog');
+    dialog.showModal();
+    var current = null;
+    for (i = 0; i < 26; i++) {
+      (function() {
+        var id = 'letter-' + String.fromCharCode(97 + i);
+        var letter = document.getElementById(id);
+        letter.addEventListener('click', function() {
+          if (current) {
+            current.style.color = '#000';
+            current.style.backgroundColor = '#fff';
+          }
+          letter.style.color = '#009688';
+          letter.style.backgroundColor = 'lightgrey';
+          current = letter;
+        });
+      }());
+    }
+    document.getElementById('select').addEventListener('click', function() {
+      if (current) {
+        var id = 'tile-" ^ string_of_int col ^ "';
+        document.getElementById(id).innerHTML = current.innerHTML;
+        current.style.color = '#000';
+        current.style.backgroundColor = '#fff';
+        current = null;
+        dialog.close();
+      }
+    });
+    dialog.querySelector('.close').addEventListener('click', function() {
+      if (current) {
+        current.style.color = '#000';
+        current.style.backgroundColor = '#fff';
+        current = null;
+      }
+      dialog.close();
+    });"
+  |> Js.Unsafe.eval_string
+  |> ignore
+
 (* [get_element_by_id id] gets a DOM element by [id] *)
 let get_element_by_id id = 
   Js.Opt.get Dom_html.document##getElementById (Js.string id) fail
@@ -200,7 +241,8 @@ let handle_player_tile col _ =
     begin
       blur_current_tile ();
       let new_value = Js.to_string (get_player_tile col)##innerHTML in
-      if new_value <> "" then
+      if new_value = "?" then dialog col
+      else if new_value <> "" then
         begin
           (get_player_tile col)##style##backgroundColor <- Js.string "#fff";
           current_tile := Some (get_player_tile col)

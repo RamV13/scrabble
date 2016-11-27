@@ -28,6 +28,63 @@
       <button type="button" class="mdl-snackbar__action"></button>
     </div>
 
+    <dialog class="mdl-dialog">
+      <center>
+        <h4 class="mdl-dialog__title" style="color:#009688">Select Letter</h4>
+      </center>
+      <br>
+      <center>
+        <ul class="alphabet">
+          <li id="letter-a">A</li>
+          <li id="letter-b">B</li>
+          <li id="letter-c">C</li>
+          <li id="letter-d">D</li>
+          <li id="letter-e">E</li>
+          <li id="letter-f">F</li>
+        </ul>
+      </center>
+      <br>
+      <center>
+        <ul class="alphabet">
+          <li id="letter-g">G</li>
+          <li id="letter-h">H</li>
+          <li id="letter-i">I</li>
+          <li id="letter-j">J</li>
+          <li id="letter-k">K</li>
+          <li id="letter-l">L</li>
+          <li id="letter-m">M</li>
+        </ul>
+      </center>
+      <br>
+      <center>
+        <ul class="alphabet">
+          <li id="letter-n">N</li>
+          <li id="letter-o">O</li>
+          <li id="letter-p">P</li>
+          <li id="letter-q">Q</li>
+          <li id="letter-r">R</li>
+          <li id="letter-s">S</li>
+        </ul>
+      </center>
+      <br>
+      <center>
+        <ul class="alphabet">
+          <li id="letter-t">T</li>
+          <li id="letter-u">U</li>
+          <li id="letter-v">V</li>
+          <li id="letter-w">W</li>
+          <li id="letter-x">X</li>
+          <li id="letter-y">Y</li>
+          <li id="letter-z">Z</li>
+        </ul>
+      </center>
+      <br>
+      <center>
+        <button type="button" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect close">Cancel</button>
+        <button id="select" type="button" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">Select</button>
+      </center>
+    </dialog>
+
     <div class="score">
         <table class="mdl-data-table mdl-js-data-table mdl-shadow--16dp" style="border-radius: 5px">
           <thead>
@@ -362,7 +419,7 @@
         <div class="mdl-card__actions mdl-card--border"></div>
         <div id="chat" class="chat-box mdl-card__supporting-text"></div>
         <div class="mdl-card__actions mdl-card--border">
-          <div class="mdl-textfield mdl-js-textfield">
+          <div class="mdl-textfield mdl-js-textfield" style="width:75%">
             <input id="message" class="mdl-textfield__input" type="text" placeholder="Type a message...">
             <label class="mdl-textfield__label" for="message"></label>
           </div>
