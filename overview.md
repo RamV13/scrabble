@@ -85,6 +85,7 @@ are consistently < 10,000 in length (efficiency traded off in favor of simplicit
 - web application is only accessible on Cornell's network for security reasons
 - browser CORS security protects against malicious rewritten JavaScript requests
 - due to Cornell's hosting only opening port 80, all requests to the uri "/api" on port 80 are forwarded to an internal OCaml server running on port 8000
+- prevented DOM manipulation to influence HTTP requests by disabling inspect element functionality
 
 ##### Web
 - used SSE (Server-Sent Events) as opposed to polling techniques (for fast downstream game updates and messages)  
