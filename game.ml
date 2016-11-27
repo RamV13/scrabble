@@ -1,4 +1,6 @@
 open Yojson.Basic.Util
+open Grid
+open Dictionary
 
 exception Full
 exception FailedMove of string
