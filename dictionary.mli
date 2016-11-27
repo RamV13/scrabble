@@ -32,3 +32,9 @@ val make : string -> t
   dictionaries created from the file. The first dictionary is the set of
   forward words, the second dictionary is the set of backward words*)
 val dict_from_file : string -> t * t
+
+(*[fmem] returns true if a string is in the offical scrabble dictionary*)
+val in_dict : string -> bool
+
+(*[bmem] returns true if a string appears in the backwards dictionary*)
+val in_back_dict : string -> bool
