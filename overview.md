@@ -69,7 +69,7 @@ NetID's: jwp258, bcs84, kt485, rsv32
 Types are sometimes specified to assist OCaml in overcoming the pitfalls of weak type inference with records or refs and also to improve code clarity in some cases.
 
 #### UI
-- used 'id' for each 'td' tag because of limitations of `Js_of_ocaml` in searching through an HTML table
+- used 'id' even for repeated tags because of limitations of `Js_of_ocaml` in searching through an HTML table
 - used viewport pixels to scale well with multiple screen sizes
 - newly joined users may not view older chats only newly received chats (design decision of messaging system)
 - attempts to load the `scrabble.html` page without joining/creating a game will lead to an automatic redirection to the `index.html` (main) page
