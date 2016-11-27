@@ -19,8 +19,16 @@ val mem: string -> t -> bool
 (*[is_leaf] returns whether or not a given string is fully extended*)
 val is_leaf : string -> t -> bool
 
+(*[is_valid_word] returns whether or not a given string is a valid word*)
+val is_valid_word : string -> t -> bool
+
 (*[extenstions] returns all possible extentions of an input string*)
 val extensions : string -> t -> string list
 
 (*[make] is a function which accepts a string and returns a completed trie*)
 val make : string -> t
+
+(*[dict_from_file] takes in the name of a file and returns a pair of
+  dictionaries created from the file. The first dictionary is the set of
+  forward words, the second dictionary is the set of backward words*)
+val dict_from_file : string -> t * t
