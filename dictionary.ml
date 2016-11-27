@@ -107,3 +107,29 @@ module CharMap = Map.Make(Char)
   let rec extensions s t = extend s t [] s
 
   let make s = add s empty;;
+
+  let string_rev s = let new_str = (String.make (String.length s) 'a') in
+    let rec rev_word str counter = (match counter with
+    |0 -> new_str
+    |_ -> new_str.[(String.length str - counter)] <-
+      (String.get str (counter - 1));
+      rev_word str (counter - 1)) in
+    rev_word s (String.length s)
+
+
+  let dict_from_file f =
+  let trees = ref (empty,empty) in
+   let input_channel = open_in f in
+   try
+      let rec process_line () =
+        let line = input_line input_channel in
+        let forward = fst(!trees) in
+        let back = snd(!trees) in
+        trees:=((add line forward),(add (string_rev line) back));
+        process_line ()
+      in
+      ignore (process_line ());
+      close_in input_channel; !trees
+   with
+   | End_of_file -> close_in input_channel; !trees
+   | exc -> close_in_noerr input_channel; !trees
