@@ -145,7 +145,9 @@ let dialog col =
         }
         if (playerTiles.includes(current.innerHTML)) {
           var notification = document.querySelector('.mdl-js-snackbar');
-          notification.MaterialSnackbar.showSnackbar({message: \"You already have a '\" + current.innerHTML + \"' tile. Please place this first.\"});
+          notification.MaterialSnackbar.showSnackbar({message: 
+            \"You already have a '\" + current.innerHTML + 
+            \"' tile. Please place this first.\"});
           resetCurrent();
           document.getElementById('select').removeEventListener('click', handleSelect);
           dialog.close();
