@@ -190,60 +190,53 @@ let remove_player (s : state) (p_n : string) : (string * int) =
 
 (* execute =================================================================*)
 
-(* TODO these can be optimized into just one function that takes in direction *)
-(* given row,col returns tuple of vertical prefix and score of the prefix *)
-let get_vert_prefix board ((row,col),tile) =
-  let rec go_up (x,y) (acc_w,acc_s) = 
-    let top_neighbor = (Grid.get_neighbors board x y).top in
-    match top_neighbor with
-    | Some c -> 
+(* get the prefix of a specific cell in a given direction *)
+let get_prefix board ((row,col),tile) dir = 
+  let rec get_prev (x,y) (acc_w,acc_s) dx dy = 
+    let prev_neighbor = 
+      if dir = Horizontal then (Grid.get_neighbors board x y).left 
+      else (Grid.get_neighbors board x y).top
+    in
+    match prev_neighbor with
+    | Some c ->
       let tile = Char.escaped c in
       let tile_val = List.assoc c tile_values in
-      go_up (x,y - 1) (tile ^ acc_w, acc_s + tile_val)
+      get_prev (x + dx, y + dy) (tile ^ acc_w, acc_s + tile_val) dx dy
     | None -> (acc_w,acc_s)
   in
-  go_up (row,col) ("",0)
+  let (dx,dy) = if dir = Horizontal then (-1,0) else (0,-1) in
+  get_prev (row,col) ("",0) dx dy
 
-(* given row,col returns tuple of vertical suffix and score of the suffix *)
-let get_vert_suffix board ((row,col),tile) = 
-  let rec go_down (x,y) (acc_w,acc_s) = 
-    let bot_neighbor = (Grid.get_neighbors board x y).bottom in
-    match bot_neighbor with
-    | Some c -> 
+(* get the suffix of a specific cell in a given direction *)
+let get_suffix board ((row,col),tile) dir = 
+  let rec get_next (x,y) (acc_w,acc_s) dx dy = 
+    let next_neighbor = 
+      if dir = Horizontal then (Grid.get_neighbors board x y).right 
+      else (Grid.get_neighbors board x y).bottom
+    in
+    match next_neighbor with
+    | Some c ->
       let tile = Char.escaped c in
       let tile_val = List.assoc c tile_values in
-      go_down (x,y + 1) (acc_w ^ tile, acc_s + tile_val)
+      get_next (x + dx, y + dy) (acc_w ^ tile, acc_s + tile_val) dx dy
     | None -> (acc_w,acc_s)
   in
-  go_down (row,col) ("",0)
-
-(* given row,col returns tuple of horizontal prefix and score of the prefix *)
-let get_horiz_prefix board ((row,col),tile) = 
-  let rec go_left (x,y) (acc_w,acc_s) = 
-    let l_neighbor = (Grid.get_neighbors board x y).left in
-    match l_neighbor with
-    | Some c -> 
-      let tile = Char.escaped c in
-      let tile_val = List.assoc c tile_values in
-      go_left (x - 1,y) (tile ^ acc_w, acc_s + tile_val)
-    | None -> (acc_w,acc_s)
-  in
-  go_left (row,col) ("",0)
-
-(* given row,col returns tuple of horizontal suffix and score of the suffix *)
-let get_horiz_suffix board ((row,col),tile) = 
-  let rec go_right (x,y) (acc_w,acc_s) = 
-    let r_neighbor = (Grid.get_neighbors board x y).right in
-    match r_neighbor with
-    | Some c -> 
-      let tile = Char.escaped c in
-      let tile_val = List.assoc c tile_values in
-      go_right (x + 1,y) (acc_w ^ tile, acc_s + tile_val)
-    | None -> (acc_w,acc_s)
-  in
-  go_right (row,col) ("",0)
+  let (dx,dy) = if dir = Horizontal then (1,0) else (0,1) in
+  get_next (row,col) ("",0) dx dy
 
 let rec get_words board tp dir = 
+  (*let valid_skips lst dir (x0,y0) = 
+    let z0 = if dir = Horizontal then x0 else y0 in
+    let (_,break) = List.fold_left 
+          (fun (acc,found) ((x,y),_) -> 
+            let z = if dir = Horizontal then x else y in
+            if z = acc + 2 then (z,found @ [acc + 1])
+            else if z > acc + 2 then raise (FailedMove "skip too large")
+            else (z,found)) 
+          (z0 - 1,[]) lst
+    in
+    break
+  in*)
   match dir with
   | Horizontal -> 
     let t = List.sort (fun ((x1,_),_) ((x2,_),_) -> Pervasives.compare x1 x2) tp in
@@ -258,6 +251,7 @@ let rec get_words board tp dir =
       in
       break
     in
+    (*get_words_horiz board t (valid_skips t Horizontal (x0,y0)) (x0,y0)*)
     get_words_horiz board t (valid_skips t) (x0,y0)
   | Vertical -> 
     let t = List.sort (fun ((_,y1),_) ((_,y2),_) -> Pervasives.compare y1 y2) tp in
@@ -272,13 +266,14 @@ let rec get_words board tp dir =
       in
       break
     in
+    (*get_words_vert board t (valid_skips t Vertical (x0,y0)) (x0,y0)*)
     get_words_vert board t (valid_skips t) (x0,y0)
 
 and get_words_horiz b tp breaks (x0,y0)= 
   let words = List.fold_left 
     (fun acc ((x,y),c) -> 
-      let (prefix,p_sc) = get_vert_prefix b ((x,y),c) in
-      let (suffix,s_sc) = get_vert_suffix b ((x,y),c) in
+      let (prefix,p_sc) = get_prefix b ((x,y),c) Vertical in
+      let (suffix,s_sc) = get_suffix b ((x,y),c) Vertical in
       let tile_mult = Grid.bonus_letter_at (x,y) in
       let word_mult = Grid.bonus_word_at (x,y) in
       let tile_val = List.assoc c tile_values in
@@ -286,8 +281,8 @@ and get_words_horiz b tp breaks (x0,y0)=
       new_w::acc)
     [] tp
   in
-  let (prefix,p_sc) = get_horiz_prefix b (List.hd tp) in
-  let (suffix,s_sc) = get_horiz_suffix b (List.hd (List.rev tp)) in
+  let (prefix,p_sc) = get_prefix b (List.hd tp) Horizontal in
+  let (suffix,s_sc) = get_suffix b (List.hd (List.rev tp)) Horizontal in
   let count = ref x0 in
   let (infix,i_sc) = List.fold_left 
     (fun (acc_w,acc_s) ((x,y),c) -> 
@@ -320,8 +315,8 @@ and get_words_horiz b tp breaks (x0,y0)=
 and get_words_vert b tp breaks (x0,y0) = 
   let words = List.fold_left 
     (fun acc ((x,y),c) -> 
-      let (prefix,p_sc) = get_horiz_prefix b ((x,y),c) in
-      let (suffix,s_sc) = get_horiz_suffix b ((x,y),c) in
+      let (prefix,p_sc) = get_prefix b ((x,y),c) Horizontal in
+      let (suffix,s_sc) = get_suffix b ((x,y),c) Horizontal in
       let tile_mult = Grid.bonus_letter_at (x,y) in
       let word_mult = Grid.bonus_word_at (x,y) in
       let tile_val = List.assoc c tile_values in
@@ -329,8 +324,8 @@ and get_words_vert b tp breaks (x0,y0) =
       new_w::acc)
     [] tp
   in
-  let (prefix,p_sc) = get_vert_prefix b (List.hd tp) in
-  let (suffix,s_sc) = get_vert_suffix b (List.hd (List.rev tp)) in
+  let (prefix,p_sc) = get_prefix b (List.hd tp) Vertical in
+  let (suffix,s_sc) = get_suffix b (List.hd (List.rev tp)) Vertical in
   let count = ref y0 in
   let (infix,i_sc) = List.fold_left 
     (fun (acc_w,acc_s) ((x,y),c) -> 
