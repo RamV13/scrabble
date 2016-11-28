@@ -195,10 +195,10 @@ let execute_move req =
     send_diff game_name diff_string;
     {headers;status=`OK;res_body=""}
   with
-  | FailedMove -> {
+  | FailedMove msg -> {
       headers=default_headers;
       status=`Bad_request;
-      res_body="Invalid move"
+      res_body=msg
     }
   | _ -> {
       headers=default_headers;

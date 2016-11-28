@@ -1,7 +1,9 @@
 open Yojson.Basic.Util
+open Grid
+open Dictionary
 
 exception Full
-exception FailedMove
+exception FailedMove of string
 
 (* [player] contains the player's identification information, tiles, score,
  * order in the game, and a flag indicating whether this player is an AI *)
@@ -41,6 +43,8 @@ type diff = {
   players_diff : player list
 }
 
+type direction = Vertical | Horizontal
+
 (* for initializing names to be used in create game *)
 (* [names_file] is the file containing a list of line separated names *)
 let names_file = "names.txt"
@@ -61,9 +65,18 @@ let init_names () =
   | End_of_file -> close_in input_channel
   | exc -> close_in_noerr input_channel; raise exc
 
+let tile_values = 
+  [('e',1);('a',1);('i',1);('o',1);('n',1);('r',1);('t',1);('l',1);('s',1);('u',1);
+   ('d',2);('g',2);
+   ('b',3);('c',3);('m',3);('p',3);
+   ('f',4);('h',4);('v',4);('w',4);('y',4);
+   ('k',5);
+   ('j',8);('x',8);
+   ('q',10);('z',10);
+   ('?',0)]
+
 let create_bag () = 
-  [
-    'a';'a';'a';'a';'a';'a';'a';'a';'a';
+  [ 'a';'a';'a';'a';'a';'a';'a';'a';'a';
     'b';'b';
     'c';'c';
     'd';'d';'d';'d';
@@ -89,8 +102,7 @@ let create_bag () =
     'x';
     'y';'y';
     'z';
-    '?';'?'
-  ]
+    '?';'?']
 
 (* convert a string of length 1 to character *)
 let str_to_c s = 
@@ -176,19 +188,207 @@ let remove_player (s : state) (p_n : string) : (string * int) =
   substituted.ai <- true;
   (substituted.player_name,substituted.order)
 
+(* execute =================================================================*)
+
+(* get the prefix and its score of a specific cell in a given direction *)
+let get_prefix board ((row,col),tile) dir = 
+  let rec get_prev (x,y) (acc_w,acc_s) dx dy = 
+    let prev_neighbor = 
+      if dir = Horizontal then (Grid.get_neighbors board x y).left 
+      else (Grid.get_neighbors board x y).top
+    in
+    match prev_neighbor with
+    | Some c ->
+      let tile = Char.escaped c in
+      let tile_val = List.assoc c tile_values in
+      get_prev (x + dx, y + dy) (tile ^ acc_w, acc_s + tile_val) dx dy
+    | None -> (acc_w,acc_s)
+  in
+  let (dx,dy) = if dir = Horizontal then (-1,0) else (0,-1) in
+  get_prev (row,col) ("",0) dx dy
+
+(* get the suffix and its score of a specific cell in a given direction *)
+let get_suffix board ((row,col),tile) dir = 
+  let rec get_next (x,y) (acc_w,acc_s) dx dy = 
+    let next_neighbor = 
+      if dir = Horizontal then (Grid.get_neighbors board x y).right 
+      else (Grid.get_neighbors board x y).bottom
+    in
+    match next_neighbor with
+    | Some c ->
+      let tile = Char.escaped c in
+      let tile_val = List.assoc c tile_values in
+      get_next (x + dx, y + dy) (acc_w ^ tile, acc_s + tile_val) dx dy
+    | None -> (acc_w,acc_s)
+  in
+  let (dx,dy) = if dir = Horizontal then (1,0) else (0,1) in
+  get_next (row,col) ("",0) dx dy
+
+(* get all new words and their scores formed when tiles [tp] are placed in 
+ * direction [dir].
+ * the actual work is done in the two functions below *)
+let rec get_words board tp dir = 
+  let valid_skips lst dir (x0,y0) = 
+    let z0 = if dir = Horizontal then x0 else y0 in
+    let (_,break) = List.fold_left 
+          (fun (acc,found) ((x,y),_) -> 
+            let z = if dir = Horizontal then x else y in
+            if z = acc + 2 then (z,found @ [acc + 1])
+            else if z > acc + 2 then raise (FailedMove "skip too large")
+            else (z,found)) 
+          (z0 - 1,[]) lst
+    in
+    break
+  in
+  match dir with
+  | Horizontal -> 
+    let t = List.sort (fun ((x1,_),_) ((x2,_),_) -> Pervasives.compare x1 x2) tp in
+    let ((x0,y0),_) = try List.hd t with _ -> print_endline "c"; failwith "here4" in
+    get_words_dir board t (valid_skips t Horizontal (x0,y0)) (x0,y0) Horizontal
+  | Vertical -> 
+    let t = List.sort (fun ((_,y1),_) ((_,y2),_) -> Pervasives.compare y1 y2) tp in
+    let ((x0,y0),_) = try List.hd t with _ -> print_endline "d"; failwith "here4" in
+    get_words_dir board t (valid_skips t Vertical (x0,y0)) (x0,y0) Vertical
+
+(*and get_words_horiz b tp breaks (x0,y0)= 
+  let words = List.fold_left 
+    (fun acc ((x,y),c) -> 
+      let (prefix,p_sc) = get_prefix b ((x,y),c) Vertical in
+      let (suffix,s_sc) = get_suffix b ((x,y),c) Vertical in
+      let tile_mult = Grid.bonus_letter_at (x,y) in
+      let word_mult = Grid.bonus_word_at (x,y) in
+      let tile_val = try List.assoc c tile_values with _ -> raise (FailedMove "u suck") in
+      let new_w = (prefix ^ (Char.escaped c) ^ suffix, (p_sc + s_sc + tile_mult * tile_val)*word_mult) in
+      if String.length (fst new_w) > 1 then new_w::acc else acc)
+    [] tp
+  in
+  let (prefix,p_sc) = get_prefix b (try List.hd tp with _ -> raise (FailedMove "u suck1")) Horizontal in
+  let (suffix,s_sc) = get_suffix b (try List.hd (List.rev tp) with _ -> raise (FailedMove "u suck2")) Horizontal in
+  let count = ref x0 in
+  let (infix,i_sc) = List.fold_left 
+    (fun (acc_w,acc_s) ((x,y),c) -> 
+      if x = !count then 
+        begin
+          count := !count + 1;
+          let tile_mult = Grid.bonus_letter_at (x,y) in
+          (acc_w ^ (Char.escaped c),tile_mult * (try List.assoc c tile_values with _ -> raise (FailedMove "u suck3")) + acc_s)
+        end
+      else 
+        begin
+          count := !count + 2; 
+          let tile = 
+            match Grid.get_tile b (x - 1) y with
+            | Some character -> character 
+            | None -> raise (FailedMove "gap in tiles placed")
+          in
+          let tile_mult = Grid.bonus_letter_at (x,y) in
+          (acc_w ^ (Char.escaped tile) ^ (Char.escaped c), tile_mult * (try List.assoc c tile_values with _ -> raise (FailedMove "u suck4")) + acc_s)
+        end
+    ) ("",0) tp 
+  in
+  print_endline (prefix ^ infix ^ suffix);
+  let word_mult = 
+    List.map (fun x -> Grid.bonus_word_at (x,y0)) breaks
+    |> List.fold_left (fun acc x -> acc*x) 1
+  in
+  let h_word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in
+  print_endline (string_of_int (snd h_word));
+  h_word::words*)
+
+and get_words_dir b tp breaks (x0,y0) dir = 
+  let opp dir = 
+    if dir = Horizontal then Vertical else Horizontal
+  in
+  let words = List.fold_left 
+    (fun acc ((x,y),c) -> 
+      let (prefix,p_sc) = get_prefix b ((x,y),c) (opp dir) in
+      let (suffix,s_sc) = get_suffix b ((x,y),c) (opp dir) in
+      let tile_mult = Grid.bonus_letter_at (x,y) in
+      let word_mult = Grid.bonus_word_at (x,y) in
+      let tile_val = List.assoc c tile_values in
+      let new_w = (prefix ^ (Char.escaped c) ^ suffix, (p_sc + s_sc + tile_mult * tile_val)*word_mult) in
+      if String.length (fst new_w) > 1 then new_w::acc else acc)
+    [] tp
+  in
+  let (prefix,p_sc) = get_prefix b (try List.hd tp with _ -> print_endline "a";failwith "here2") dir in
+  let (suffix,s_sc) = get_suffix b (try List.hd (List.rev tp)with _ -> print_endline "b";failwith "here3") dir in
+  let z0 = if dir = Horizontal then x0 else y0 in
+  let count = ref z0 in
+  let (infix,i_sc) = List.fold_left 
+    (fun (acc_w,acc_s) ((x,y),c) -> 
+      let z = if dir = Horizontal then x else y in
+      if z = !count then 
+        begin
+          count := !count + 1;
+          let tile_mult = Grid.bonus_letter_at (x,y) in
+          (acc_w ^ (Char.escaped c),tile_mult * (List.assoc c tile_values) + acc_s)
+        end
+      else 
+        begin
+          count := !count + 2; 
+          let tile = 
+            let (dx,dy) = if dir=Horizontal then (-1,0) else (0,-1) in
+            match Grid.get_tile b (x + dx) (y + dy) with
+            | Some character -> character 
+            | None -> raise (FailedMove "gap in tiles placed")
+          in
+          let tile_mult = Grid.bonus_letter_at (x,y) in
+          (acc_w ^ (Char.escaped tile) ^ (Char.escaped c), tile_mult * (List.assoc c tile_values) + acc_s)
+        end
+    ) ("",0) tp 
+  in
+  let word_mult = 
+    List.map (fun z -> if dir = Horizontal then Grid.bonus_word_at (z,y0) else Grid.bonus_word_at (x0,z)) breaks
+    |> List.fold_left (fun acc x -> acc*x) 1
+  in
+  let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in
+  word::words
+  
+(* get the direction a word was placed in *)
+let get_word_dir tp = 
+  let ((x0,y0),c0) = try (List.hd tp) with _ -> print_endline "here"; assert false in
+  let vert = List.fold_left (fun acc ((x,y),c) -> acc && x=x0) true tp in
+  let horiz = List.fold_left (fun acc ((x,y),c) -> acc && y=y0) true tp in
+  match vert,horiz with
+  | false, false -> 
+    raise (FailedMove "tiles must be placed horizontally or vertically")
+  | true, _ -> (*print_endline "vert";*) Vertical
+  | false, true -> (*print_endline "horiz";*) Horizontal
+
 (* [execute state move] executes a [move] to produce a new game state from the 
  * previous game state [state] *)
-let execute s m =
-  let tiles_pl = m.tiles_placed in
-  let p_n = m.player in
-  let substituted = 
-    try List.find (fun player -> player.player_name = p_n) s.players
+(* ram is assuming that players_diff is always list of length 1 *)
+let execute s move =
+  print_endline "here";
+  (* flip flopped bc we messed up *)
+  let move_flipped = 
+    let new_placed_tiles = 
+      List.map (fun ((a,b),c) -> ((b,a),Char.lowercase_ascii c)) move.tiles_placed
+    in
+    {move with tiles_placed=new_placed_tiles}
+  in
+  let tiles_pl = move_flipped.tiles_placed in
+  let p_n = move.player in
+  let cur_p = 
+    try List.find (fun p -> p.player_name = p_n) s.players
     with Not_found -> assert false
   in
-  substituted.score <- (substituted.score + 1);
-  s.turn <- ((s.turn + 1) mod 4);
-  (* later: player diff sometimes is just empty *)
-  {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [substituted]}
+  assert (cur_p.order = s.turn);
+  print_endline "1";
+  let (words,words_sc) = List.split (get_words s.grid tiles_pl (get_word_dir tiles_pl)) in
+  print_string "words: "; List.iter (fun x -> print_endline x) words;
+  if List.fold_left (fun acc w -> acc && Dictionary.in_dict w) true words then
+    begin
+    (* place tiles *)
+    List.iter (fun ((x,y),c) -> s.grid <- (Grid.place s.grid x y c);) tiles_pl;
+    (* todo BINGO *)
+    let calc_score = List.fold_left (fun acc x -> acc + x) 0 words_sc in
+    cur_p.score <- (cur_p.score + calc_score);
+    s.turn <- ((s.turn + 1) mod 4);
+    {board_diff = move.tiles_placed; new_turn_val = s.turn; players_diff = [cur_p]}
+    end
+  else
+    raise (FailedMove "an illegimate word was formed")
 
 (* ===========================================================================
  * JSON methods below *)
@@ -326,3 +526,37 @@ let move_from_json json =
   let p = member "playerName" json |> to_string in
   let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
   {player = p; tiles_placed = tp}
+
+(*let _ = 
+  let print_board b = 
+    let print_row r = 
+      List.iter (fun x -> 
+        match x with 
+        | Some t -> print_string ((Char.escaped t) ^ " ");
+        | None -> print_string "# ";
+      ) r
+    in
+    List.iter (fun row -> print_row row; print_endline "";) b;
+  in
+  (*print_endline ("hello: " ^ (string_of_bool (Dictionary.in_dict "hello")));
+  print_endline ("hen: " ^ (string_of_bool (Dictionary.in_dict "hen")));
+  print_endline ("ten: " ^ (string_of_bool (Dictionary.in_dict "ten")));*)
+  init_names();
+  let s = create_game "Brian" "game" in
+  print_endline ("turn: " ^ (string_of_int s.turn));
+  print_board s.grid;  
+  let m_ten = {
+    tiles_placed = [((5,5),'h');((6,5),'e');((7,5),'n')];
+    player = "Brian"
+  } in
+  let _ = execute s m_ten in
+  print_board s.grid;
+  let player2 = List.nth (s.players) 1 in
+  let m_hen = {
+    tiles_placed = [((6,4),'t');((6,6),'n')];
+    player = player2.player_name
+  } in
+  let _ = execute s m_hen in
+  print_endline ("turn: " ^ (string_of_int s.turn));
+  print_board s.grid;*)
+
