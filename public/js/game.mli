@@ -2,7 +2,7 @@ open Yojson
 open Grid
 
 exception Full
-exception FailedMove
+exception FailedMove of string
 
 (* [player] contains the player's identification information, tiles, score,
  * order in the game, and a flag indicating whether this player is an AI *)
@@ -41,34 +41,6 @@ type diff = {
   new_turn_val : int;
   players_diff : player list
 }
-
-(* initialize list of names from names.txt *)
-val init_names : unit -> unit
-
-(* create new game with 3 AIs and one user given game name and player name. 
- * creates ais by getting random names from text file. Tiles are also randomly 
- * distributed to all players *)
-val create_game : string -> string -> state
-
-(* [add_player state player_name] adds the player with name [player_name] to the
- * current game [state], and returns the new turn order that the player was 
- * added to. The state itself is changed mutably. The player replaces any 
- * computer, and inherits its tiles, score, and turn.
- * raises Full if the game is full of players already and can't be joined *)
-val add_player : state -> string -> int
-
-(* [remove_player state player_id] removes the player with id [player_id] from
- * current game [state], and returns a tuple containing the new AIs name and its
- * turn order. It replaces the old player with a computer that inherits the 
- * removed player's tiles, score, turn, and id. The state itself is changed
- * mutably.
- * asserts false if there is no player in the game with [player_id] *)
-val remove_player : state -> string -> (string * int)
-
-(* [execute state move] executes a [move] in a given game [state]. The game is
- * updated mutably and the diff between the two states is returned. 
- * raises FailedMove if the move fails *)
-val execute : state -> move -> diff
 
 (* [to_json state] is a json representation of [state] as a string *)
 val state_to_json : state -> string

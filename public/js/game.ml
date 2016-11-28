@@ -1,7 +1,8 @@
 open Yojson.Basic.Util
+open Grid
 
 exception Full
-exception FailedMove
+exception FailedMove of string
 
 (* [player] contains the player's identification information, tiles, score,
  * order in the game, and a flag indicating whether this player is an AI *)
@@ -41,154 +42,12 @@ type diff = {
   players_diff : player list
 }
 
-(* for initializing names to be used in create game *)
-(* [names_file] is the file containing a list of line separated names *)
-let names_file = "names.txt"
-(* [names] is the list of computer names *)
-let names = ref []
-
-let init_names () = 
-  let input_channel = open_in names_file in
-  try
-    let rec process_line () = 
-      let line = input_line input_channel in
-      names := line::!names;
-      process_line ()
-    in
-    ignore (process_line ());
-    close_in input_channel
-  with
-  | End_of_file -> close_in input_channel
-  | exc -> close_in_noerr input_channel; raise exc
-
-let create_bag () = 
-  [
-    'a';'a';'a';'a';'a';'a';'a';'a';'a';
-    'b';'b';
-    'c';'c';
-    'd';'d';'d';'d';
-    'e';'e';'e';'e';'e';'e';'e';'e';'e';'e';'e';'e';
-    'f';'f';
-    'g';'g';'g';
-    'h';'h';
-    'i';'i';'i';'i';'i';'i';'i';'i';'i';
-    'j';
-    'k';'k';
-    'l';'l';'l';'l';
-    'm';'m';
-    'n';'n';'n';'n';'n';'n';
-    'o';'o';'o';'o';'o';'o';'o';'o';
-    'p';'p';
-    'q';
-    'r';'r';'r';'r';'r';'r';
-    's';'s';'s';'s';
-    't';'t';'t';'t';'t';'t';
-    'u';'u';'u';'u';
-    'v';'v';
-    'w';'w';
-    'x';
-    'y';'y';
-    'z';
-    '?';'?'
-  ]
+type direction = Vertical | Horizontal
 
 (* convert a string of length 1 to character *)
 let str_to_c s = 
   if String.length s <> 1 then failwith "str_to_char"
   else String.get s 0
-
-(* given bag and n # of tiles to take, return tiles taken and new bag. helper
- * function for create_game *)
-let take_tiles bag num_to_take = 
-  let take_tile bag index = 
-    let count = ref 0 in
-    let (tile, new_bag) = List.fold_left 
-      (fun (t,b) c -> 
-        if !count = index && t = None then (Some c,b)
-        else (count := !count + 1; (t, c::b)))
-      (None,[]) bag
-    in
-    match tile with 
-    | None -> assert false
-    | Some t -> (t,List.rev new_bag)
-  in
-  Random.self_init ();
-  let rec aux tiles b n =
-    if n = 0 then (tiles,b)
-    else 
-      let (t,bag') = take_tile b (Random.int (List.length b)) in 
-      aux (t::tiles) bag' (n - 1)
-  in
-  aux [] bag num_to_take
-
-(* creates a new game given a new player name [p_n] and game name [g_n]. will
- * randomly assign AI names and distribute tiles to everyone *)
-let create_game p_n g_n = 
-  let grid = Grid.empty in
-  let bag = create_bag () in
-  let base_player = {player_name=""; tiles=[]; score=0; order=0; ai=true} in
-  let create_ai order bag =
-    let player_name = (List.hd !names) ^ " (AI)" in
-    names := List.tl !names;
-    let (tiles,bag') = take_tiles bag 7 in 
-    ({base_player with player_name; order; tiles}, bag')
-  in
-  let (players,new_bag) = 
-    let rec add_players acc order b = 
-      if order < 4 then 
-        let (new_player,b') = create_ai order b in
-        add_players (new_player::acc) (order + 1) b'
-      else (acc,b)
-    in
-    let (human_tiles,bag') = take_tiles bag 7 in
-    add_players 
-      [{base_player with player_name = p_n; ai=false; tiles = human_tiles}] 
-      1 bag'
-  in
-  {name=g_n; grid; players=List.rev players; remaining_tiles=new_bag; turn=0}
-
-(* [add_player state player_id player_name] adds the player with name 
- * [player_name] to the current game [state], and returns the turn order that
- * the player was added to (i.e. the turn of the AI who the player replaced).
- * The player replaces the computer with the lowest order, and inherits its 
- * tiles, score, and turn. 
- * raise Failure if the game is full of players (non computer) already *)
-let add_player s p_n = 
-  let substituted = 
-      try List.find (fun player -> player.ai) s.players
-      with Not_found -> raise Full
-  in
-  substituted.player_name <- p_n;
-  substituted.ai <- false;
-  substituted.order
-
-(* [remove_player state player_id] removes the player with id [player_id] from
- * current game [state], and returns the new state. It replaces the old player
- * with a computer that inherits the removed player's tiles, score, turn, and id
- * raises Failure if there is no player in the game with [player_id] *)
-let remove_player (s : state) (p_n : string) : (string * int) = 
-  let substituted = 
-    try List.find (fun player -> player.player_name = p_n) s.players
-    with Not_found -> assert false
-  in
-  substituted.player_name <- ((List.hd !names) ^ " (AI)");
-  names := List.tl !names;
-  substituted.ai <- true;
-  (substituted.player_name,substituted.order)
-
-(* [execute state move] executes a [move] to produce a new game state from the 
- * previous game state [state] *)
-let execute s m =
-  let tiles_pl = m.tiles_placed in
-  let p_n = m.player in
-  let substituted = 
-    try List.find (fun player -> player.player_name = p_n) s.players
-    with Not_found -> assert false
-  in
-  substituted.score <- (substituted.score + 1);
-  s.turn <- ((s.turn + 1) mod 4);
-  (* later: player diff sometimes is just empty *)
-  {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [substituted]}
 
 (* ===========================================================================
  * JSON methods below *)
