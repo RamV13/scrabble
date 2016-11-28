@@ -24,6 +24,11 @@ val get_tile : board -> int -> int -> char option
  * at the coordinate ([row],[col]) in the [board] *)
 val place : board -> int -> int -> char -> board
 
+(* return bonus at specific coordinate. return 1 if no bonus *)
+val bonus_letter_at : int * int -> int
+
+val bonus_word_at : int * int -> int
+
 (* [neighbors] contains a set of four tiles adjacent to a central tile *)
 type neighbors = {
   top : char option;
