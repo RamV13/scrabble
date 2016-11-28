@@ -230,15 +230,37 @@ let get_horiz_suffix board ((row,col),tile) =
 let rec get_words board tp dir = 
   match dir with
   | Horizontal -> 
-    let t = 
-      List.sort (fun ((x1,_),_) ((x2,_),_) -> Pervasives.compare x1 x2) tp in
-    get_words_horiz board t
+    let t = List.sort (fun ((x1,_),_) ((x2,_),_) -> Pervasives.compare x1 x2) tp in
+    let ((x0,_),_) = List.hd t in
+    let valid_skips lst = 
+      let (_,break) = List.fold_left 
+          (fun (acc,found) ((x,_),_) -> 
+            if x = acc + 2 then (x,found)
+            else if x > acc + 2 then (x,false)
+            else (x,found)) 
+          (x0 - 1,true) t
+      in
+      break
+    in
+    if valid_skips t then get_words_horiz board t x0
+    else raise (FailedMove "skip too large")
   | Vertical -> 
-    let t = 
-      List.sort (fun ((_,y1),_) ((_,y2),_) -> Pervasives.compare y1 y2) tp in
-    get_words_vert board t
+    let t = List.sort (fun ((_,y1),_) ((_,y2),_) -> Pervasives.compare y1 y2) tp in
+    let ((_,y0),_) = List.hd t in
+    let valid_skips lst = 
+      let (_,break) = List.fold_left 
+          (fun (acc,found) ((_,y),_) -> 
+            if y = acc + 2 then (y,found)
+            else if y > acc + 2 then (y,false)
+            else (y,found)) 
+          (y0 - 1,true) t
+      in
+      break
+    in
+    if valid_skips t then get_words_vert board t y0
+    else raise (FailedMove "skip too large")
 
-and get_words_horiz b tp = 
+and get_words_horiz b tp x0 : string list = 
   let words = List.fold_left 
     (fun acc ((x,y),c) -> 
       let new_w = (get_vert_prefix b ((x,y),c)) ^ (Char.escaped c) ^ (get_vert_suffix b ((x,y),c)) in
@@ -247,10 +269,30 @@ and get_words_horiz b tp =
   in
   let prefix = get_horiz_prefix b (List.hd tp) in
   let suffix = get_horiz_suffix b (List.hd (List.rev tp)) in
-  let h_word = prefix ^ (List.fold_left (fun acc ((_,_),c) -> acc ^ (Char.escaped c)) "" tp) ^ suffix in
+  let count = ref x0 in
+  let infix = List.fold_left 
+    (fun acc ((x,y),c) -> 
+      if x = !count then 
+        begin
+          count := !count + 1;
+          acc ^ (Char.escaped c)
+        end
+      else 
+        begin
+          count := !count + 2; 
+          let tile = 
+            match Grid.get_tile b (x - 1) y with
+            | Some character -> character 
+            | None -> raise (FailedMove "gap in tiles placed")
+          in
+          acc ^ (Char.escaped tile) ^ (Char.escaped c)
+        end
+    ) "" tp 
+  in
+  let h_word = prefix ^ infix ^ suffix in
   h_word::words
 
-and get_words_vert b tp = 
+and get_words_vert b tp y0 = 
   let words = List.fold_left 
     (fun acc ((x,y),c) -> 
       let new_w = (get_horiz_prefix b ((x,y),c)) ^ (Char.escaped c) ^ (get_horiz_suffix b ((x,y),c)) in
@@ -259,8 +301,45 @@ and get_words_vert b tp =
   in
   let prefix = get_vert_prefix b (List.hd tp) in
   let suffix = get_vert_suffix b (List.hd (List.rev tp)) in
-  let v_word = prefix ^ (List.fold_left (fun acc ((_,_),c) -> acc ^ (Char.escaped c)) "" tp) ^ suffix in
+  let count = ref y0 in
+  let infix = List.fold_left 
+    (fun acc ((x,y),c) -> 
+      if y = !count then 
+        begin
+          count := !count + 1;
+          acc ^ (Char.escaped c)
+        end
+      else 
+        begin
+          count := !count + 2; 
+          let tile = 
+            match Grid.get_tile b x (y - 1) with
+            | Some character -> character 
+            | None -> raise (FailedMove "gap in tiles placed")
+          in
+          acc ^ (Char.escaped tile) ^ (Char.escaped c)
+        end
+    ) "" tp 
+  in
+  let v_word = prefix ^ infix ^ suffix in
   v_word::words
+
+let rec calc_opposite board ((x,y),c) dir = 
+  match dir with
+  | Horizontal -> calc_opposite_horiz board ((x,y),c)
+  | Vertical -> calc_opposite_vert board ((x,y),c)
+
+and calc_opposite_vert board ((x,y),c) = 
+  (*let rec go_up (x,y) acc = 
+    let top_neighbor = (Grid.get_neighbors board x y).top in
+    match top_neighbor with
+    | Some c -> go_up (x,y - 1) ((Char.escaped c) ^ acc)
+    | None -> acc
+  in*)
+  "hi"
+
+and calc_opposite_horiz board ((x,y),c) = 
+  "hi"
   
 (* get the direction a word was placed in *)
 let get_word_dir tp = 
@@ -273,14 +352,34 @@ let get_word_dir tp =
   | true, _ -> Vertical
   | false, true -> Horizontal
 
-let calc_score board tp dir = 
+let rec calc_score board tp dir = 
   match dir with
-  | Horizontal ->
-  | Vertical ->
+  | Horizontal -> 
+    let t = 
+      List.sort (fun ((x1,_),_) ((x2,_),_) -> Pervasives.compare x1 x2) tp in
+    calc_score_horiz board t
+  | Vertical -> 
+    let t = 
+      List.sort (fun ((_,y1),_) ((_,y2),_) -> Pervasives.compare y1 y2) tp in
+    calc_score_vert board t
 
 and calc_score_horiz board tp = 
+  let h_word_total = List.fold_left 
+    (fun acc ((x,y),c) -> 
+      let ((_,_),tile_mult) = 
+        try List.find (fun ((r,c),m) -> r = x && c = y) Grid.bonus_letter_tiles 
+        with _ -> ((0,0),1) (* the 0s are irrelevant *)
+      in
+      acc + (List.assoc c tile_values)*tile_mult
+    ) 
+    0 tp
+  in
+  let h_word_bonuses = List.filter (fun ((r,c),_) -> List.mem_assoc (r,c) tp) Grid.bonus_word_tiles in
+  let h_word_score = List.fold_left (fun acc ((_,_),m) -> acc * m) h_word_total h_word_bonuses in
+  h_word_score (* based on assumption that tiles are consecutive *)
 
 and calc_score_vert board tp = 
+  0
 
 (* [execute state move] executes a [move] to produce a new game state from the 
  * previous game state [state] *)
@@ -293,14 +392,14 @@ let execute s m =
   in
   assert (cur_p.order = s.turn);
   let words = get_words s.grid tiles_pl (get_word_dir tiles_pl) in
-  if List.fold_left (fun acc w -> acc && Dictionary.mem w) true words then
+  if List.fold_left (fun acc w -> acc && Dictionary.in_dict w) true words then
     begin
     (* place tiles *)
     List.iter (fun ((x,y),c) -> s.grid <- (Grid.place s.grid x y c);) tiles_pl;
     let calc_score = 1 in
-    substituted.score <- (substituted.score + calc_score);
+    cur_p.score <- (cur_p.score + calc_score);
     s.turn <- ((s.turn + 1) mod 4);
-    {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [substituted]}
+    {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else
     raise (FailedMove "an illegimate word was formed")
