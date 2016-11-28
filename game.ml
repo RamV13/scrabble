@@ -258,6 +258,7 @@ let rec get_words board tp dir =
       in
       break
     in
+    print_endline ((string_of_int x0) ^ ", " ^ (string_of_int y0));
     get_words_horiz board t (valid_skips t) (x0,y0)
   | Vertical -> 
     let t = List.sort (fun ((_,y1),_) ((_,y2),_) -> Pervasives.compare y1 y2) tp in
@@ -281,13 +282,14 @@ and get_words_horiz b tp breaks (x0,y0)=
       let (suffix,s_sc) = get_vert_suffix b ((x,y),c) in
       let tile_mult = Grid.bonus_letter_at (x,y) in
       let word_mult = Grid.bonus_word_at (x,y) in
-      let tile_val = List.assoc c tile_values in
+      let tile_val = try List.assoc c tile_values with _ -> raise (FailedMove "u suck") in
       let new_w = (prefix ^ (Char.escaped c) ^ suffix, (p_sc + s_sc + tile_mult * tile_val)*word_mult) in
-      new_w::acc)
+      if String.length (fst new_w) > 1 then new_w::acc else acc
+      )
     [] tp
   in
-  let (prefix,p_sc) = get_horiz_prefix b (List.hd tp) in
-  let (suffix,s_sc) = get_horiz_suffix b (List.hd (List.rev tp)) in
+  let (prefix,p_sc) = get_horiz_prefix b (try List.hd tp with _ -> raise (FailedMove "u suck1")) in
+  let (suffix,s_sc) = get_horiz_suffix b (try List.hd (List.rev tp) with _ -> raise (FailedMove "u suck2")) in
   let count = ref x0 in
   let (infix,i_sc) = List.fold_left 
     (fun (acc_w,acc_s) ((x,y),c) -> 
@@ -295,7 +297,7 @@ and get_words_horiz b tp breaks (x0,y0)=
         begin
           count := !count + 1;
           let tile_mult = Grid.bonus_letter_at (x,y) in
-          (acc_w ^ (Char.escaped c),tile_mult * (List.assoc c tile_values) + acc_s)
+          (acc_w ^ (Char.escaped c),tile_mult * (try List.assoc c tile_values with _ -> raise (FailedMove "u suck3")) + acc_s)
         end
       else 
         begin
@@ -306,15 +308,17 @@ and get_words_horiz b tp breaks (x0,y0)=
             | None -> raise (FailedMove "gap in tiles placed")
           in
           let tile_mult = Grid.bonus_letter_at (x,y) in
-          (acc_w ^ (Char.escaped tile) ^ (Char.escaped c), tile_mult * (List.assoc c tile_values) + acc_s)
+          (acc_w ^ (Char.escaped tile) ^ (Char.escaped c), tile_mult * (try List.assoc c tile_values with _ -> raise (FailedMove "u suck4")) + acc_s)
         end
     ) ("",0) tp 
   in
+  print_endline (prefix ^ infix ^ suffix);
   let word_mult = 
     List.map (fun x -> Grid.bonus_word_at (x,y0)) breaks
     |> List.fold_left (fun acc x -> acc*x) 1
   in
   let h_word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in
+  print_endline (string_of_int (snd h_word));
   h_word::words
 
 and get_words_vert b tp breaks (x0,y0) = 
@@ -368,8 +372,8 @@ let get_word_dir tp =
   match vert,horiz with
   | false, false -> 
     raise (FailedMove "tiles must be placed horizontally or vertically")
-  | true, _ -> Vertical
-  | false, true -> Horizontal
+  | true, _ -> print_endline "vert"; Vertical
+  | false, true -> print_endline "horiz"; Horizontal
 
 (*let rec calc_score board tp dir = 
   match dir with
@@ -402,7 +406,14 @@ and calc_score_vert board tp =
 
 (* [execute state move] executes a [move] to produce a new game state from the 
  * previous game state [state] *)
-let execute s m =
+let execute s move =
+  print_endline "here";
+  let m = 
+    let new_placed_tiles = 
+      List.map (fun ((a,b),c) -> ((b,a),Char.lowercase_ascii c)) move.tiles_placed
+    in
+    {move with tiles_placed=new_placed_tiles}
+  in
   let tiles_pl = m.tiles_placed in
   let p_n = m.player in
   let cur_p = 
@@ -410,6 +421,7 @@ let execute s m =
     with Not_found -> assert false
   in
   assert (cur_p.order = s.turn);
+  print_endline "1";
   let (words,words_sc) = List.split (get_words s.grid tiles_pl (get_word_dir tiles_pl)) in
   if List.fold_left (fun acc w -> acc && Dictionary.in_dict w) true words then
     begin
@@ -560,52 +572,3 @@ let move_from_json json =
   let p = member "playerName" json |> to_string in
   let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
   {player = p; tiles_placed = tp}
-
-let _ = 
-  (*init_names ();
-  (* create_game "Brian" "mygame" |> to_json |> print_endline *)
-  let game = create_game "Brian" "mygame" in 
-  let x = add_player game "Ram" in 
-  let y = remove_player game "Brian" in 
-  game |> to_json |> print_endline *)
-  let p = 
-    {
-      player_name = "Brian";
-      tiles = ['a';'b';'c';'d';'e';'f';'g'];
-      score = 100;
-      order = 2;
-      ai = false
-    }
-  in
-  let x = 
-    {
-      board_diff = [((0,0),'a');((1,1),'e')];
-      new_turn_val = 3;
-      players_diff = [p]
-    }
-  in
-  let m = 
-    {
-      tiles_placed = [((2,2),'a');((1,1),'e')];
-      player = "Russell"
-    }
-  in
-  print_endline (m |> move_to_json);
-  (* print_endline (x |> diff_to_json |> Yojson.Basic.from_string |> diff_from_json |> diff_to_json); *)
-  (*let rec string_of_my_list lst = 
-    let rec aux l acc = 
-      match l with 
-      | ((x,y),c)::t -> aux t (acc ^ "((" ^ (string_of_int x) ^ "," ^ (string_of_int y) ^ ")," ^ (Char.escaped c) ^ ");")
-      | [] -> acc
-    in
-    aux lst ""
-  in
-  let json = "{\"tiles_placed\": [{\"x\":0,\"y\":0,\"char\":\"a\"},{\"x\":1,\"y\":1,\"char\":\"e\"}],\"player\": \"Brian\"}" in
-  (* diff_to_json x *)
-  let move = move_from_json (Yojson.Basic.from_string json) in
-  print_endline (move.player);
-  print_endline (string_of_my_list [((0,0),'a');((1,1),'b')]);
-  print_endline (move.tiles_placed |> string_of_my_list)*)
-
-
-
