@@ -243,11 +243,11 @@ let rec get_words board tp dir =
   match dir with
   | Horizontal -> 
     let t = List.sort (fun ((x1,_),_) ((x2,_),_) -> Pervasives.compare x1 x2) tp in
-    let ((x0,y0),_) = List.hd t in
+    let ((x0,y0),_) = try List.hd t with _ -> print_endline "c"; failwith "here4" in
     get_words_dir board t (valid_skips t Horizontal (x0,y0)) (x0,y0) Horizontal
   | Vertical -> 
     let t = List.sort (fun ((_,y1),_) ((_,y2),_) -> Pervasives.compare y1 y2) tp in
-    let ((x0,y0),_) = List.hd t in
+    let ((x0,y0),_) = try List.hd t with _ -> print_endline "d"; failwith "here4" in
     get_words_dir board t (valid_skips t Vertical (x0,y0)) (x0,y0) Vertical
 
 (*and get_words_horiz b tp breaks (x0,y0)= 
@@ -310,8 +310,8 @@ and get_words_dir b tp breaks (x0,y0) dir =
       if String.length (fst new_w) > 1 then new_w::acc else acc)
     [] tp
   in
-  let (prefix,p_sc) = get_prefix b (List.hd tp) dir in
-  let (suffix,s_sc) = get_suffix b (List.hd (List.rev tp)) dir in
+  let (prefix,p_sc) = get_prefix b (try List.hd tp with _ -> print_endline "a";failwith "here2") dir in
+  let (suffix,s_sc) = get_suffix b (try List.hd (List.rev tp)with _ -> print_endline "b";failwith "here3") dir in
   let z0 = if dir = Horizontal then x0 else y0 in
   let count = ref z0 in
   let (infix,i_sc) = List.fold_left 
@@ -346,27 +346,29 @@ and get_words_dir b tp breaks (x0,y0) dir =
   
 (* get the direction a word was placed in *)
 let get_word_dir tp = 
-  let ((x0,y0),c0) = try (List.hd tp) with _ -> assert false in
+  let ((x0,y0),c0) = try (List.hd tp) with _ -> print_endline "here"; assert false in
   let vert = List.fold_left (fun acc ((x,y),c) -> acc && x=x0) true tp in
   let horiz = List.fold_left (fun acc ((x,y),c) -> acc && y=y0) true tp in
   match vert,horiz with
   | false, false -> 
     raise (FailedMove "tiles must be placed horizontally or vertically")
-  | true, _ -> print_endline "vert"; Vertical
-  | false, true -> print_endline "horiz"; Horizontal
+  | true, _ -> (*print_endline "vert";*) Vertical
+  | false, true -> (*print_endline "horiz";*) Horizontal
 
 (* [execute state move] executes a [move] to produce a new game state from the 
  * previous game state [state] *)
+(* ram is assuming that players_diff is always list of length 1 *)
 let execute s move =
   print_endline "here";
-  let m = 
+  (* flip flopped bc we messed up *)
+  let move_flipped = 
     let new_placed_tiles = 
       List.map (fun ((a,b),c) -> ((b,a),Char.lowercase_ascii c)) move.tiles_placed
     in
     {move with tiles_placed=new_placed_tiles}
   in
-  let tiles_pl = m.tiles_placed in
-  let p_n = m.player in
+  let tiles_pl = move_flipped.tiles_placed in
+  let p_n = move.player in
   let cur_p = 
     try List.find (fun p -> p.player_name = p_n) s.players
     with Not_found -> assert false
@@ -374,6 +376,7 @@ let execute s move =
   assert (cur_p.order = s.turn);
   print_endline "1";
   let (words,words_sc) = List.split (get_words s.grid tiles_pl (get_word_dir tiles_pl)) in
+  print_string "words: "; List.iter (fun x -> print_endline x) words;
   if List.fold_left (fun acc w -> acc && Dictionary.in_dict w) true words then
     begin
     (* place tiles *)
@@ -382,7 +385,7 @@ let execute s move =
     let calc_score = List.fold_left (fun acc x -> acc + x) 0 words_sc in
     cur_p.score <- (cur_p.score + calc_score);
     s.turn <- ((s.turn + 1) mod 4);
-    {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [cur_p]}
+    {board_diff = move.tiles_placed; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else
     raise (FailedMove "an illegimate word was formed")
@@ -523,3 +526,37 @@ let move_from_json json =
   let p = member "playerName" json |> to_string in
   let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
   {player = p; tiles_placed = tp}
+
+(*let _ = 
+  let print_board b = 
+    let print_row r = 
+      List.iter (fun x -> 
+        match x with 
+        | Some t -> print_string ((Char.escaped t) ^ " ");
+        | None -> print_string "# ";
+      ) r
+    in
+    List.iter (fun row -> print_row row; print_endline "";) b;
+  in
+  (*print_endline ("hello: " ^ (string_of_bool (Dictionary.in_dict "hello")));
+  print_endline ("hen: " ^ (string_of_bool (Dictionary.in_dict "hen")));
+  print_endline ("ten: " ^ (string_of_bool (Dictionary.in_dict "ten")));*)
+  init_names();
+  let s = create_game "Brian" "game" in
+  print_endline ("turn: " ^ (string_of_int s.turn));
+  print_board s.grid;  
+  let m_ten = {
+    tiles_placed = [((5,5),'h');((6,5),'e');((7,5),'n')];
+    player = "Brian"
+  } in
+  let _ = execute s m_ten in
+  print_board s.grid;
+  let player2 = List.nth (s.players) 1 in
+  let m_hen = {
+    tiles_placed = [((6,4),'t');((6,6),'n')];
+    player = player2.player_name
+  } in
+  let _ = execute s m_hen in
+  print_endline ("turn: " ^ (string_of_int s.turn));
+  print_board s.grid;*)
+
