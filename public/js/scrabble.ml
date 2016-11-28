@@ -112,6 +112,7 @@ let dialog col =
   " var dialog = document.querySelector('dialog');
     dialog.showModal();
     var current = null;
+
     for (i = 0; i < 26; i++) {
       (function() {
         var id = 'letter-' + String.fromCharCode(97 + i);
@@ -127,22 +128,40 @@ let dialog col =
         });
       }());
     }
-    document.getElementById('select').addEventListener('click', function() {
+
+    function resetCurrent() {
       if (current) {
-        var id = 'tile-" ^ string_of_int col ^ "';
-        document.getElementById(id).innerHTML = current.innerHTML;
         current.style.color = '#000';
         current.style.backgroundColor = '#fff';
         current = null;
-        dialog.close();
       }
-    });
+    }
+
+    function handleSelect() {
+      if (current) {
+        var playerTiles = [];
+        for (i = 0; i < " ^ string_of_int num_player_tiles ^ "; i++) {
+          playerTiles.push(document.getElementById('tile-' + i).innerHTML);
+        }
+        if (playerTiles.includes(current.innerHTML)) {
+          var notification = document.querySelector('.mdl-js-snackbar');
+          notification.MaterialSnackbar.showSnackbar({message: \"You already have a '\" + current.innerHTML + \"' tile. Please place this first.\"});
+          resetCurrent();
+          document.getElementById('select').removeEventListener('click', handleSelect);
+          dialog.close();
+        } else {
+          var id = 'tile-" ^ string_of_int col ^ "';
+          document.getElementById(id).innerHTML = current.innerHTML;
+          resetCurrent();
+          document.getElementById('select').removeEventListener('click', handleSelect);
+          dialog.close();
+        }
+      }
+    }
+
+    document.getElementById('select').addEventListener('click', handleSelect);
     dialog.querySelector('.close').addEventListener('click', function() {
-      if (current) {
-        current.style.color = '#000';
-        current.style.backgroundColor = '#fff';
-        current = null;
-      }
+      resetCurrent();
       dialog.close();
     });
   "

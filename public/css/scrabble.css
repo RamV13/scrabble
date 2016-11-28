@@ -108,8 +108,8 @@ body {
 }
 
 .alphabet li:hover {
-    color: #009688;
-    background-color: lightgrey;
+    color: #009688 !important;
+    background-color: lightgrey !important;
 }
 
 .tile-values {
