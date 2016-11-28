@@ -338,14 +338,32 @@ let init_state () =
   let game_state = 
     "gameState" |> get |> Yojson.Basic.from_string |> Game.state_from_json
   in
-  let set_scoreboard_name player order = 
-    let id = "scorename-" ^ (string_of_int order) in
-    (get_element_by_id id)##innerHTML <- Js.string player.player_name
-  in
-  let count = ref 0 in
   remove "gameState";
-  game_state.players
-  |> List.iter (fun p -> set_scoreboard_name p !count; count := !count + 1);
+  let set_scoreboard player = 
+    let name_id = "scorename-" ^ (string_of_int player.order) in
+    let score_id = "score-" ^ (string_of_int player.order) in
+    (get_element_by_id name_id)##innerHTML <- Js.string player.player_name;
+    let score_string = string_of_int player.score in
+    (get_element_by_id score_id)##innerHTML <- Js.string score_string
+  in
+  let x = ref 0 in
+  let y = ref 0 in
+  let update_tile grid_value = 
+    (match grid_value with
+    | Some value -> 
+      begin
+        value
+        |> Char.uppercase_ascii
+        |> Char.escaped
+        |> place_tile !x !y
+      end
+    | None -> ());
+    x := 1 + !x
+  in
+  game_state.grid
+  |> List.iter (fun row -> List.iter update_tile row; y := 1 + !y; x := 0);
+  placed_tiles := [];
+  List.iter (fun player -> set_scoreboard player) game_state.players;
   let player = 
     game_state.players
     |> List.find (fun player -> player.player_name = (!player_name))
