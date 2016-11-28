@@ -14,6 +14,8 @@ NetID's: jwp258, bcs84, kt485, rsv32
 - Ocamlbuild documentation [https://github.com/ocaml/ocamlbuild](https://github.com/ocaml/ocamlbuild)
 - Cohttp source code and documentation [https://github.com/mirage/ocaml-cohttp](https://github.com/mirage/ocaml-cohttp)
 - Lwt source code and documentation [https://github.com/ocsigen/lwt](https://github.com/ocsigen/lwt)
+- MDL documentation [https://getmdl.io/components/](https://getmdl.io/components/)
+- JavaScript documentation [https://developer.mozilla.org/en-US/docs/Web/JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
 ## Architecture
 
@@ -35,6 +37,7 @@ NetID's: jwp258, bcs84, kt485, rsv32
 - cohttp - for the HTTP client and server
 - yojson - for serializing/deserializing data to and from JSON
 - js_of_ocaml - for developing a browser-compatible GUI
+- node - for serving web pages and forwarding requests to the OCaml server
 
 \* use `opam update` and `opam upgrade` to fix unbound value compile errors
 
@@ -56,7 +59,7 @@ NetID's: jwp258, bcs84, kt485, rsv32
 - no real security guarantees (outside of browser CORS security and Cornell's hosting security guarantees) although we do recognize certain vulnerabilities that would be simple to protect against given more time 
   - incorporating a user and game id mechanism and employing hashing and/or authentication to prevent against unwanted requests to modify game state
   - concealing other player's tiles in server-sent payloads involving game state
-- open multiple instances of the game on one machine within one browser (i.e. in different tabs) will **NOT** work due to the limitations of 6 `EventSource` instances per browser (may work up to 2-3 tabs at most)
+- opening multiple instances of the game on one machine within one browser (i.e. in different tabs) will **NOT** work due to the limitations of 6 `EventSource` instances per browser (may work up to 2-3 tabs at most) and may even break the individual game attempting to be joined but will leave all other games unaffected
 
 ## Division of Labor
 
