@@ -225,7 +225,7 @@ let get_suffix board ((row,col),tile) dir =
   get_next (row,col) ("",0) dx dy
 
 let rec get_words board tp dir = 
-  (*let valid_skips lst dir (x0,y0) = 
+  let valid_skips lst dir (x0,y0) = 
     let z0 = if dir = Horizontal then x0 else y0 in
     let (_,break) = List.fold_left 
           (fun (acc,found) ((x,y),_) -> 
@@ -236,38 +236,16 @@ let rec get_words board tp dir =
           (z0 - 1,[]) lst
     in
     break
-  in*)
+  in
   match dir with
   | Horizontal -> 
     let t = List.sort (fun ((x1,_),_) ((x2,_),_) -> Pervasives.compare x1 x2) tp in
     let ((x0,y0),_) = List.hd t in
-    let valid_skips lst = 
-      let (_,break) = List.fold_left 
-          (fun (acc,found) ((x,_),_) -> 
-            if x = acc + 2 then (x,found @ [acc + 1])
-            else if x > acc + 2 then raise (FailedMove "skip too large")
-            else (x,found)) 
-          (x0 - 1,[]) t
-      in
-      break
-    in
-    (*get_words_horiz board t (valid_skips t Horizontal (x0,y0)) (x0,y0)*)
-    get_words_horiz board t (valid_skips t) (x0,y0)
+    get_words_horiz board t (valid_skips t Horizontal (x0,y0)) (x0,y0)
   | Vertical -> 
     let t = List.sort (fun ((_,y1),_) ((_,y2),_) -> Pervasives.compare y1 y2) tp in
     let ((x0,y0),_) = List.hd t in
-    let valid_skips lst = 
-      let (_,break) = List.fold_left 
-          (fun (acc,found) ((_,y),_) -> 
-            if y = acc + 2 then (y,found @ [acc + 1])
-            else if y > acc + 2 then raise (FailedMove "skip too large")
-            else (y,found)) 
-          (y0 - 1,[]) t
-      in
-      break
-    in
-    (*get_words_vert board t (valid_skips t Vertical (x0,y0)) (x0,y0)*)
-    get_words_vert board t (valid_skips t) (x0,y0)
+    get_words_vert board t (valid_skips t Vertical (x0,y0)) (x0,y0)
 
 and get_words_horiz b tp breaks (x0,y0)= 
   let words = List.fold_left 
