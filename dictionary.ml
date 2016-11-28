@@ -43,7 +43,7 @@ module CharMap = Map.Make(Char)
     let old_node = CharMap.find (String.get s 0) m in
     Node (c, CharMap.add (String.get s 0) (add_helper s old_node) m,word)
   else Node (c, CharMap.add (String.get s 0) (add_helper s Empty) m,word)
-  |Empty -> failwith"please add to \"empty\" "
+  |Empty -> print_endline "enemy stand";failwith"please add to \"empty\" "
 
   (* //////////////// THIS WHOLE SECTION HAS A TON OF REPEATED CODE
     ///////////////// I WILL REMEDY THIS SOON*)
@@ -54,9 +54,10 @@ module CharMap = Map.Make(Char)
   |Node(c,m,_) -> match c with
     |None -> (try(mem s
         (CharMap.find (String.get s 0) m)) with _ -> false)
-    |Some d when (d = String.get s 0) -> if String.length s = 1 then true else
+    |Some d when (d = String.get s 0) -> (if String.length s = 1 then true else
       try (mem (String.sub s 1 (String.length s - 1))
-        (CharMap.find (String.get s 1) m)) with _ -> false
+        (CharMap.find (String.get s 1) m)) with _ -> false)
+    |Some _ -> false
 
   (*If we ever need this I'll implement it*)
   let remove s t = t
@@ -67,10 +68,11 @@ module CharMap = Map.Make(Char)
   |Node(c,m,_) -> match c with
     |None -> (try(is_leaf s
         (CharMap.find (String.get s 0) m)) with _ -> false)
-    |Some d when (d = String.get s 0) -> if String.length s = 1 then
+    |Some d when (d = String.get s 0) -> (if String.length s = 1 then
       CharMap.is_empty m else
       try (is_leaf (String.sub s 1 (String.length s - 1))
-        (CharMap.find (String.get s 1) m)) with _ -> false
+        (CharMap.find (String.get s 1) m)) with _ -> false)
+    |Some _ -> false
 
   (*Once again copied code, not sure of better way to do it*)
   let rec is_valid_word s t = match t with
@@ -78,10 +80,10 @@ module CharMap = Map.Make(Char)
   |Node(c,m,word) -> match c with
     |None -> (try(is_valid_word s
         (CharMap.find (String.get s 0) m)) with _ -> false)
-    |Some d when (d = String.get s 0) -> if String.length s = 1 then
+    |Some d when (d = String.get s 0) -> (if String.length s = 1 then
       word else
       try (is_valid_word (String.sub s 1 (String.length s - 1))
-        (CharMap.find (String.get s 1) m)) with _ -> false
+        (CharMap.find (String.get s 1) m)) with _ -> false)
     |_ -> false
 
 
@@ -89,9 +91,11 @@ module CharMap = Map.Make(Char)
   |Empty -> []
   |Node(_,m,_) -> if CharMap.is_empty m then accum else List.flatten (List.map
     (fun h -> (let new_str = (str ^ String.make 1 h) in
-      let new_node = (CharMap.find h m) in match new_node with Node (a,b,c) ->
-        if c then add_words new_node (new_str::accum) new_str
-      else add_words new_node accum new_str)) (List.map (fun (a,b) -> a) (CharMap.bindings m)))
+      let new_node = (CharMap.find h m) in match new_node with
+      |Node (a,b,c) ->
+        (if c then add_words new_node (new_str::accum) new_str
+      else add_words new_node accum new_str)
+      |Empty ->[])) (List.map (fun (a,b) -> a) (CharMap.bindings m)))
 
 
   let rec extend s t words str = match t with
@@ -99,11 +103,51 @@ module CharMap = Map.Make(Char)
   |Node(c,m,word) -> match c with
     |None ->(try(extend s
         (CharMap.find (String.get s 0) m) words str) with _ -> words)
-    |Some d when (d = String.get s 0) -> if String.length s = 1 then
+    |Some d when (d = String.get s 0) -> (if String.length s = 1 then
       add_words t [] str else
       try (extend (String.sub s 1 (String.length s - 1))
-        (CharMap.find (String.get s 1) m) words str) with _ -> words
+        (CharMap.find (String.get s 1) m) words str) with _ -> words)
+    |Some _ -> words
 
   let rec extensions s t = extend s t [] s
 
   let make s = add s empty;;
+
+  let string_rev s = let new_str = (String.make (String.length s) 'a') in
+    let rec rev_word str counter = (match counter with
+    |0 -> new_str
+    |_ -> Bytes.set new_str (String.length str - counter)
+      (String.get str (counter - 1));
+      rev_word str (counter - 1)) in
+    rev_word s (String.length s)
+
+
+  let dict_from_file f =
+  let trees = ref (empty,empty) in
+   let input_channel = open_in f in
+   try
+      let rec process_line () =
+        let line = input_line input_channel in
+        let forward = fst(!trees) in
+        let back = snd(!trees) in
+        trees:=((add line forward),(add (string_rev line) back));
+        process_line ()
+      in
+      ignore (process_line ());
+      close_in input_channel; !trees
+   with
+   | End_of_file -> close_in input_channel; !trees
+   | exc -> close_in_noerr input_channel; !trees
+
+  let global_dict =
+    dict_from_file "./full_dict.txt"
+
+  let back_dict = snd(global_dict)
+
+  let forward_dict = fst(global_dict)
+
+  let in_dict s =
+    is_valid_word s forward_dict
+
+  let in_back_dict s =
+    is_valid_word s back_dict
