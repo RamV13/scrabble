@@ -22,3 +22,4 @@ setup.log
 # Mac files
 .DS_STORE
 
+Makefile

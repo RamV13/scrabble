@@ -1,5 +1,5 @@
-OBJS=grid.cmo dictionary.cmo
-NAME=game
+OBJS=grid.cmo dictionary.cmo game.cmo
+NAME=ai
 OFIND=ocamlfind ocamlc -package yojson
 
 $(NAME).byte: $(OBJS)

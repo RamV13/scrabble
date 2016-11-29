@@ -18,6 +18,14 @@ type surroundings = {
 
 type direction = Up | Down | Left | Right
 
+(* A bunch of tiny utility functions. *)
+let fst' (a, _, _) = a
+let snd' (_, a, _) = a
+let thrd' (_, _, a) = a
+let to_str c = String.make 1 c
+let list_place l r c ch = (ch, (r,c))::l
+let flip' (a, b) = (b, a)
+
 
 (* [has_neighbors n] returns true if at least one of [neighbors] n
  * is not empty. *)
@@ -51,13 +59,6 @@ let find_slots board =
   !slots
 
 
-let fst' (a, _, _) = a
-let snd' (_, a, _) = a
-let thrd' (_, _, a) = a
-let to_str c = String.make 1 c
-let list_place l r c ch = (ch, (r,c))::l
-
-
 (* [find_adj board slot acc dir] returns the words adjacent to slot [s]
  * in the given direction [dir] for board [board]. Helper function. *)
 let rec find_adj board slot acc dir =
@@ -72,7 +73,7 @@ let rec find_adj board slot acc dir =
   in
   match fst' adj with
   | None -> acc
-  | Some c -> find_adj board (snd' adj) (acc ^ (to_str c)) (thrd' adj)
+  | Some c -> find_adj board (snd' adj) ((to_str c) ^ acc) (thrd' adj)
 
 
 (* [get_surroundings b s] returns the surrounding words around slot [s]
@@ -134,64 +135,87 @@ let makes_move dir surr ch =
 let makes_prefix dir surr ch =
   let s = to_str ch in
   match dir with
-  | Up -> (Dictionary.has_extensions (surr.below ^ s))
-  | Down -> (Dictionary.has_extensions (s ^ surr.above))
-  | Left -> (Dictionary.has_extensions (surr.right ^ s))
-  | Right -> (Dictionary.has_extensions (s ^ surr.left))
+  | Up -> (Dictionary.has_back_extensions (surr.below ^ s))
+  | Down -> (Dictionary.has_extensions (surr.above ^ s))
+  | Left -> (Dictionary.has_back_extensions (surr.right ^ s))
+  | Right -> (Dictionary.has_extensions (surr.left ^ s))
 
 
 let get_next dir curr =
-  let ((r, c), cl) = curr in
+  let ((r, c), _) = curr in
   match dir with
-  | Up -> ((r - 1, c), cl)
-  | Down -> ((r + 1, c), cl)
-  | Left -> ((r, c + 1), cl)
-  | Right -> ((r, c - 1), cl)
+  | Up -> ((r - 1, c), snd curr)
+  | Down -> ((r + 1, c), snd curr)
+  | Left -> ((r, c - 1), snd curr)
+  | Right -> ((r, c + 1), snd curr)
 
 
-(* Removes element [el] from list [li]. It is tail recursive. *)
-let rem li el =
-  let rec aux l e acc=
-    match li with
+(* Removes only the first occurence of element [el] from list [li].
+ * It is not tail recursive. *)
+let rec rem li el =
+  match li with
+  | [] -> []
+  | h::t -> if h = el then t else h::(rem t el)
+
+
+(* [intersect l1 l2] returns the elements that are common to both of
+ * lists l1 AND l2. *)
+let intersect l1 l2 =
+  let it = l1 in
+  let rec aux it acc =
+    match it with
     | [] -> acc
-    | h::t -> if h = e then t else aux t e (h::acc)
+    | h::t -> if List.mem h l2 then aux t (h::acc) else aux t acc
   in
-  aux li el []
+  aux it []
 
+let print_surr s =
+  let _ = List.map print_string
+      [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in
+  ()
 
-(* Should return a list of board * char/int lists *)
-let rec build start board curr surr tiles dir acc =
-  let cl = snd curr in
-  let (r, c) = fst curr in
-  match cl with
-  | [] -> acc
-  | _::_ ->
-    let new_moves =
-      let good_chars = List.filter (fun c -> makes_move dir surr c) cl in
-      List.fold_left
-        (
-          fun acc ch ->
-            (Grid.place board r c ch, start, dir)::acc
-        )
-        [] good_chars
+(* might be a scoping issue here with valid_move and place_char *)
+let build' start state player anchors curr dir =
+  let rec aux state player dir curr acc =
+    let ((row, col), _) = curr in
+    let valid_move surr c =
+      try
+        let allowed = List.assoc (fst curr) anchors in
+        if List.mem c allowed then
+          makes_move dir surr c
+        else false
+      with
+      | Not_found -> makes_move dir surr c
     in
-    let new_acc = List.rev_append new_moves acc in
-    let good_prefixes =
-      match tiles with
-      | [] -> []
-      | _::_ ->
-        List.filter (fun ch -> makes_prefix dir surr ch) cl
+    let place_char c =
+      Grid.place (state.Game.grid) row col c
     in
-    let new_curr = get_next dir curr in
-    List.fold_left
-      (fun a ch ->
-         let new_board = Grid.place board r c ch in
-         List.rev_append a
-           (build start new_board
-              new_curr (fst new_curr |> get_surroundings new_board)
-              (rem tiles ch) dir new_acc))
-      new_acc
-      good_prefixes
+    let tiles = player.Game.tiles in
+    match tiles with
+    | [] -> acc
+    | h::t ->
+      let surr = get_surroundings state.Game.grid (row, col) in
+      let good_ends = List.filter (valid_move surr) tiles in
+      let moves = List.map (place_char) good_ends in
+      let dir_moves = List.map (fun m -> (start, dir, m)) moves in
+      let new_acc = List.rev_append dir_moves acc in
+      let good_ixes = List.filter (makes_prefix dir surr) player.Game.tiles in
+      let new_curr = get_next dir curr in
+      if good_ixes = [] then new_acc else
+        List.fold_left
+          (
+            fun a p ->
+              let new_board = place_char p in
+              let new_tiles = rem tiles p in
+              aux
+                {state with Game.grid = new_board}
+                {player with Game.tiles = new_tiles}
+                dir new_curr new_acc
+          )
+          [] good_ixes
+  in
+  aux state player dir curr []
+
 
 let gen_tiles_placed board cl start dir =
   let rec aux coord counter acc =
@@ -211,14 +235,13 @@ let gen_tiles_placed board cl start dir =
   in
   aux start (List.length cl) []
 
-let flip' (a, b) = (b, a)
 
 (* Get the diff of all boards, generate moves as a result *)
 let to_moves player init_state boards =
   List.fold_left
     (
       fun acc b ->
-        let (board, start, dir) = b in
+        let (start, dir, board) = b in
         let added =
           Grid.get_diff init_state.Game.grid board
         in
@@ -242,29 +265,27 @@ let best_move state player =
   let init_tiles = player.Game.tiles in
   let slots = find_slots init_board in
   if slots = [] then
-    let mv = build center init_board (center, player.Game.tiles)
-        (get_surroundings init_board center)
-        init_tiles Right []
-    in
+    let mv = build' center state player [] (center, true) Right in
     mv |> to_moves player state  |> rank_moves |> List.hd
   else
     let anchors = get_anchors init_board init_tiles slots in
+    let _ = print_int (List.length anchors) in
     let moves = List.fold_left
         (
           fun acc anc ->
-            let b = build (fst anc) init_board anc
-                (get_surroundings init_board (fst anc))
-                init_tiles
+            let b = build' (fst anc) state player anchors anc
             in
-            let lm = b Left [] in
-            let rm = b Right [] in
-            let um = b Up [] in
-            let dm = b Down [] in
+            let lm = b Left in
+            let rm = b Right in
+            let um = b Up in
+            let dm = b Down in
             let mvs =
               lm |> List.rev_append rm |> List.rev_append um |> List.rev_append dm
             in
+            print_int (List.length mvs) |> print_newline;
             List.rev_append mvs acc
         )
         [] anchors
     in
-    moves |> to_moves player state  |> rank_moves |> List.hd
+    let ranked = moves |> to_moves player state  |> rank_moves in
+    if ranked = [] then failwith "No more moves" else List.hd ranked
