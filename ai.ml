@@ -201,7 +201,7 @@ let to_moves player init_state boards =
       fun acc b ->
         let (board, start, dir) = b in
         let diff =
-          Game.get_diff init_state ({init_state with Game.grid=board})
+          Grid.get_diff init_state ({init_state with Game.grid=board})
         in
         let added = diff.Game.added_tiles in
         let open Game in
