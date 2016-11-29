@@ -224,10 +224,71 @@ let get_suffix board ((row,col),tile) dir =
   let (dx,dy) = if dir = Horizontal then (1,0) else (0,1) in
   get_next (row,col) ("",0) dx dy
 
+let get_words_dir b tp (y0,x0) dir = 
+  let opp dir = 
+    if dir = Horizontal then Vertical else Horizontal
+  in
+  let words = List.fold_left 
+    (fun acc ((y,x),c) -> 
+      let (prefix,p_sc) = get_prefix b ((y,x),c) (opp dir) in
+      let (suffix,s_sc) = get_suffix b ((y,x),c) (opp dir) in
+      let tile_mult = Grid.bonus_letter_at (y,x) in
+      let word_mult = Grid.bonus_word_at (y,x) in
+      let tile_val = List.assoc c tile_values in
+      let new_w = 
+        (prefix ^ (Char.escaped c) ^ suffix, 
+        word_mult * (p_sc + s_sc + tile_mult * tile_val)) 
+      in
+      if String.length (fst new_w) > 1 then new_w::acc else acc)
+    [] tp
+  in
+  (*if dir = Horizontal then print_endline "horiz" else print_endline "vert";*)
+  let (prefix,p_sc) = 
+    get_prefix b (try List.hd tp with _ -> assert false) dir in
+  let (suffix,s_sc) = 
+    get_suffix b (try List.hd (List.rev tp) with _ -> assert false) dir in
+  let z0 = if dir = Horizontal then x0 else y0 in
+  let count = ref z0 in
+  let (infix,i_sc) = List.fold_left 
+    (fun (acc_w,acc_s) ((y,x),c) -> 
+      let z = if dir = Horizontal then x else y in
+      if z = !count then 
+        begin
+          count := !count + 1;
+          let tile_mult = Grid.bonus_letter_at (y,x) in
+          (acc_w ^ Char.escaped c,tile_mult*(List.assoc c tile_values) + acc_s)
+        end
+      else 
+        begin
+          count := !count + 2; 
+          let tile = 
+            let (dx,dy) = if dir = Horizontal then (-1,0) else (0,-1) in
+            match Grid.get_tile b (y + dy) (x + dx) with
+            | Some character -> character 
+            | None -> raise (FailedMove "gap in tiles placed")
+          in
+          let tile_mult = Grid.bonus_letter_at (y,x) in
+          (acc_w ^ (Char.escaped tile) ^ (Char.escaped c), tile_mult * (List.assoc c tile_values) + acc_s)
+        end
+    ) ("",0) tp 
+  in
+  print_endline ("prefix: "^prefix ^ " infix: " ^ infix ^ " suffix: " ^ suffix);
+  let word_mult = 
+    List.map (fun ((y,x),_) -> Grid.bonus_word_at (y,x)) tp 
+    |> List.fold_left (fun acc x -> acc*x) 1
+  in
+  print_endline ("main word multiplier: " ^ string_of_int word_mult);
+  let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in
+  let final_words = word::words in
+  if final_words = [] && prefix = "" && suffix = "" && not (b = Grid.empty) then 
+    raise (FailedMove "cannot place tiles apart from existing ones")
+  else
+   final_words
+
 (* get all new words and their scores formed when tiles [tp] are placed in 
  * direction [dir].
  * the actual work is done in the two functions below *)
-let rec get_words board tp dir = 
+let get_words board tp dir = 
   let valid_skips lst dir (y0,x0) = 
     let z0 = if dir = Horizontal then x0 else y0 in
     let (_,v) = List.fold_left 
@@ -243,101 +304,61 @@ let rec get_words board tp dir =
   match dir with
   | Horizontal -> 
     let t = List.sort (fun ((_,x1),_) ((_,x2),_) -> Pervasives.compare x1 x2) tp in
-    let ((y0,x0),_) = try List.hd t with _ -> print_endline "c"; failwith "here4" in
+    let ((y0,x0),_) = try List.hd t with _ -> assert false in
     if valid_skips t Horizontal (y0,x0) then get_words_dir board t (y0,x0) Horizontal
     else raise (FailedMove "skip too large")
   | Vertical -> 
     let t = List.sort (fun ((y1,_),_) ((y2,_),_) -> Pervasives.compare y1 y2) tp in
-    let ((y0,x0),_) = try List.hd t with _ -> print_endline "d"; failwith "here4" in
+    let ((y0,x0),_) = try List.hd t with _ -> assert false in
     if valid_skips t Vertical (y0,x0) then get_words_dir board t (y0,x0) Vertical
     else raise (FailedMove "skip too large")
-
-and get_words_dir b tp (y0,x0) dir = 
-  let opp dir = 
-    if dir = Horizontal then Vertical else Horizontal
-  in
-  let words = List.fold_left 
-    (fun acc ((y,x),c) -> 
-      let (prefix,p_sc) = get_prefix b ((y,x),c) (opp dir) in
-      let (suffix,s_sc) = get_suffix b ((y,x),c) (opp dir) in
-      let tile_mult = Grid.bonus_letter_at (y,x) in
-      let word_mult = Grid.bonus_word_at (y,x) in
-      let tile_val = List.assoc c tile_values in
-      let new_w = (prefix ^ (Char.escaped c) ^ suffix, (p_sc + s_sc + tile_mult * tile_val)*word_mult) in
-      if String.length (fst new_w) > 1 then new_w::acc else acc)
-    [] tp
-  in
-  if dir = Horizontal then print_endline "horiz" else print_endline "vert";
-  let (prefix,p_sc) = get_prefix b (try List.hd tp with _ -> print_endline "a";failwith "here2") dir in
-  let (suffix,s_sc) = get_suffix b (try List.hd (List.rev tp)with _ -> print_endline "b";failwith "here3") dir in
-  let z0 = if dir = Horizontal then x0 else y0 in
-  let count = ref z0 in
-  let (infix,i_sc) = List.fold_left 
-    (fun (acc_w,acc_s) ((y,x),c) -> 
-      let z = if dir = Horizontal then x else y in
-      if z = !count then 
-        begin
-          count := !count + 1;
-          let tile_mult = Grid.bonus_letter_at (y,x) in
-          (acc_w ^ (Char.escaped c),tile_mult * (List.assoc c tile_values) + acc_s)
-        end
-      else 
-        begin
-          count := !count + 2; 
-          let tile = 
-            let (dx,dy) = if dir=Horizontal then (-1,0) else (0,-1) in
-            match Grid.get_tile b (y + dy) (x + dx) with
-            | Some character -> character 
-            | None -> raise (FailedMove "gap in tiles placed")
-          in
-          let tile_mult = Grid.bonus_letter_at (y,x) in
-          (acc_w ^ (Char.escaped tile) ^ (Char.escaped c), tile_mult * (List.assoc c tile_values) + acc_s)
-        end
-    ) ("",0) tp 
-  in
-  print_endline ("prefix: "^prefix ^ " infix: " ^ infix ^ " suffix: " ^ suffix);
-  if words = [] && prefix = "" && suffix = "" && not (b = Grid.empty) then raise (FailedMove "cannot place tiles apart from existing ones")
-  else
-    begin
-      (*let word_mult = 
-        List.map (fun z -> if dir = Horizontal then Grid.bonus_word_at (y0,z) else Grid.bonus_word_at (z,x0)) breaks
-        |> List.fold_left (fun acc x -> acc*x) 1
-      in*)
-      let word_mult = 
-        List.map (fun ((y,x),_) -> Grid.bonus_word_at (y,x)) tp 
-        |> List.fold_left (fun acc x -> acc*x) 1
-      in
-      print_endline ("main word multiplier: " ^ string_of_int word_mult);
-      let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in
-      word::words
-    end
   
 (* get the direction a word was placed in *)
-let get_word_dir tp = 
-  let ((y0,x0),c0) = try (List.hd tp) with _ -> print_endline "here"; assert false in
-  let vert = List.fold_left (fun acc ((y,x),c) -> acc && x=x0) true tp in
-  let horiz = List.fold_left (fun acc ((y,x),c) -> acc && y=y0) true tp in
-  match vert,horiz with
-  | false, false -> 
-    raise (FailedMove "tiles must be placed horizontally or vertically")
-  | true, _ -> (*print_endline "vert";*) print_endline "VERT"; Vertical
-  | false, true -> (*print_endline "horiz";*) print_endline "HORIZ"; Horizontal
+let get_word_dir b tp = 
+  let ((y0,x0),c0) = try (List.hd tp) with _ -> assert false in
+  let get_dir_single_char () = 
+    let t = List.hd tp in
+    let vert_prefix = fst (get_prefix b t Vertical) in
+    let vert_suffix = fst (get_suffix b t Vertical) in
+    let horiz_prefix = fst (get_prefix b t Horizontal) in
+    let horiz_suffix = fst (get_suffix b t Horizontal) in
+    if vert_prefix = "" && vert_suffix = "" && (horiz_prefix <> "" || horiz_suffix <> "") then Horizontal
+    else if horiz_prefix = "" && horiz_suffix = "" && (vert_prefix <> "" || vert_suffix <> "") then Vertical
+    else if vert_prefix = "" && vert_suffix = "" && horiz_prefix = "" && horiz_suffix = "" then raise (FailedMove "cannot place single tile by itself")
+    else Horizontal
+  in
+  let get_dir_multiple_chars () = 
+    let vert = List.fold_left (fun acc ((y,x),c) -> acc && x=x0) true tp in
+    let horiz = List.fold_left (fun acc ((y,x),c) -> acc && y=y0) true tp in
+    match vert,horiz with
+    | false, false -> 
+      raise (FailedMove "tiles must be placed horizontally or vertically")
+    | true, false -> (*print_endline "VERT";*) Vertical
+    | false, true -> (*print_endline "HORIZ";*) Horizontal
+    | true, true -> failwith "TODO: single tile infer direction"
+  in
+  if List.length tp = 1 then get_dir_single_char () else get_dir_multiple_chars ()
 
 (* return remaining tile rack after playing [played] from [rack] *)
 (* assumes that tiles played will always be subset of rack *)
 let diff_tile_rack rack played = 
   let rec remove_from_list elem lst prev = 
     match lst with
-    | x::y::t -> if x = elem then prev @ (y::t) else if y = elem then prev @ (x::t) else remove_from_list elem t (prev @ [x] @ [y])
-    | x::t -> if x = elem then prev @ t else remove_from_list elem t (prev @ [x])
+    | x::y::t -> 
+      if x = elem then prev @ (y::t) 
+      else if y = elem then prev @ (x::t) 
+      else remove_from_list elem t (prev @ [x] @ [y])
+    | x::t -> 
+      if x = elem then prev @ t 
+      else remove_from_list elem t (prev @ [x])
     | [] -> failwith "not found"
   in
   let rec aux r p =
     match p with
     | h::t -> 
-      if List.mem h r then aux (remove_from_list h r []) t (* current tile played is in rack *)
-      else if List.mem '?' r then aux (remove_from_list '?' r []) t (* current tile played not in rack, but can use blank tile *)
-      else assert false
+      if List.mem h r then aux (remove_from_list h r []) t (* cur tile played is in rack *)
+      else if List.mem '?' r then aux (remove_from_list '?' r []) t (* cur tile played not in rack, but can use blank tile *)
+      else assert false (* there's a tile played which player never had *)
     | [] -> r
   in
   aux rack played
@@ -346,26 +367,28 @@ let diff_tile_rack rack played =
  * previous game state [state] *)
 (* ram is assuming that players_diff is always list of length 1 *)
 let execute s move =
-  (*let tiles_pl = List.map (fun ((a,b),c) -> ((a,b),Char.lowercase_ascii c)) move.tiles_placed in *)
   let tiles_pl = move.tiles_placed in
+
   let p_n = move.player in
   let cur_p = 
     try List.find (fun p -> p.player_name = p_n) s.players
     with Not_found -> assert false
   in
   assert (cur_p.order = s.turn);
-  let (words,words_sc) = List.split (get_words s.grid tiles_pl (get_word_dir tiles_pl)) in
+  let (words,words_sc) = 
+    List.split (get_words s.grid tiles_pl (get_word_dir s.grid tiles_pl)) in
   let words_cap = List.map (fun w -> String.lowercase_ascii w) words in
   print_string "words: "; List.iter (fun x -> print_endline x) words;
-  if List.fold_left (fun acc w -> acc && Dictionary.in_dict w) true words_cap then
+  if List.fold_left (fun ac w -> ac && Dictionary.in_dict w) true words_cap then
     begin
-    (* place tiles *)
     List.iter (fun ((y,x),c) -> s.grid <- (Grid.place s.grid y x c);) tiles_pl;
-    (* todo BINGO *)
-    let calc_score = List.fold_left (fun acc x -> acc + x) 0 words_sc in
+    let calc_score = 
+      List.fold_left (fun acc x -> acc + x) 0 words_sc 
+      + (if List.length tiles_pl = 7 then 50 else 0) (* BINGO! *)
+    in
     let tiles = List.map (fun ((_,_),c) -> c) tiles_pl in
-    let num_tiles = List.length tiles in
-    let (tiles_taken,new_bag) = take_tiles s.remaining_tiles num_tiles in
+    let (tiles_taken,new_bag) = 
+      take_tiles s.remaining_tiles (List.length tiles) in
     let new_tiles = (diff_tile_rack cur_p.tiles tiles) @ tiles_taken in
     assert (List.length new_tiles = 7);
     cur_p.score <- (cur_p.score + calc_score);
