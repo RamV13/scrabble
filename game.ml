@@ -339,12 +339,16 @@ and get_words_dir b tp breaks (y0,x0) dir =
     ) ("",0) tp 
   in
   print_endline ("prefix: "^prefix ^ " infix: " ^ infix ^ " suffix: " ^ suffix);
-  let word_mult = 
-    List.map (fun z -> if dir = Horizontal then Grid.bonus_word_at (y0,z) else Grid.bonus_word_at (z,x0)) breaks
-    |> List.fold_left (fun acc x -> acc*x) 1
-  in
-  let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in
-  word::words
+  if words = [] && prefix = "" && suffix = "" then raise (FailedMove "cannot place tiles apart from existing ones")
+  else
+    begin
+      let word_mult = 
+        List.map (fun z -> if dir = Horizontal then Grid.bonus_word_at (y0,z) else Grid.bonus_word_at (z,x0)) breaks
+        |> List.fold_left (fun acc x -> acc*x) 1
+      in
+      let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in
+      word::words
+    end
   
 (* get the direction a word was placed in *)
 let get_word_dir tp = 
