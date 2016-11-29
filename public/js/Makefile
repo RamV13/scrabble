@@ -17,4 +17,5 @@ $(NAME).byte: $(OBJS)
 clean:
 	rm *.cm*
 	rm *.byte
-	rm *.js
+	rm index.js
+	rm scrabble.js
