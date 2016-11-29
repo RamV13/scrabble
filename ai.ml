@@ -221,23 +221,30 @@ let best_move pd sd state player =
   let init_board = state.Game.grid in
   let init_tiles = player.Game.tiles in
   let slots = find_slots init_board in
-  let anchors = get_anchors init_board init_tiles pd sd slots in
-  let moves = List.fold_left
-      (
-        fun acc anc ->
-          let b = build (fst anc) init_board pd sd anc
-              (get_surroundings init_board (fst anc))
-              init_tiles
-          in
-          let lm = b Left [] in
-          let rm = b Right [] in
-          let um = b Up [] in
-          let dm = b Down [] in
-          let mvs =
-            lm |> List.rev_append rm |> List.rev_append um |> List.rev_append dm
-          in
-          List.rev_append mvs acc
-      )
-      [] anchors
-  in
-  moves |> to_moves player state  |> rank_moves |> List.hd
+  if slots = [] then
+    let mv = build (0, 0) init_board pd sd ((0, 0), player.Game.tiles)
+        (get_surroundings init_board (0, 0))
+        init_tiles Right []
+    in
+    mv |> to_moves player state  |> rank_moves |> List.hd
+  else
+    let anchors = get_anchors init_board init_tiles pd sd slots in
+    let moves = List.fold_left
+        (
+          fun acc anc ->
+            let b = build (fst anc) init_board pd sd anc
+                (get_surroundings init_board (fst anc))
+                init_tiles
+            in
+            let lm = b Left [] in
+            let rm = b Right [] in
+            let um = b Up [] in
+            let dm = b Down [] in
+            let mvs =
+              lm |> List.rev_append rm |> List.rev_append um |> List.rev_append dm
+            in
+            List.rev_append mvs acc
+        )
+        [] anchors
+    in
+    moves |> to_moves player state  |> rank_moves |> List.hd
