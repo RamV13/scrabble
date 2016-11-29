@@ -3,7 +3,7 @@
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;Some 'f';None;None;None;None;None;None;None;None];
-[None;None;None;None;Some 'n';Some 'g';Some 'c';Some 'e';Some 't';Some 'a';None;None;None;None;None];
+[None;None;None;None;Some 'a';Some 'p';Some 'p';Some 'l';Some 'e';None;None;None;None;None;None];
 [None;None;None;None;None;None;Some 'a';None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;Some 'p';None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
@@ -15,3 +15,13 @@
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
 
 ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h'; 'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p'; 'q'; 'r'; 's'; 't'; 'u'; 'v'; 'w'; 'x'; 'y'; 'z']
+5,8
+
+build' state player (find_slots board |> get_anchors board t) Down ((7,7), true);;
+
+Here are the resulting boards from the command:
+    build' state player anchors Right ((5,9), true);;
+
+apple becomes applets
+apple becomes applet
+apple becomes apples
