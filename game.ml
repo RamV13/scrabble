@@ -548,7 +548,7 @@ let move_from_json json =
   let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
   {player = p; tiles_placed = tp}
 
-let _ = 
+(* let _ = 
   let print_board b = 
     let print_row r = 
       List.iter (fun x -> 
@@ -592,4 +592,4 @@ let _ =
   let _ = execute s m2 in
   print_endline ("turn: " ^ (string_of_int s.turn));
   print_board s.grid;*)
-
+*)
