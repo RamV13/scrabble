@@ -66,42 +66,42 @@ let init_names () =
   | exc -> close_in_noerr input_channel; raise exc
 
 let tile_values = 
-  [('e',1);('a',1);('i',1);('o',1);('n',1);('r',1);('t',1);('l',1);('s',1);('u',1);
-   ('d',2);('g',2);
-   ('b',3);('c',3);('m',3);('p',3);
-   ('f',4);('h',4);('v',4);('w',4);('y',4);
-   ('k',5);
-   ('j',8);('x',8);
-   ('q',10);('z',10);
+  [('E',1);('A',1);('I',1);('O',1);('N',1);('R',1);('T',1);('L',1);('S',1);('U',1);
+   ('D',2);('G',2);
+   ('B',3);('C',3);('M',3);('P',3);
+   ('F',4);('H',4);('V',4);('W',4);('Y',4);
+   ('K',5);
+   ('J',8);('X',8);
+   ('Q',10);('Z',10);
    ('?',0)]
 
 let create_bag () = 
-  [ 'a';'a';'a';'a';'a';'a';'a';'a';'a';
-    'b';'b';
-    'c';'c';
-    'd';'d';'d';'d';
-    'e';'e';'e';'e';'e';'e';'e';'e';'e';'e';'e';'e';
-    'f';'f';
-    'g';'g';'g';
-    'h';'h';
-    'i';'i';'i';'i';'i';'i';'i';'i';'i';
-    'j';
-    'k';'k';
-    'l';'l';'l';'l';
-    'm';'m';
-    'n';'n';'n';'n';'n';'n';
-    'o';'o';'o';'o';'o';'o';'o';'o';
-    'p';'p';
-    'q';
-    'r';'r';'r';'r';'r';'r';
-    's';'s';'s';'s';
-    't';'t';'t';'t';'t';'t';
-    'u';'u';'u';'u';
-    'v';'v';
-    'w';'w';
-    'x';
-    'y';'y';
-    'z';
+  [ 'A';'A';'A';'A';'A';'A';'A';'A';'A';
+    'B';'B';
+    'C';'C';
+    'D';'D';'D';'D';
+    'E';'E';'E';'E';'E';'E';'E';'E';'E';'E';'E';'E';
+    'F';'F';
+    'G';'G';'G';
+    'H';'H';
+    'I';'I';'I';'I';'I';'I';'I';'I';'I';
+    'J';
+    'K';'K';
+    'L';'L';'L';'L';
+    'M';'M';
+    'N';'N';'N';'N';'N';'N';
+    'O';'O';'O';'O';'O';'O';'O';'O';
+    'P';'P';
+    'Q';
+    'R';'R';'R';'R';'R';'R';
+    'S';'S';'S';'S';
+    'T';'T';'T';'T';'T';'T';
+    'U';'U';'U';'U';
+    'V';'V';
+    'W';'W';
+    'X';
+    'Y';'Y';
+    'Z';
     '?';'?']
 
 (* convert a string of length 1 to character *)
@@ -358,19 +358,30 @@ let get_word_dir tp =
   | false, true -> (*print_endline "horiz";*) print_endline "HORIZ"; Horizontal
 
 (* return remaining tile rack after playing [played] from [rack] *)
+(* assumes that tiles played will always be subset of rack *)
 let diff_tile_rack rack played = 
-  let rec aux r p new_rack =
-    match r with
-    | patt -> expr
-    | _ -> expr2
+  let rec remove_from_list elem lst prev = 
+    match lst with
+    | x::y::t -> if x = elem then prev @ (y::t) else if y = elem then prev @ (x::t) else remove_from_list elem t (prev @ [x] @ [y])
+    | x::t -> if x = elem then prev @ t else remove_from_list elem t (prev @ [x])
+    | [] -> failwith "not found"
   in
-  aux r p []
+  let rec aux r p =
+    match p with
+    | h::t -> 
+      if List.mem h r then aux (remove_from_list h r []) t (* current tile played is in rack *)
+      else if List.mem '?' r then aux (remove_from_list '?' r []) t (* current tile played not in rack, but can use blank tile *)
+      else assert false
+    | [] -> r
+  in
+  aux rack played
 
 (* [execute state move] executes a [move] to produce a new game state from the 
  * previous game state [state] *)
 (* ram is assuming that players_diff is always list of length 1 *)
 let execute s move =
-  let tiles_pl = List.map (fun ((a,b),c) -> ((a,b),Char.lowercase_ascii c)) move.tiles_placed in
+  (*let tiles_pl = List.map (fun ((a,b),c) -> ((a,b),Char.lowercase_ascii c)) move.tiles_placed in *)
+  let tiles_pl = move.tiles_placed in
   let p_n = move.player in
   let cur_p = 
     try List.find (fun p -> p.player_name = p_n) s.players
@@ -378,17 +389,23 @@ let execute s move =
   in
   assert (cur_p.order = s.turn);
   let (words,words_sc) = List.split (get_words s.grid tiles_pl (get_word_dir tiles_pl)) in
+  let words_cap = List.map (fun w -> String.lowercase_ascii w) words in
   print_string "words: "; List.iter (fun x -> print_endline x) words;
-  if List.fold_left (fun acc w -> acc && Dictionary.in_dict w) true words then
+  if List.fold_left (fun acc w -> acc && Dictionary.in_dict w) true words_cap then
     begin
     (* place tiles *)
     List.iter (fun ((y,x),c) -> s.grid <- (Grid.place s.grid y x c);) tiles_pl;
     (* todo BINGO *)
     let calc_score = List.fold_left (fun acc x -> acc + x) 0 words_sc in
     let tiles = List.map (fun ((_,_),c) -> c) tiles_pl in
-
+    let num_tiles = List.length tiles in
+    let (tiles_taken,new_bag) = take_tiles s.remaining_tiles num_tiles in
+    let new_tiles = (diff_tile_rack cur_p.tiles tiles) @ tiles_taken in
+    assert (List.length new_tiles = 7);
     cur_p.score <- (cur_p.score + calc_score);
+    cur_p.tiles <- new_tiles;
     s.turn <- ((s.turn + 1) mod 4);
+    s.remaining_tiles <- new_bag;
     {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else
@@ -531,7 +548,7 @@ let move_from_json json =
   let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
   {player = p; tiles_placed = tp}
 
-let _ = 
+(* let _ = 
   let print_board b = 
     let print_row r = 
       List.iter (fun x -> 
@@ -575,4 +592,4 @@ let _ =
   let _ = execute s m2 in
   print_endline ("turn: " ^ (string_of_int s.turn));
   print_board s.grid;*)
-
+*)
