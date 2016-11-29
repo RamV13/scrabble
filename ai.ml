@@ -18,6 +18,7 @@ type surroundings = {
 
 type direction = Up | Down | Left | Right
 
+
 (* [has_neighbors n] returns true if at least one of [neighbors] n
  * is not empty. *)
 let has_neighbors n =
@@ -25,6 +26,7 @@ let has_neighbors n =
      (n.Grid.right = None) && (n.Grid.bottom = None)
   then false
   else true
+
 
 (* [is_slot b r c] returns true if the tile at (r,c) on board [b] is a slot. *)
 let is_slot board r c =
@@ -34,6 +36,7 @@ let is_slot board r c =
     if has_neighbors n then true
     else false
   else false
+
 
 (* [find_slots b] returns a list of slots (represented as point list) for
  * the grid board [b]. *)
@@ -47,25 +50,33 @@ let find_slots board =
   done;
   !slots
 
+
 let fst' (a, _, _) = a
 let snd' (_, a, _) = a
 let thrd' (_, _, a) = a
+let to_str c = String.make 1 c
+let list_place l r c ch = (ch, (r,c))::l
 
-let rec find_adj board slot acc d =
-  let open Grid in
+
+(* [find_adj board slot acc dir] returns the words adjacent to slot [s]
+ * in the given direction [dir] for board [board]. Helper function. *)
+let rec find_adj board slot acc dir =
   let (r, c) = slot in
   let n = Grid.get_neighbors board r c in
   let adj =
-    match d with
-    | Left -> (n.left, (r, c - 1), Left)
-    | Right -> (n.right, (r, c + 1), Right)
-    | Up -> (n.top, (r - 1, c), Up)
-    | Down -> (n.bottom, (r + 1, c), Down)
+    match dir with
+    | Left -> (n.Grid.left, (r, c - 1), Left)
+    | Right -> (n.Grid.right, (r, c + 1), Right)
+    | Up -> (n.Grid.top, (r - 1, c), Up)
+    | Down -> (n.Grid.bottom, (r + 1, c), Down)
   in
   match fst' adj with
   | None -> acc
-  | Some c -> find_adj board (snd' adj) (acc ^ (String.make 1 c)) (thrd' adj)
+  | Some c -> find_adj board (snd' adj) (acc ^ (to_str c)) (thrd' adj)
 
+
+(* [get_surroundings b s] returns the surrounding words around slot [s]
+ * on the board [b]. *)
 let get_surroundings board slot =
   let f = find_adj board slot "" in
   {
@@ -75,46 +86,61 @@ let get_surroundings board slot =
     below = f Down;
   }
 
-let to_str c = String.make 1 c
 
-let valid_chars pd sd surr tiles =
-  let pred t =
-    let st = to_str t in
-    Dictionary.is_valid_word (surr.left ^ st) pd &&
-    Dictionary.is_valid_word (st ^ surr.right) sd &&
-    Dictionary.is_valid_word (surr.above ^ st) pd &&
-    Dictionary.is_valid_word (st ^ surr.below) sd &&
-    Dictionary.is_valid_word (surr.left ^ st ^ surr.right) pd &&
-    Dictionary.is_valid_word (surr.above ^ st ^ surr.below) pd
+(* [valid_chars surr tiles] returns the chars from [tiles] that
+ * form valid words with the surrounding tiles in [surr]. *)
+let valid_chars surr tiles =
+  let is_ok t =
+    let s = to_str t in
+    let ixes =
+      [
+        s ^ surr.right;
+        surr.left ^ s;
+        s ^ surr.below;
+        surr.above ^ s
+      ]
+    in
+    let not_empties = List.filter (fun a -> String.length a > 1) ixes in
+    let bools = List.map Dictionary.in_dict not_empties in
+    List.fold_left (fun acc b -> acc && b) true bools
   in
-  List.filter pred tiles
+  List.filter is_ok tiles
 
-let get_anchors board tiles pd sd slots =
+
+(* [get_anchors b t s] returns a list of anchors given a list of
+ * slots [s], a game board [b] and the player's tile list [t]. *)
+let get_anchors board tiles slots =
   let aux acc slot =
     let surr = get_surroundings board slot in
-    let chrs = valid_chars pd sd surr tiles in
+    let chrs = valid_chars surr tiles in
     (slot, chrs)::acc
   in
   List.fold_left aux [] slots
 
-let makes_move pd sd dir surr ch =
+
+(* [makes_move d s c] returns true if the char [c] makes a valid word move
+ * in the direction [s] with current surroundings [s]. *)
+let makes_move dir surr ch =
   let s = to_str ch in
   match dir with
-  | Up -> Dictionary.is_valid_word (s ^ surr.below) sd
-  | Down -> Dictionary.is_valid_word (surr.above ^ s) pd
-  | Left -> Dictionary.is_valid_word (s ^ surr.right) sd
-  | Right -> Dictionary.is_valid_word (surr.left ^ s) pd
+  | Up -> Dictionary.in_dict (s ^ surr.below)
+  | Down -> Dictionary.in_dict (surr.above ^ s)
+  | Left -> Dictionary.in_dict (s ^ surr.right)
+  | Right -> Dictionary.in_dict (surr.left ^ s)
 
 
-let makes_prefix pd sd dir surr ch =
+(* [makes_prefix d s c] returns true if the char [c] makes a valid prefix or
+ * suffix in the direction [d] with current surroundings [s]. *)
+let makes_prefix dir surr ch =
   let s = to_str ch in
   match dir with
-  | Up -> (Dictionary.extensions (surr.below ^ s) pd) <> []
-  | Down -> (Dictionary.extensions (s ^ surr.above) sd) <> []
-  | Left -> (Dictionary.extensions (surr.right ^ s) pd) <> []
-  | Right -> (Dictionary.extensions (s ^ surr.left) sd) <> []
+  | Up -> (Dictionary.has_extensions (surr.below ^ s))
+  | Down -> (Dictionary.has_extensions (s ^ surr.above))
+  | Left -> (Dictionary.has_extensions (surr.right ^ s))
+  | Right -> (Dictionary.has_extensions (s ^ surr.left))
 
-let get_next pd sd dir curr =
+
+let get_next dir curr =
   let ((r, c), cl) = curr in
   match dir with
   | Up -> ((r - 1, c), cl)
@@ -122,6 +148,8 @@ let get_next pd sd dir curr =
   | Left -> ((r, c + 1), cl)
   | Right -> ((r, c - 1), cl)
 
+
+(* Removes element [el] from list [li]. It is tail recursive. *)
 let rem li el =
   let rec aux l e acc=
     match li with
@@ -130,7 +158,6 @@ let rem li el =
   in
   aux li el []
 
-let list_place l r c ch = (ch, (r,c))::l
 
 (* Should return a list of board * char/int lists *)
 let rec build start board pd sd curr surr tiles dir acc =
@@ -140,7 +167,7 @@ let rec build start board pd sd curr surr tiles dir acc =
   | [] -> acc
   | _::_ ->
     let new_moves =
-      let good_chars = List.filter (fun c -> makes_move pd sd dir surr c) cl in
+      let good_chars = List.filter (fun c -> makes_move dir surr c) cl in
       List.fold_left
         (
           fun acc ch ->
@@ -153,9 +180,9 @@ let rec build start board pd sd curr surr tiles dir acc =
       match tiles with
       | [] -> []
       | _::_ ->
-        List.filter (fun ch -> makes_prefix pd sd dir surr ch) cl
+        List.filter (fun ch -> makes_prefix dir surr ch) cl
     in
-    let new_curr = get_next pd sd dir curr in
+    let new_curr = get_next dir curr in
     List.fold_left
       (fun a ch ->
          let new_board = Grid.place board r c ch in
@@ -221,7 +248,7 @@ let best_move pd sd state player =
     in
     mv |> to_moves player state  |> rank_moves |> List.hd
   else
-    let anchors = get_anchors init_board init_tiles pd sd slots in
+    let anchors = get_anchors init_board init_tiles slots in
     let moves = List.fold_left
         (
           fun acc anc ->

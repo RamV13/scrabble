@@ -1,0 +1,17 @@
+[[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;Some 'f';None;None;None;None;None;None;None;None];
+[None;None;None;None;Some 'n';Some 'g';Some 'c';Some 'e';Some 't';Some 'a';None;None;None;None;None];
+[None;None;None;None;None;None;Some 'a';None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;Some 'p';None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
+
+['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h'; 'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p'; 'q'; 'r'; 's'; 't'; 'u'; 'v'; 'w'; 'x'; 'y'; 'z']
