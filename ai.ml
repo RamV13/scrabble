@@ -18,7 +18,6 @@ type surroundings = {
 
 type direction = Up | Down | Left | Right
 
-
 (* [has_neighbors n] returns true if at least one of [neighbors] n
  * is not empty. *)
 let has_neighbors n =
@@ -39,23 +38,14 @@ let is_slot board r c =
 (* [find_slots b] returns a list of slots (represented as point list) for
  * the grid board [b]. *)
 let find_slots board =
-  let rec process_row row_num col_num row acc =
-    match row with
-    | [] -> acc
-    | h::t ->
-      match h with
-      | None -> process_row row_num (col_num + 1) t acc
-      | Some c ->
-        if is_slot board row_num col_num
-        then process_row row_num (col_num + 1) t ((row_num, col_num)::acc)
-        else process_row row_num (col_num + 1) t acc
-  in
-  let rec aux row_num acc board =
-    match board with
-    | [] -> acc
-    | h::t -> aux (row_num + 1) ((process_row row_num 1 h []) @ acc) t
-  in
-  aux 1 [] board
+  let len = List.length board - 1 in
+  let slots = ref [] in
+  for r = 0 to len do
+    for c = 0 to len do
+      if is_slot board r c then slots := (r,c)::!slots else ()
+    done;
+  done;
+  !slots
 
 let fst' (a, _, _) = a
 let snd' (_, a, _) = a
@@ -90,12 +80,12 @@ let to_str c = String.make 1 c
 let valid_chars pd sd surr tiles =
   let pred t =
     let st = to_str t in
-    Dictionary.mem (surr.left ^ st) pd &&
-    Dictionary.mem (st ^ surr.right) sd &&
-    Dictionary.mem (surr.above ^ st) pd &&
-    Dictionary.mem (st ^ surr.below) sd &&
-    Dictionary.mem (surr.left ^ st ^ surr.right) pd &&
-    Dictionary.mem (surr.above ^ st ^ surr.below) pd
+    Dictionary.is_valid_word (surr.left ^ st) pd &&
+    Dictionary.is_valid_word (st ^ surr.right) sd &&
+    Dictionary.is_valid_word (surr.above ^ st) pd &&
+    Dictionary.is_valid_word (st ^ surr.below) sd &&
+    Dictionary.is_valid_word (surr.left ^ st ^ surr.right) pd &&
+    Dictionary.is_valid_word (surr.above ^ st ^ surr.below) pd
   in
   List.filter pred tiles
 
@@ -110,10 +100,10 @@ let get_anchors board tiles pd sd slots =
 let makes_move pd sd dir surr ch =
   let s = to_str ch in
   match dir with
-  | Up -> Dictionary.mem (s ^ surr.below) sd
-  | Down -> Dictionary.mem (surr.above ^ s) pd
-  | Left -> Dictionary.mem (s ^ surr.right) sd
-  | Right -> Dictionary.mem (surr.left ^ s) pd
+  | Up -> Dictionary.is_valid_word (s ^ surr.below) sd
+  | Down -> Dictionary.is_valid_word (surr.above ^ s) pd
+  | Left -> Dictionary.is_valid_word (s ^ surr.right) sd
+  | Right -> Dictionary.is_valid_word (surr.left ^ s) pd
 
 
 let makes_prefix pd sd dir surr ch =
