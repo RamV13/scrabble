@@ -361,7 +361,7 @@ let get_word_dir tp =
  * previous game state [state] *)
 (* ram is assuming that players_diff is always list of length 1 *)
 let execute s move =
-  let tiles_pl = move.tiles_placed in
+  let tiles_pl = List.map (fun ((a,b),c) -> ((a,b),Char.lowercase_ascii c)) move.tiles_placed in
   let p_n = move.player in
   let cur_p = 
     try List.find (fun p -> p.player_name = p_n) s.players
@@ -520,7 +520,7 @@ let move_from_json json =
   let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
   {player = p; tiles_placed = tp}
 
-(*let _ = 
+let _ = 
   let print_board b = 
     let print_row r = 
       List.iter (fun x -> 
@@ -551,7 +551,7 @@ let move_from_json json =
   } in
   let _ = execute s m_hen in*)
   let m1 = {
-    tiles_placed = [((5,5),'f');((6,5),'e');((7,5),'e')];
+    tiles_placed = [((7,5),'f');((6,5),'e');((7,5),'e')];
     player = "Brian"
   } in
   let _ = execute s m1 in
@@ -563,5 +563,5 @@ let move_from_json json =
   } in
   let _ = execute s m2 in
   print_endline ("turn: " ^ (string_of_int s.turn));
-  print_board s.grid;*)
+  print_board s.grid;
 
