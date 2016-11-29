@@ -209,7 +209,7 @@ let to_moves player init_state boards =
         let mv =
           {
             Game.tiles_placed = gen_tiles_placed board added start dir |> List.map flip';
-            player = player.player_id;
+            player = player.player_name;
           }
         in
         mv::acc
