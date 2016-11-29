@@ -342,8 +342,12 @@ and get_words_dir b tp breaks (y0,x0) dir =
   if words = [] && prefix = "" && suffix = "" && not (b = Grid.empty) then raise (FailedMove "cannot place tiles apart from existing ones")
   else
     begin
-      let word_mult = 
+      (*let word_mult = 
         List.map (fun z -> if dir = Horizontal then Grid.bonus_word_at (y0,z) else Grid.bonus_word_at (z,x0)) breaks
+        |> List.fold_left (fun acc x -> acc*x) 1
+      in*)
+      let word_mult = 
+        List.map (fun ((y,x),_) -> Grid.bonus_word_at (y,x)) tp 
         |> List.fold_left (fun acc x -> acc*x) 1
       in
       print_endline ("main word multiplier: " ^ string_of_int word_mult);
