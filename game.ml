@@ -378,7 +378,7 @@ let execute s move =
   let (words,words_sc) = 
     List.split (get_words s.grid tiles_pl (get_word_dir s.grid tiles_pl)) in
   let words_cap = List.map (fun w -> String.lowercase_ascii w) words in
-  print_string "words: "; List.iter (fun x -> print_string (x ^ ", ")) words;
+  print_string "words: "; List.iter (fun x -> print_string (x ^ ", ")) words; print_endline "";
   let (is_valid,invalid_words) = List.fold_left
     (fun (acc_bool,invalid_w) w -> 
       if Dictionary.in_dict w then (acc_bool,invalid_w)
@@ -405,7 +405,7 @@ let execute s move =
     end
   else
     begin
-      let bad_words = List.fold_left (fun acc x -> acc ^ x ^ ", ") "" invalid_words in
+      let bad_words = List.fold_left (fun acc x -> acc ^ (if acc <> "" then ", " else "") ^ x) "" invalid_words in
       raise (FailedMove ("illegimate word(s) formed: " ^ bad_words))
     end
 
