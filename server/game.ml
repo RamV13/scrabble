@@ -339,7 +339,7 @@ and get_words_dir b tp breaks (y0,x0) dir =
     ) ("",0) tp 
   in
   print_endline ("prefix: "^prefix ^ " infix: " ^ infix ^ " suffix: " ^ suffix);
-  if words = [] && prefix = "" && suffix = "" then raise (FailedMove "cannot place tiles apart from existing ones")
+  if words = [] && prefix = "" && suffix = "" && not (b = Grid.empty) then raise (FailedMove "cannot place tiles apart from existing ones")
   else
     begin
       let word_mult = 
