@@ -13,7 +13,7 @@ val bonus_word_tiles : ((int * int) * int) list
 val empty : board
 
 (* gets the diff between two boards in terms of chars added *)
-val get_diff : board -> board -> char option list
+val get_diff : board -> board -> char list
 
 (* [is_empty board row col] is true if the coordinate ([row],[col] is empty in
  * the [board] *)
