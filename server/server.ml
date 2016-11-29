@@ -275,6 +275,19 @@ let send_message req =
 
 let _ = 
   Game.init_names ();
+  (*Lwt.async (fun () -> 
+    let rec loop_ai () = 
+      let process_game game = 
+        print_endline game.name
+      in
+      List.iter process_game !games;
+      loop_ai ()
+    in
+    loop_ai ()
+    |> Lwt.return
+  );*)
+  (* TODO *)
+  (* Lwt.async_exception_hook := fun ex -> (); *)
   HttpServer.add_route (`OPTIONS,"/api/game") cors_control;
   HttpServer.add_custom_route (`GET,"/api/game") subscribe_updates;
   HttpServer.add_route (`PUT,"/api/game") create_game;

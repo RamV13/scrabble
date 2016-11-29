@@ -1,5 +1,5 @@
 
-OBJS=dictionary.cmo grid.cmo game.cmo httpServer.cmo
+OBJS=dictionary.cmo grid.cmo game.cmo ai.cmo httpServer.cmo
 NAME=server
 OFIND=ocamlfind ocamlc -thread -package cohttp.lwt,cohttp.async,lwt.ppx,sqlite3,yojson
 
