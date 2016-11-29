@@ -33,8 +33,18 @@ val make : string -> t
   forward words, the second dictionary is the set of backward words*)
 val dict_from_file : string -> t * t
 
+(*END OF INTERNAL FUNCTIONS*)
+
 (*[fmem] returns true if a string is in the offical scrabble dictionary*)
 val in_dict : string -> bool
 
 (*[bmem] returns true if a string appears in the backwards dictionary*)
 val in_back_dict : string -> bool
+
+(*[has_extensions] takes in a string and returns whether or not it
+  is possible to extend it*)
+val has_extensions : string -> bool
+
+(*[has_back_extensions] takes in a string and returns whether or not it
+  has possible back extensions*)
+val has_back_extensions : string -> bool
