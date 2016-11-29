@@ -363,18 +363,7 @@ let diff_tile_rack rack played =
   in
   aux rack played
 
-(* [execute state move] executes a [move] to produce a new game state from the 
- * previous game state [state] *)
-(* ram is assuming that players_diff is always list of length 1 *)
-let execute s move =
-  let tiles_pl = move.tiles_placed in
-
-  let p_n = move.player in
-  let cur_p = 
-    try List.find (fun p -> p.player_name = p_n) s.players
-    with Not_found -> assert false
-  in
-  assert (cur_p.order = s.turn);
+let create_diff s tiles_pl cur_p = 
   let (words,words_sc) = 
     List.split (get_words s.grid tiles_pl (get_word_dir s.grid tiles_pl)) in
   let words_cap = List.map (fun w -> String.lowercase_ascii w) words in
@@ -408,6 +397,25 @@ let execute s move =
       let bad_words = List.fold_left (fun acc x -> acc ^ (if acc <> "" then ", " else "") ^ x) "" invalid_words in
       raise (FailedMove ("illegimate word(s) formed: " ^ bad_words))
     end
+
+(* [execute state move] executes a [move] to produce a new game state from the 
+ * previous game state [state] *)
+(* ram is assuming that players_diff is always list of length 1 *)
+let execute s move =
+  let tiles_pl = move.tiles_placed in
+  let p_n = move.player in
+  let cur_p = 
+    try List.find (fun p -> p.player_name = p_n) s.players
+    with Not_found -> assert false
+  in
+  assert (cur_p.order = s.turn);
+  if List.length tiles_pl = 0 then 
+    begin
+      s.turn <- ((s.turn + 1) mod 4);
+      {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
+    end
+  else create_diff s tiles_pl cur_p
+  
 
 (* ===========================================================================
  * JSON methods below *)
