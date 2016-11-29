@@ -218,16 +218,10 @@ let get_tile row col =
  * [row] and [col] coordinates *)
 let place_tile row col value = 
   let tile = get_tile row col in
-  let check_tile ((r,c),_) = r = row && c = col in
-  let is_bonus = 
-    List.exists check_tile Grid.bonus_letter_tiles ||
-    List.exists check_tile Grid.bonus_word_tiles
-  in
   let filled = String.length (Js.to_string tile##innerHTML) = 1 in
   if not filled then
     begin
-      if not is_bonus
-      then tile##style##backgroundColor <- Js.string dark_tile_background;
+      tile##style##backgroundColor <- Js.string dark_tile_background;
       tile##innerHTML <- Js.string value;
       let upper = value.[0] |> Char.uppercase_ascii in
       placed_tiles := ((row,col),upper)::!placed_tiles;
@@ -286,6 +280,7 @@ let register_player_tiles () =
 
 (* [reset_player_tiles ()] resets player tiles based on the current player *)
 let reset_player_tiles () = 
+  blur_current_tile ();
   let reset_tile row col = 
     let tile = get_tile row col in
     let check_tile ((r,c),_) = r = row && c = col in
