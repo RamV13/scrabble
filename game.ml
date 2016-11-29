@@ -30,7 +30,8 @@ type state = {
  * the player who performs the move *)
 type move = {
   tiles_placed : ((int * int) * char) list;
-  player : string
+  player : string;
+  swap : char list;
 }
 
 (* [diff] is a representation of the difference between two game states. There
@@ -546,13 +547,14 @@ let diff_from_json json =
 (* converts a move to its json representation *)
 let move_to_json m = 
   "{\"tilesPlaced\": [" ^ (board_diff_to_json m.tiles_placed) ^ 
-  "], \"playerName\": \"" ^ m.player ^ "\"}"
+  "], \"playerName\": \"" ^ m.player ^ "\", \"swappedTiles\":" ^ (char_list_to_json m.swap) ^ "}"
 
 (* converts json to its move representation *)
 let move_from_json json = 
   let p = member "playerName" json |> to_string in
   let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
-  {player = p; tiles_placed = tp}
+  let st = member "swappedTiles" json |> to_list |> List.map (fun x -> x |> to_string |> str_to_c) in
+  {player = p; tiles_placed = tp; swap = st}
 
 (* let _ = 
   let print_board b = 
