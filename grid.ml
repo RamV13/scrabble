@@ -88,11 +88,11 @@ let get_diff b1 b2 =
         | Some c -> c::acc
     ) [] med
 
-let bonus_letter_at (x,y) =
-  try List.assoc (x,y) bonus_letter_tiles with _ -> 1
+let bonus_letter_at (y,x) = 
+  try List.assoc (y,x) bonus_letter_tiles with _ -> 1
 
-let bonus_word_at (x,y) =
-  try List.assoc (x,y) bonus_word_tiles with _ -> 1
+let bonus_word_at (y,x) = 
+  try List.assoc (y,x) bonus_word_tiles with _ -> 1
 
 let rec place_helper1 (row:(char option) list) y c new_row = match row with
 |[] -> new_row
