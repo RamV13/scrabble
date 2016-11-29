@@ -22,3 +22,6 @@ setup.log
 # Mac files
 .DS_STORE
 
+# Log files
+*log.txt
+
