@@ -160,7 +160,7 @@ let rem li el =
 
 
 (* Should return a list of board * char/int lists *)
-let rec build start board pd sd curr surr tiles dir acc =
+let rec build start board curr surr tiles dir acc =
   let cl = snd curr in
   let (r, c) = fst curr in
   match cl with
@@ -188,7 +188,7 @@ let rec build start board pd sd curr surr tiles dir acc =
          let new_board = Grid.place board r c ch in
          List.rev_append a
            (build start new_board
-              pd sd new_curr (fst new_curr |> get_surroundings new_board)
+              new_curr (fst new_curr |> get_surroundings new_board)
               (rem tiles ch) dir new_acc))
       new_acc
       good_prefixes
@@ -237,12 +237,12 @@ let rank_moves moves = List.sort (fun a b -> 0) moves
 
 let center = (7, 7)
 
-let best_move pd sd state player =
+let best_move state player =
   let init_board = state.Game.grid in
   let init_tiles = player.Game.tiles in
   let slots = find_slots init_board in
   if slots = [] then
-    let mv = build center init_board pd sd (center, player.Game.tiles)
+    let mv = build center init_board (center, player.Game.tiles)
         (get_surroundings init_board center)
         init_tiles Right []
     in
@@ -252,7 +252,7 @@ let best_move pd sd state player =
     let moves = List.fold_left
         (
           fun acc anc ->
-            let b = build (fst anc) init_board pd sd anc
+            let b = build (fst anc) init_board anc
                 (get_surroundings init_board (fst anc))
                 init_tiles
             in
