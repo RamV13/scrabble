@@ -346,6 +346,7 @@ and get_words_dir b tp breaks (y0,x0) dir =
         List.map (fun z -> if dir = Horizontal then Grid.bonus_word_at (y0,z) else Grid.bonus_word_at (z,x0)) breaks
         |> List.fold_left (fun acc x -> acc*x) 1
       in
+      print_endline ("main word multiplier: " ^ string_of_int word_mult);
       let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in
       word::words
     end
