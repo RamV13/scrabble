@@ -410,7 +410,18 @@ let execute s move =
     with Not_found -> assert false
   in
   assert (cur_p.order = s.turn);
-  if List.length tiles_pl = 0 then 
+  if List.length move.swap <> 0 then
+    begin
+      s.turn <- ((s.turn + 1) mod 4);
+      let tiles = move.swap in
+      let (tiles_taken,new_bag) = 
+        take_tiles s.remaining_tiles (List.length tiles) in
+      let new_tiles = (diff_tile_rack cur_p.tiles tiles) @ tiles_taken in
+      cur_p.tiles <- new_tiles;
+      s.remaining_tiles <- (new_bag @ tiles);
+      {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
+    end
+  else if List.length tiles_pl = 0 then 
     begin
       s.turn <- ((s.turn + 1) mod 4);
       {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
