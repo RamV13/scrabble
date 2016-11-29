@@ -62,6 +62,23 @@ let is_empty board x y = List.nth (List.nth board x) y = None
 
 let get_tile board x y = try (List.nth (List.nth board x) y) with _ -> None
 
+(* The "newer" list comes second *)
+let get_diff b1 b2 =
+  List.fold_left2
+    (
+      fun acc sub1 sub2 ->
+        let sub_diff =
+          List.fold_left2
+          (
+            fun a b c ->
+              if b = c then a else c::a
+          )
+          [] sub1 sub2
+        in
+        List.rev_append sub_diff acc
+    )
+    [] b1 b2
+
 let rec place_helper1 (row:(char option) list) y c new_row = match row with
 |[] -> new_row
 |h::t -> if y = 0 then place_helper1 t (0-1) c (c::new_row)
@@ -104,5 +121,5 @@ let rec dejsonify board result = match board with
 |[] -> List.rev(result)
 |h::t -> dejsonify t ((dejsonify_row h) :: result)
 
-let from_json j = 
+let from_json j =
   dejsonify (Yojson.Basic.Util.to_list j) []
