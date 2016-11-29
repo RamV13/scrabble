@@ -355,7 +355,7 @@ let init_state () =
         value
         |> Char.uppercase_ascii
         |> Char.escaped
-        |> place_tile !x !y
+        |> place_tile !y !x
       end
     | None -> ());
     x := 1 + !x
