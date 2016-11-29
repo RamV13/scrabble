@@ -142,7 +142,8 @@ let rem li el =
 
 let list_place l r c ch = (ch, (r,c))::l
 
-let rec build board pd sd curr surr tiles dir acc =
+(* Should return a list of board * char/int lists *)
+let rec build start board pd sd curr surr tiles dir acc =
   let cl = snd curr in
   let (r, c) = fst curr in
   match cl with
@@ -150,7 +151,12 @@ let rec build board pd sd curr surr tiles dir acc =
   | _::_ ->
     let new_moves =
       let good_chars = List.filter (fun c -> makes_move pd sd dir surr c) cl in
-      List.fold_left (fun acc ch -> (Grid.place board r c ch)::acc) [] good_chars
+      List.fold_left
+        (
+          fun acc ch ->
+            (Grid.place board r c ch, start, dir)::acc
+        )
+        [] good_chars
     in
     let new_acc = List.rev_append new_moves acc in
     let good_prefixes =
@@ -164,13 +170,52 @@ let rec build board pd sd curr surr tiles dir acc =
       (fun a ch ->
          let new_board = Grid.place board r c ch in
          List.rev_append a
-           (build new_board
+           (build start new_board
               pd sd new_curr (fst new_curr |> get_surroundings new_board)
               (rem tiles ch) dir new_acc))
       new_acc
       good_prefixes
 
-let rank_boards boards = List.sort (fun a b -> 0) boards
+let gen_tiles_placed board cl start dir =
+  let rec aux coord counter acc =
+    if counter = 0 then acc
+    else
+      let (r, c) = coord in
+      let (nr, nc) =
+        match dir with
+        | Up -> (r - 1, c)
+        | Down -> (r + 1, c)
+        | Left -> (r, c - 1)
+        | Right -> (r, c + 1)
+      in
+      match Grid.get_tile board nr nc with
+      | Some ch -> aux (nr, nc) (counter - 1) ((ch, (nr, nc))::acc)
+      | None -> failwith "Board error"
+  in
+  aux start (List.length cl) []
+
+(* Get the diff of all boards, generate moves as a result *)
+let to_moves player init_state boards =
+  List.fold_left
+    (
+      fun acc b ->
+        let (board, start, dir) = b in
+        let diff =
+          Game.get_diff init_state ({init_state with Game.grid=board})
+        in
+        let added = diff.Game.added_tiles in
+        let open Game in
+        let mv =
+          {
+            tiles_placed = gen_tiles_placed board added start dir;
+            player = player.player_id;
+          }
+        in
+        mv::acc
+    )
+    [] boards
+
+let rank_moves moves = List.sort (fun a b -> 0) moves
 
 let best_move pd sd state player =
   let init_board = state.Game.grid in
@@ -180,7 +225,7 @@ let best_move pd sd state player =
   let moves = List.fold_left
       (
         fun acc anc ->
-          let b = build init_board pd sd anc
+          let b = build (fst anc) init_board pd sd anc
               (get_surroundings init_board (fst anc))
               init_tiles
           in
@@ -195,4 +240,4 @@ let best_move pd sd state player =
       )
       [] anchors
   in
-  List.hd (rank_boards moves)
+  moves |> to_moves player state  |> rank_moves |> List.hd
