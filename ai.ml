@@ -194,21 +194,22 @@ let gen_tiles_placed board cl start dir =
   in
   aux start (List.length cl) []
 
+let flip' (a, b) = (b, a)
+
 (* Get the diff of all boards, generate moves as a result *)
 let to_moves player init_state boards =
   List.fold_left
     (
       fun acc b ->
         let (board, start, dir) = b in
-        let diff =
-          Game.get_diff init_state ({init_state with Game.grid=board})
+        let added =
+          Grid.get_diff init_state.Game.grid board
         in
-        let added = diff.Game.added_tiles in
         let open Game in
         let mv =
           {
-            tiles_placed = gen_tiles_placed board added start dir;
-            player = player.player_id;
+            Game.tiles_placed = gen_tiles_placed board added start dir |> List.map flip';
+            player = player.player_name;
           }
         in
         mv::acc
@@ -217,13 +218,15 @@ let to_moves player init_state boards =
 
 let rank_moves moves = List.sort (fun a b -> 0) moves
 
+let center = (7, 7)
+
 let best_move pd sd state player =
   let init_board = state.Game.grid in
   let init_tiles = player.Game.tiles in
   let slots = find_slots init_board in
   if slots = [] then
-    let mv = build (0, 0) init_board pd sd ((0, 0), player.Game.tiles)
-        (get_surroundings init_board (0, 0))
+    let mv = build center init_board pd sd (center, player.Game.tiles)
+        (get_surroundings init_board center)
         init_tiles Right []
     in
     mv |> to_moves player state  |> rank_moves |> List.hd

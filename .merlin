@@ -1,5 +1,5 @@
 B _build
 
-PKG cohttp lwt
+PKG cohttp lwt yojson
 
 S .
