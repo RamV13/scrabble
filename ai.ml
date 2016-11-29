@@ -194,6 +194,8 @@ let gen_tiles_placed board cl start dir =
   in
   aux start (List.length cl) []
 
+let flip' (a, b) = (b, a)
+
 (* Get the diff of all boards, generate moves as a result *)
 let to_moves player init_state boards =
   List.fold_left
@@ -206,7 +208,7 @@ let to_moves player init_state boards =
         let open Game in
         let mv =
           {
-            Game.tiles_placed = gen_tiles_placed board added start dir;
+            Game.tiles_placed = gen_tiles_placed board added start dir |> List.map flip';
             player = player.player_id;
           }
         in
