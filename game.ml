@@ -357,6 +357,15 @@ let get_word_dir tp =
   | true, _ -> (*print_endline "vert";*) print_endline "VERT"; Vertical
   | false, true -> (*print_endline "horiz";*) print_endline "HORIZ"; Horizontal
 
+(* return remaining tile rack after playing [played] from [rack] *)
+let diff_tile_rack rack played = 
+  let rec aux r p new_rack =
+    match r with
+    | patt -> expr
+    | _ -> expr2
+  in
+  aux r p []
+
 (* [execute state move] executes a [move] to produce a new game state from the 
  * previous game state [state] *)
 (* ram is assuming that players_diff is always list of length 1 *)
@@ -376,6 +385,8 @@ let execute s move =
     List.iter (fun ((y,x),c) -> s.grid <- (Grid.place s.grid y x c);) tiles_pl;
     (* todo BINGO *)
     let calc_score = List.fold_left (fun acc x -> acc + x) 0 words_sc in
+    let tiles = List.map (fun ((_,_),c) -> c) tiles_pl in
+
     cur_p.score <- (cur_p.score + calc_score);
     s.turn <- ((s.turn + 1) mod 4);
     {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [cur_p]}
@@ -551,17 +562,17 @@ let _ =
   } in
   let _ = execute s m_hen in*)
   let m1 = {
-    tiles_placed = [((7,5),'f');((6,5),'e');((7,5),'e')];
+    tiles_placed = [((5,5),'z');((6,5),'e');((7,5),'n');((8,5),'i');((9,5),'t');((10,5),'h')];
     player = "Brian"
   } in
   let _ = execute s m1 in
   print_board s.grid;
-  let player2 = List.nth (s.players) 1 in
+  (*let player2 = List.nth (s.players) 1 in
   let m2 = {
     tiles_placed = [((8,5),'l');((9,5),'s')];
     player = player2.player_name
   } in
   let _ = execute s m2 in
   print_endline ("turn: " ^ (string_of_int s.turn));
-  print_board s.grid;
+  print_board s.grid;*)
 
