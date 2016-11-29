@@ -42,6 +42,8 @@ type diff = {
   players_diff : player list
 }
 
+val tile_values : (char * int) list
+
 (* initialize list of names from names.txt *)
 val init_names : unit -> unit
 
