@@ -277,6 +277,24 @@ let send_message req =
 
 let _ = 
   Game.init_names ();
+  Lwt.async (fun () -> 
+    let rec keep_alive () = 
+      Lwt_unix.sleep 15. >>= fun () -> 
+        begin
+          let send_keep_alives game = 
+            let sendable = Some (Printf.sprintf ": \n\n") in
+            (try send game_pushers game.name sendable 
+            with Not_found -> assert false);
+            (try send msg_pushers game.name sendable 
+            with Not_found -> assert false)
+          in
+          List.iter send_keep_alives !games;
+          keep_alive ()
+        end
+    in
+    keep_alive ()
+    |> Lwt.return
+  );
   HttpServer.add_route (`OPTIONS,"/api/game") cors_control;
   HttpServer.add_custom_route (`GET,"/api/game") subscribe_updates;
   HttpServer.add_route (`PUT,"/api/game") create_game;
