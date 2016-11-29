@@ -378,8 +378,14 @@ let execute s move =
   let (words,words_sc) = 
     List.split (get_words s.grid tiles_pl (get_word_dir s.grid tiles_pl)) in
   let words_cap = List.map (fun w -> String.lowercase_ascii w) words in
-  print_string "words: "; List.iter (fun x -> print_endline x) words;
-  if List.fold_left (fun ac w -> ac && Dictionary.in_dict w) true words_cap then
+  print_string "words: "; List.iter (fun x -> print_string (x ^ ", ")) words;
+  let (is_valid,invalid_words) = List.fold_left
+    (fun (acc_bool,invalid_w) w -> 
+      if Dictionary.in_dict w then (acc_bool,invalid_w)
+      else (false,w::invalid_w))
+    (true,[]) words_cap
+  in
+  if is_valid then
     begin
     List.iter (fun ((y,x),c) -> s.grid <- (Grid.place s.grid y x c);) tiles_pl;
     let calc_score = 
@@ -398,7 +404,10 @@ let execute s move =
     {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else
-    raise (FailedMove "an illegimate word was formed")
+    begin
+      let bad_words = List.fold_left (fun acc x -> acc ^ x ^ ", ") "" invalid_words in
+      raise (FailedMove ("illegimate word(s) formed: " ^ bad_words))
+    end
 
 (* ===========================================================================
  * JSON methods below *)
