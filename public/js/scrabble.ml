@@ -470,7 +470,7 @@ let handle_update json =
   else if contains json "board_diff" then
     begin
       let diff = Game.diff_from_json json in
-      let player = List.hd diff.players_diff in (* TODO convert to one player *)
+      let player = List.hd diff.players_diff in
       let update_tile ((row,col),value) = 
         place_tile row col (Char.escaped value)
       in
