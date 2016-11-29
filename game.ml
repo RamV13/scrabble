@@ -358,13 +358,23 @@ let get_word_dir tp =
   | false, true -> (*print_endline "horiz";*) print_endline "HORIZ"; Horizontal
 
 (* return remaining tile rack after playing [played] from [rack] *)
+(* assumes that tiles played will always be subset of rack *)
 let diff_tile_rack rack played = 
-  let rec aux r p new_rack =
-    match r with
-    | patt -> expr
-    | _ -> expr2
+  let rec remove_from_list elem lst prev = 
+    match lst with
+    | x::y::t -> if x = elem then prev @ (y::t) else if y = elem then prev @ (x::t) else remove_from_list elem t (prev @ [x] @ [y])
+    | x::t -> if x = elem then prev @ t else remove_from_list elem t (prev @ [x])
+    | [] -> failwith "not found"
   in
-  aux r p []
+  let rec aux r p =
+    match p with
+    | h::t -> 
+      if List.mem h r then aux (remove_from_list h r []) t (* current tile played is in rack *)
+      else if List.mem '?' r then aux (remove_from_list '?' r []) t (* current tile played not in rack, but can use blank tile *)
+      else assert false
+    | [] -> r
+  in
+  aux rack played
 
 (* [execute state move] executes a [move] to produce a new game state from the 
  * previous game state [state] *)
