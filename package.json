@@ -1,0 +1,27 @@
+{
+  "name": "scrabble",
+  "version": "1.0.0",
+  "description": "Primary server for serving public files for the web application.",
+  "main": "server.js",
+  "dependencies": {
+    "connect": "^3.5.0",
+    "express": "^4.14.0",
+    "http-proxy": "^1.15.2",
+    "serve-static": "^1.11.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "sudo node server.js >> ~/workspace/scrabble/public/server_log.txt 2>&1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RamV13/scrabble.git"
+  },
+  "author": "Ram Vellanki",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RamV13/scrabble/issues"
+  },
+  "homepage": "https://github.com/RamV13/scrabble#readme"
+}
