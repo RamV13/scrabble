@@ -175,7 +175,9 @@ let leave_game req =
     let (player_name,game_name) = get_info req in
     let game = List.find (fun game -> game.name = game_name) !games in
     let (player_name,order) = Game.remove_player game player_name in
-    send_new_player game_name player_name order;
+    if List.fold_left (fun acc player -> player.ai && acc) true game.players
+    then games := List.filter (fun game -> game.name <> game_name) !games
+    else send_new_player game_name player_name order;
     {headers;status=`OK;res_body=""}
   with
   | _ -> {
@@ -275,19 +277,6 @@ let send_message req =
 
 let _ = 
   Game.init_names ();
-  (*Lwt.async (fun () -> 
-    let rec loop_ai () = 
-      let process_game game = 
-        print_endline game.name
-      in
-      List.iter process_game !games;
-      loop_ai ()
-    in
-    loop_ai ()
-    |> Lwt.return
-  );*)
-  (* TODO *)
-  (* Lwt.async_exception_hook := fun ex -> (); *)
   HttpServer.add_route (`OPTIONS,"/api/game") cors_control;
   HttpServer.add_custom_route (`GET,"/api/game") subscribe_updates;
   HttpServer.add_route (`PUT,"/api/game") create_game;
