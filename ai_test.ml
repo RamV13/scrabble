@@ -7,8 +7,7 @@ open Ai
  * get_surroundings (DONE)
  * valid_chars (DONE)
  * makes_move (DONE)
- * makes_prefix
- * out_of_bounds
+ * out_of_bounds (DONE)
  *)
 
 let empty_board = Grid.empty
@@ -163,9 +162,27 @@ let makes_move_test = [
   "applea" >:: (fun _ -> assert_equal false (makes_move Right a_surr 'a'));
 ]
 
+let a_state =
+  {
+    Game.name = "asdf";
+    grid = empty_board;
+    players = [];
+    remaining_tiles = [];
+    turn = 1;
+  }
+
+let out_of_bounds_test = [
+  "inside" >:: (fun _ -> assert_equal false
+                   (out_of_bounds a_state ((1,1), true)));
+  "outside 1" >:: (fun _ -> assert_equal true
+                      (out_of_bounds a_state ((-1,10), true)));
+  "outside 2" >:: (fun _ -> assert_equal true
+                   (out_of_bounds a_state ((100,1), true)));
+]
+
 let suite = "A.I. test suite"
             >:::
             find_slots_test @ get_surroundings_test @ valid_chars_test
-            @ makes_move_test
+            @ makes_move_test @ out_of_bounds_test
 
 let _ = run_test_tt_main suite
