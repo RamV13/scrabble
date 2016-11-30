@@ -188,6 +188,13 @@ let dialog col =
   |> Js.Unsafe.eval_string
   |> ignore
 
+(* [reflow row col] triggers a reflow on the tile at [row] and [col] *)
+let reflow row col = 
+  let coords = string_of_int row ^ "," ^ string_of_int col in
+  "document.getElementById('grid-" ^ coords ^ "').offsetHeight;"
+  |> Js.Unsafe.eval_string
+  |> ignore;
+
 (* [get_element_by_id id] gets a DOM element by [id] *)
 let get_element_by_id id = 
   Js.Opt.get Dom_html.document##getElementById (Js.string id) fail
@@ -239,7 +246,12 @@ let place_tile row col value =
   let filled = String.length (Js.to_string tile##innerHTML) = 1 in
   if not filled then
     begin
+      tile##className <- Js.string "scrabble-td no-transition";
+      tile##style##color <- Js.string "rgba(0, 0, 0, 0)";
+      reflow row col;
+      tile##className <- Js.string "scrabble-td";
       tile##style##backgroundColor <- Js.string dark_tile_background;
+      tile##style##color <- Js.string "rgba(0, 0, 0, 1)";
       tile##innerHTML <- Js.string value;
       let upper = value.[0] |> Char.uppercase_ascii in
       placed_tiles := ((row,col),upper)::!placed_tiles;

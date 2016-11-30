@@ -4,6 +4,11 @@ body {
   font-size: 14px;
 }
 
+.no-transition {
+    -webkit-transition: none !important;
+    transition:         none !important;
+}
+
 .scrabble-table {
     border-collapse: collapse;
     table-layout: fixed;
@@ -13,7 +18,8 @@ body {
 .scrabble-td {
     font-family: "Source Code Pro";
     border: 1px solid #FAFAFA;
-    background: #EFEBE9;
+    color: rgba(0, 0, 0, 1);
+    background-color: #EFEBE9;
     padding: 14px;
     width: 0.8vw;
     font-size: 0.9vw;
@@ -40,7 +46,7 @@ body {
 
 .tiles-td {
     border: 1px solid #FAFAFA;
-    background: #EFEBE9;
+    background-color: #EFEBE9;
     box-sizing: initial !important;
     padding: 15px !important;
     width: 0.8vw !important;
