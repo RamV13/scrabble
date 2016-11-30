@@ -23,8 +23,9 @@ module CharMap = Map.Make(Char)
   |Node (c,m,_) -> CharMap.iter print_ugly_helper m
   |_ -> ()
 
-  let rec add_helper s on =  if (String.length s) < 2 then
-  Node (Some (String.get s 0),CharMap.empty,true) else
+  let rec add_helper s on =  if (String.length s) < 2 then (match on with
+  |Node (_,m,_) -> Node (Some (String.get s 0),m,true)
+  |Empty -> Node (Some (String.get s 0),CharMap.empty,true)) else
   let child_string = String.sub s 1 (String.length s - 1) in
   match on with
   |Node (_,m,word) ->
@@ -124,6 +125,7 @@ module CharMap = Map.Make(Char)
 
   let dict_from_file f =
   let trees = ref (empty,empty) in
+  let there = ref false in
    let input_channel = open_in f in
    try
       let rec process_line () =
@@ -131,6 +133,7 @@ module CharMap = Map.Make(Char)
         let forward = fst(!trees) in
         let back = snd(!trees) in
         trees:=((add line forward),(add (string_rev line) back));
+        if mem "olleh" (snd(!trees)) then there:=true else if !there = true then (print_endline line; there:=false) else ();
         process_line ()
       in
       ignore (process_line ());
