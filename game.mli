@@ -29,7 +29,8 @@ type state = {
  * the player who performs the move *)
 type move = {
   tiles_placed : ((int * int) * char) list;
-  player : string
+  player : string;
+  swap : char list;
 }
 
 (* [diff] is a representation of the difference between two game states. There
@@ -41,6 +42,8 @@ type diff = {
   new_turn_val : int;
   players_diff : player list
 }
+
+val tile_values : (char * int) list
 
 (* initialize list of names from names.txt *)
 val init_names : unit -> unit

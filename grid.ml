@@ -64,26 +64,35 @@ let get_tile board x y = try (List.nth (List.nth board x) y) with _ -> None
 
 (* The "newer" list comes second *)
 let get_diff b1 b2 =
-  List.fold_left2
+  let med =
+    List.fold_left2
+      (
+        fun acc sub1 sub2 ->
+          let sub_diff =
+            List.fold_left2
+              (
+                fun a b c ->
+                  if b = c then a else c::a
+              )
+              [] sub1 sub2
+          in
+          List.rev_append sub_diff acc
+      )
+      [] b1 b2
+  in
+  List.fold_left
     (
-      fun acc sub1 sub2 ->
-        let sub_diff =
-          List.fold_left2
-            (
-              fun a b c ->
-                if b = c then a else c::a
-            )
-            [] sub1 sub2
-        in
-        List.rev_append sub_diff acc
-    )
-    [] b1 b2
+      fun acc ch ->
+        match ch with
+        | None -> assert false
+        | Some c -> c::acc
+    ) [] med
 
-let bonus_letter_at (x,y) =
-  try List.assoc (x,y) bonus_letter_tiles with _ -> 1
+let bonus_letter_at (y,x) = 
+  try List.assoc (y,x) bonus_letter_tiles with _ -> 1
 
-let bonus_word_at (x,y) =
-  try List.assoc (x,y) bonus_word_tiles with _ -> 1
+let bonus_word_at (y,x) = 
+  try List.assoc (y,x) bonus_word_tiles with _ -> 1
 
 let rec place_helper1 (row:(char option) list) y c new_row = match row with
 |[] -> new_row
