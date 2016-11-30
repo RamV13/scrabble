@@ -225,7 +225,7 @@ let get_suffix board ((row,col),tile) dir =
   let (dx,dy) = if dir = Horizontal then (1,0) else (0,1) in
   get_next (row,col) ("",0) dx dy
 
-let get_words_dir b tp (y0,x0) dir = 
+let get_words_dir b tp breaks (y0,x0) dir = 
   let opp dir = 
     if dir = Horizontal then Vertical else Horizontal
   in
@@ -279,7 +279,7 @@ let get_words_dir b tp (y0,x0) dir =
     |> List.fold_left (fun acc x -> acc*x) 1
   in
   print_endline ("main word multiplier: " ^ string_of_int word_mult);
-  if words = [] && prefix = "" && suffix = "" && not (b = Grid.empty) then 
+  if words = [] && prefix = "" && suffix = "" && breaks = [] && not (b = Grid.empty) then 
     raise (FailedMove "cannot place tiles apart from existing ones")
   else
    let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in 
@@ -291,27 +291,29 @@ let get_words_dir b tp (y0,x0) dir =
 let get_words board tp dir = 
   let valid_skips lst dir (y0,x0) = 
     let z0 = if dir = Horizontal then x0 else y0 in
-    let (_,v) = List.fold_left 
-      (fun (acc,valid) ((y,x),_) -> 
+    let (_,break) = List.fold_left 
+      (fun (acc,found) ((y,x),_) -> 
         let z = if dir = Horizontal then x else y in
-        if z = acc + 2 then (z,valid)
-        else if z > acc + 2 then (z,false)
-        else (z,valid)) 
-      (z0 - 1,true) lst
+        if z = acc + 2 then (z,found @ [acc + 1])
+        else if z > acc + 2 then raise (FailedMove "skip too large")
+        else (z,found)) 
+      (z0 - 1,[]) lst
     in
-    v
+    break
   in
   match dir with
   | Horizontal -> 
     let t = List.sort (fun ((_,x1),_) ((_,x2),_) -> Pervasives.compare x1 x2) tp in
     let ((y0,x0),_) = try List.hd t with _ -> assert false in
-    if valid_skips t Horizontal (y0,x0) then get_words_dir board t (y0,x0) Horizontal
-    else raise (FailedMove "skip too large")
+    get_words_dir board t (valid_skips t Horizontal (y0,x0)) (y0,x0) Horizontal
+    (*if valid_skips t Horizontal (y0,x0) then get_words_dir board t (y0,x0) Horizontal
+    else raise (FailedMove "skip too large")*)
   | Vertical -> 
     let t = List.sort (fun ((y1,_),_) ((y2,_),_) -> Pervasives.compare y1 y2) tp in
     let ((y0,x0),_) = try List.hd t with _ -> assert false in
-    if valid_skips t Vertical (y0,x0) then get_words_dir board t (y0,x0) Vertical
-    else raise (FailedMove "skip too large")
+    get_words_dir board t (valid_skips t Vertical (y0,x0)) (y0,x0) Vertical
+    (*if valid_skips t Vertical (y0,x0) then get_words_dir board t (y0,x0) Vertical
+    else raise (FailedMove "skip too large")*)
   
 (* get the direction a word was placed in *)
 let get_word_dir b tp = 
@@ -335,7 +337,7 @@ let get_word_dir b tp =
       raise (FailedMove "tiles must be placed horizontally or vertically")
     | true, false -> (*print_endline "VERT";*) Vertical
     | false, true -> (*print_endline "HORIZ";*) Horizontal
-    | true, true -> failwith "TODO: single tile infer direction"
+    | true, true -> assert false
   in
   if List.length tp = 1 then get_dir_single_char () else get_dir_multiple_chars ()
 
@@ -409,7 +411,6 @@ let execute s move =
     with Not_found -> assert false
   in
   assert (cur_p.order = s.turn);
-  if s.grid = Grid.empty && List.length (List.filter (fun ((y,x),_) -> y = 7 && x = 7) tiles_pl) = 0 then raise (FailedMove "first move must have one tile on star") else ();
   if List.length move.swap <> 0  && List.length s.remaining_tiles > 6 then
     begin
       s.turn <- ((s.turn + 1) mod 4);
@@ -428,7 +429,11 @@ let execute s move =
       s.turn <- ((s.turn + 1) mod 4);
       {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
     end
-  else create_diff s tiles_pl cur_p
+  else 
+    begin
+      if s.grid = Grid.empty && List.length (List.filter (fun ((y,x),_) -> y = 7 && x = 7) tiles_pl) = 0 then raise (FailedMove "first move must have one tile on star") else ();
+      create_diff s tiles_pl cur_p
+    end
   
 
 (* ===========================================================================
