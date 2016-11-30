@@ -100,9 +100,9 @@ let valid_chars surr tiles =
     let ixes =
       [
         s ^ surr.right;
-        surr.left ^ s;
+        s ^ surr.left;
         s ^ surr.below;
-        surr.above ^ s
+        s ^ surr.above
       ]
     in
     let not_empties = List.filter (fun a -> String.length a > 1) ixes in
@@ -192,19 +192,23 @@ let print_surr s =
     List.map print_string
       [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in ()
 
+
+(* print_pair (r,c) prints the integer pair. *)
 let print_pair (r, c) =
   print_int r;
   print_newline ();
   print_int c;
   print_newline ()
 
-
+(* Prints a boolean. *)
 let print_bool b =
   match b with
   | true -> print_string "True"
   | false -> print_string "False"
 
 
+(* [no_dups_append l1 l2] appends all of list [l2] contents to list [l1],
+ * but it ensures that there are no duplicates in the result. *)
 let no_dups_append l1 l2 =
   let rec aux l1 l2 acc =
     match l2 with
@@ -215,7 +219,7 @@ let no_dups_append l1 l2 =
 
 
 (* need to write a really clear spec for this *)
-let build' state player anchors curr dir =
+let build state player anchors curr dir =
   let rec aux state player dir curr acc =
     let ((row, col), _) = curr in
     let valid_move surr curr c =
