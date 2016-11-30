@@ -26,6 +26,10 @@ let to_str c = String.make 1 c
 let list_place l r c ch = (ch, (r,c))::l
 let flip' (a, b) = (b, a)
 
+let alphabet = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h';
+                'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p';
+                'q'; 'r'; 's'; 't'; 'u'; 'v'; 'w'; 'x';
+                'y'; 'z']
 
 (* [has_neighbors n] returns true if at least one of neighbors [n]s
  * is not empty. *)
@@ -147,9 +151,9 @@ let out_of_bounds state curr =
   let ((r, c), _) = curr in
   let board = state.Game.grid in
   if r > (List.length board - 1) || c > (List.length board - 1)
-  then false
-  else if r < 0 || c < 0 then false
-  else true
+  then true
+  else if r < 0 || c < 0 then true
+  else false
 
 
 (* [get_next dir curr] returns the next location from current position [curr]
@@ -188,12 +192,33 @@ let print_surr s =
     List.map print_string
       [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in ()
 
+let print_pair (r, c) =
+  print_int r;
+  print_newline ();
+  print_int c;
+  print_newline ()
+
+
+let print_bool b =
+  match b with
+  | true -> print_string "True"
+  | false -> print_string "False"
+
+
+let no_dups_append l1 l2 =
+  let rec aux l1 l2 acc =
+    match l2 with
+    | [] -> acc
+    | h::t -> if List.mem h l1 then aux l1 t acc else aux l1 t (h::acc)
+  in
+  aux l1 l2 l1
+
 
 (* need to write a really clear spec for this *)
-let build' start state player anchors curr dir =
+let build' state player anchors curr dir =
   let rec aux state player dir curr acc =
     let ((row, col), _) = curr in
-    let valid_move surr c =
+    let valid_move surr curr c =
       try
         let allowed = List.assoc (fst curr) anchors in
         if List.mem c allowed then
@@ -202,32 +227,37 @@ let build' start state player anchors curr dir =
       with
       | Not_found -> makes_move dir surr c
     in
-    let place_char c =
-      Grid.place (state.Game.grid) row col c
+    let place_char state (i, j) c =
+      Grid.place (state.Game.grid) i j c
     in
     let tiles = player.Game.tiles in
-    match tiles with
-    | [] -> acc
-    | h::t ->
-      let surr = get_surroundings state.Game.grid (row, col) in
-      let good_ends = List.filter (valid_move surr) tiles in
-      let moves = List.map (place_char) good_ends in
-      let dir_moves = List.map (fun m -> (start, dir, m)) moves in
-      let new_acc = List.rev_append dir_moves acc in
-      let good_ixes = List.filter (makes_prefix dir surr) player.Game.tiles in
-      let new_curr = get_next dir curr in
-      if good_ixes = [] then new_acc else
-      if out_of_bounds state new_curr then new_acc else
-        List.fold_left
-          (
-            fun a p ->
-              let new_board = place_char p in
-              let new_tiles = rem tiles p in
-              aux
-                {state with Game.grid = new_board}
-                {player with Game.tiles = new_tiles}
-                dir new_curr new_acc
-          )
-          [] good_ixes
+    let surr = get_surroundings state.Game.grid (row, col) in
+    let final_tiles = List.filter (valid_move surr curr) tiles in
+    let moves = List.map (place_char state (row, col)) final_tiles in
+    let new_acc = no_dups_append moves acc in
+    let len = List.length tiles - 1 in
+    let new_curr = get_next dir curr in
+    let collector = ref [] in
+    collector := new_acc;
+    if out_of_bounds state new_curr then new_acc else
+      let () =
+      for i = 0 to len do
+        let t = List.nth tiles i in
+        let new_tiles = rem tiles t in
+        let _ = List.map print_char new_tiles in
+        let () = print_newline () in
+        let new_board = place_char state (row, col) t in
+        let more_moves =
+          if makes_prefix dir surr t
+          then
+            aux {state with Game.grid = new_board}
+            {player with Game.tiles = new_tiles} dir new_curr new_acc
+          else
+            []
+        in
+        collector := no_dups_append !collector more_moves;
+      done
+      in
+      !collector
   in
   aux state player dir curr []
