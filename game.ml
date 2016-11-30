@@ -141,7 +141,7 @@ let create_game p_n g_n =
   let bag = create_bag () in
   let base_player = {player_name=""; tiles=[]; score=0; order=0; ai=true} in
   let create_ai order bag =
-    let player_name = (List.hd !names) ^ " (AI)" in
+    let player_name = (try List.hd !names with _ -> init_names (); List.hd !names) ^ " (AI)" in
     names := List.tl !names;
     let (tiles,bag') = take_tiles bag 7 in 
     ({base_player with player_name; order; tiles}, bag')
@@ -184,7 +184,7 @@ let remove_player (s : state) (p_n : string) : (string * int) =
     try List.find (fun player -> player.player_name = p_n) s.players
     with Not_found -> assert false
   in
-  substituted.player_name <- ((List.hd !names) ^ " (AI)");
+  substituted.player_name <- ((try List.hd !names with _ -> init_names (); List.hd !names) ^ " (AI)");
   names := List.tl !names;
   substituted.ai <- true;
   (substituted.player_name,substituted.order)
@@ -279,12 +279,11 @@ let get_words_dir b tp (y0,x0) dir =
     |> List.fold_left (fun acc x -> acc*x) 1
   in
   print_endline ("main word multiplier: " ^ string_of_int word_mult);
-  let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in
-  let final_words = word::words in
-  if final_words = [] && prefix = "" && suffix = "" && not (b = Grid.empty) then 
+  if words = [] && prefix = "" && suffix = "" && not (b = Grid.empty) then 
     raise (FailedMove "cannot place tiles apart from existing ones")
   else
-   final_words
+   let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in 
+   word::words
 
 (* get all new words and their scores formed when tiles [tp] are placed in 
  * direction [dir].
@@ -410,6 +409,7 @@ let execute s move =
     with Not_found -> assert false
   in
   assert (cur_p.order = s.turn);
+  if s.grid = Grid.empty && List.length (List.filter (fun ((y,x),_) -> y = 7 && x = 7) tiles_pl) = 0 then raise (FailedMove "first move must have one tile on star") else ();
   if List.length move.swap <> 0  && List.length s.remaining_tiles > 6 then
     begin
       s.turn <- ((s.turn + 1) mod 4);
