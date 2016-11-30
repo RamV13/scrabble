@@ -60,6 +60,8 @@ let drag_value : string ref = ref ""
 let dragging = ref false
 (* [current_tile] is the current focused tile *)
 let current_tile : Dom_html.element Js.t option ref = ref None
+(* [replace_tiles] is the current focused tiles *)
+let replace_tiles : Dom_html.element Js.t list ref = ref []
 (* [placed_tiles] is the current list of placed tiles as an association list *)
 let placed_tiles : ((int * int) * char) list ref = ref []
 
@@ -94,18 +96,19 @@ let current_value () =
   | Some elt -> Some (Js.to_string elt##innerHTML)
   | _ -> None
 
-(* [blur_current_tile ()] blurs focus on the current selected player tile *)
-let blur_current_tile () =
-  match !current_tile with
-  | Some elt -> elt##style##backgroundColor <- Js.string tile_background
-  | _ -> ()
+(* [blur_current_tiles ()] blurs focus on the current selected player tiles *)
+let blur_current_tiles () =
+  let blur_tile tile = 
+    tile##style##backgroundColor <- Js.string tile_background
+  in
+  List.iter blur_tile !replace_tiles
 
 (* [reset_current_tile ()] resets the current tile *)
 let reset_current_tile () = 
   match !current_tile with
   | Some elt -> 
     begin
-      blur_current_tile (); 
+      blur_current_tiles (); 
       elt##innerHTML <- Js.string "";
       current_tile := None
     end
@@ -270,13 +273,12 @@ let get_player_tile col =
 let handle_player_tile col _ = 
   if (!cur_player).order = !turn then
     begin
-      blur_current_tile ();
       let new_value = Js.to_string (get_player_tile col)##innerHTML in
       if new_value = "?" then dialog col
       else if new_value <> "" then
         begin
           (get_player_tile col)##style##backgroundColor <- Js.string "#fff";
-          current_tile := Some (get_player_tile col)
+          replace_tiles := (get_player_tile col)::!replace_tiles
         end
     end;
   Js._false
@@ -342,7 +344,7 @@ let reset_tile row col =
 
 (* [reset_player_tiles ()] resets player tiles based on the current player *)
 let reset_player_tiles () = 
-  blur_current_tile ();
+  blur_current_tiles ();
   List.iter (fun ((row,col),_) -> reset_tile row col) !placed_tiles;
   placed_tiles := [];
   let rec aux col = 
@@ -360,7 +362,7 @@ let reset_player_tiles () =
           let content = Js.to_string tile##innerHTML in
           if content = "?" || content = "" then Js._false else 
             begin
-              blur_current_tile ();
+              blur_current_tiles ();
               drag_value := content;
               dragging := true;
               current_tile := Some tile;
@@ -455,7 +457,7 @@ let init_state () =
       if not filled then 
         begin
           dragging := false;
-          blur_current_tile ();
+          blur_current_tiles ();
           let start = 5 in
           let id = (Js.to_string tile##id) in
           let comma_index = String.index id ',' in
@@ -485,39 +487,9 @@ let init_state () =
   if player.order <> game_state.turn then disable_controls ();
   reset_player_tiles ()
 
-(* [handle_submit ()] is the callback for the submit button of the game *)
-let handle_submit _ = 
-  if List.length !placed_tiles > 0 then
-    begin
-      let move = 
-        {tiles_placed=(!placed_tiles);player=(!cur_player).player_name;swap=[]}
-      in
-      ScrabbleClient.execute_move (!game_name) move >>= (fun result ->
-        begin
-          (
-            match result with
-            | Success -> ()
-            | Failed msg -> notify msg
-            | Server_error msg -> Dom_html.window##alert (Js.string msg)
-            | _ -> assert false
-          );
-          Lwt.return ()
-        end
-      )
-      |> ignore;
-      reset_player_tiles ()
-    end
-  else notify "No tiles placed!";
-  Js._false
-
-(* [handle_reset ()] is the callback for the reset button of the game *)
-let handle_reset _ = 
-  reset_player_tiles ();
-  Js._false
-
-(* [handle_pass ()] is the callback for the pass button of the game *)
-let handle_pass _ = 
-  let move = {tiles_placed=[];player=(!cur_player).player_name;swap=[]} in
+(* [execute move] performs the HTTP requests for executive a move and effects
+ * the corresponding GUI changes *)
+let execute move = 
   ScrabbleClient.execute_move (!game_name) move >>= (fun result ->
     begin
       (
@@ -531,12 +503,36 @@ let handle_pass _ =
     end
   )
   |> ignore;
+  reset_player_tiles ()
+
+(* [handle_place ()] is the callback for the place button of the game *)
+let handle_place _ = 
+  if List.length !placed_tiles > 0 then
+    begin
+      {tiles_placed=(!placed_tiles);player=(!cur_player).player_name;swap=[]}
+      |> execute
+    end
+  else notify "No tiles placed!";
+  Js._false
+
+(* [handle_reset ()] is the callback for the reset button of the game *)
+let handle_reset _ = 
   reset_player_tiles ();
+  Js._false
+
+(* [handle_pass ()] is the callback for the pass button of the game *)
+let handle_pass _ = 
+  execute {tiles_placed=[];player=(!cur_player).player_name;swap=[]};
   Js._false
 
 (* [handle_replace ()] is the callback for the replace button of the game *)
 let handle_replace _ = 
-  (* TODO *)
+  let swap = 
+    !replace_tiles
+    |> List.fold_left (fun acc elt -> (Js.to_string elt##innerHTML).[0]::acc) []
+  in
+  if List.length swap = 0 then notify "No tiles selected!"
+  else execute {tiles_placed=[];player=(!cur_player).player_name;swap};
   Js._false
 
 (* [handle_send ()] is the callback for the send chat button *)
@@ -624,7 +620,7 @@ let onload _ =
   with _ -> Dom_html.window##location##href <- Js.string "index.html");
   register_tiles ();
   register_player_tiles ();
-  (get_element_by_id "submit")##onclick <- Dom_html.handler handle_submit;
+  (get_element_by_id "submit")##onclick <- Dom_html.handler handle_place;
   (get_element_by_id "reset")##onclick <- Dom_html.handler handle_reset;
   (get_element_by_id "pass")##onclick <- Dom_html.handler handle_pass;
   (get_element_by_id "replace")##onclick <- Dom_html.handler handle_replace;
