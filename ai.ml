@@ -169,10 +169,21 @@ let intersect l1 l2 =
   in
   aux it []
 
+
 let print_surr s =
   let _ = List.map print_string
       [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in
   ()
+
+
+let out_of_bounds state curr =
+  let ((r, c), _) = curr in
+  let board = state.Game.grid in
+  if r > (List.length board - 1) || c > (List.length board - 1)
+  then false
+  else if r < 0 || c < 0 then false
+  else true
+
 
 (* might be a scoping issue here with valid_move and place_char *)
 let build' start state player anchors curr dir =
@@ -202,6 +213,7 @@ let build' start state player anchors curr dir =
       let good_ixes = List.filter (makes_prefix dir surr) player.Game.tiles in
       let new_curr = get_next dir curr in
       if good_ixes = [] then new_acc else
+      if out_of_bounds state new_curr then new_acc else
         List.fold_left
           (
             fun a p ->
@@ -217,23 +229,27 @@ let build' start state player anchors curr dir =
   aux state player dir curr []
 
 
+(* Given the board, the character list, the starting point, and the direction,
+ * generate the tiles_placed field of game. *)
 let gen_tiles_placed board cl start dir =
-  let rec aux coord counter acc =
-    if counter = 0 then acc
-    else
-      let (r, c) = coord in
-      let (nr, nc) =
-        match dir with
-        | Up -> (r - 1, c)
-        | Down -> (r + 1, c)
-        | Left -> (r, c - 1)
-        | Right -> (r, c + 1)
-      in
-      match Grid.get_tile board nr nc with
-      | Some ch -> aux (nr, nc) (counter - 1) ((ch, (nr, nc))::acc)
-      | None -> failwith "Board error"
+  let rec aux board cl start dir acc =
+    match cl with
+    | [] -> acc
+    | h::t ->
+      let (r,c) = start in
+      match Grid.get_tile board r c with
+      | None -> failwith "This should never happen"
+      | Some ch ->
+        let (nr, nc) =
+          match dir with
+          | Up -> (r - 1, c)
+          | Down -> (r + 1, c)
+          | Left -> (r, c - 1)
+          | Right -> (r, c + 1)
+        in
+        aux board t (nr, nc) dir (((r,c),ch)::acc)
   in
-  aux start (List.length cl) []
+  aux board cl start dir []
 
 
 (* Get the diff of all boards, generate moves as a result *)
@@ -245,11 +261,10 @@ let to_moves player init_state boards =
         let added =
           Grid.get_diff init_state.Game.grid board
         in
-        let open Game in
         let mv =
           {
-            Game.tiles_placed = gen_tiles_placed board added start dir |> List.map flip';
-            player = player.player_name;
+            Game.tiles_placed = gen_tiles_placed board added start dir;
+            player = player.Game.player_name;
           }
         in
         mv::acc
@@ -269,7 +284,6 @@ let best_move state player =
     mv |> to_moves player state  |> rank_moves |> List.hd
   else
     let anchors = get_anchors init_board init_tiles slots in
-    let _ = print_int (List.length anchors) in
     let moves = List.fold_left
         (
           fun acc anc ->
@@ -282,7 +296,6 @@ let best_move state player =
             let mvs =
               lm |> List.rev_append rm |> List.rev_append um |> List.rev_append dm
             in
-            print_int (List.length mvs) |> print_newline;
             List.rev_append mvs acc
         )
         [] anchors
