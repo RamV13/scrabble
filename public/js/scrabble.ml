@@ -45,6 +45,14 @@ let tile_background = "#EFEBE9"
 let dark_tile_background = "#D7CCC8"
 (* [score_name_color] is the value of the highlighted score name color *)
 let score_name_color = "#EF5350"
+(* [double_letter_background] is the background color of double letter tiles *)
+let double_letter_background = "#81D4FA"
+(* [double_word_background] is the background color of double word tiles *)
+let double_word_background = "#EF9A9A"
+(* [triple_letter_background] is the background color of triple letter tiles *)
+let triple_letter_background = "#039BE5"
+(* [triple_word_background] is the background color of triple word tiles *)
+let triple_word_background = "#EF5350"
 
 (* [current_tile] is the current focused tile *)
 let current_tile : Dom_html.element Js.t option ref = ref None
@@ -306,8 +314,25 @@ let reset_player_tiles () =
           |> string_of_int
         in
         if row = (board_dimension - 1) / 2 && col = (board_dimension - 1) / 2
-        then tile##innerHTML <- Js.string "★"
-        else tile##innerHTML <- Js.string (bonus ^ second)
+        then 
+          begin
+            tile##innerHTML <- Js.string "★";
+            tile##style##backgroundColor <- Js.string double_word_background
+          end
+        else 
+          begin
+            let value = bonus ^ second in
+            tile##innerHTML <- Js.string value;
+            if value = "2L" then 
+              tile##style##backgroundColor <- Js.string double_letter_background
+            else if value = "2W" then 
+              tile##style##backgroundColor <- Js.string double_word_background
+            else if value = "3L" then 
+              tile##style##backgroundColor <- Js.string triple_letter_background
+            else if value = "3W" then 
+              tile##style##backgroundColor <- Js.string triple_word_background
+            else assert false
+          end
       end
   in
   List.iter (fun ((row,col),_) -> reset_tile row col) !placed_tiles;
