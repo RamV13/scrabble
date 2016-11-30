@@ -155,5 +155,5 @@ module CharMap = Map.Make(Char)
   let has_extensions s =
     (not (is_leaf s forward_dict)) && (mem s forward_dict)
 
-  let has_back_extensions s =
-    (not (is_leaf s back_dict)) && (mem s back_dict)
+  let has_back_extensions s = let r = string_rev s in
+    (not (is_leaf r back_dict)) && (mem r back_dict)
