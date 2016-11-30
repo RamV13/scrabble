@@ -10,7 +10,11 @@ app.use('/api', function(req, res, next) {
   var data = "";
   req.on('data', function(chunk) {data += chunk});
   req.on('end', function() {
-     console.log(req.method + '\t\t' + req.path + '\t\t\t' + data);
+    if (req.path.includes('messaging')) {
+      console.log(req.method + '\t\t' + req.path + '\t\t' + data);
+    } else {
+      console.log(req.method + '\t\t' + req.path + '\t\t\t' + data);
+    }
   });
   proxy.web(req, res, {
     target: 'http://localhost:8000/api'
