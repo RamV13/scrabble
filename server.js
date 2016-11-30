@@ -10,7 +10,7 @@ app.use('/api', function(req, res, next) {
   var data = "";
   req.on('data', function(chunk) {data += chunk});
   req.on('end', function() {
-    if (req.path.includes('messaging')) {
+    if (req.path.indexOf('messaging') > -1) {
       console.log(req.method + '\t\t' + req.path + '\t\t' + data);
     } else {
       console.log(req.method + '\t\t' + req.path + '\t\t\t' + data);
