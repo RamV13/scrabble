@@ -193,7 +193,7 @@ let reflow row col =
   let coords = string_of_int row ^ "," ^ string_of_int col in
   "document.getElementById('grid-" ^ coords ^ "').offsetHeight;"
   |> Js.Unsafe.eval_string
-  |> ignore;
+  |> ignore
 
 (* [get_element_by_id id] gets a DOM element by [id] *)
 let get_element_by_id id = 
