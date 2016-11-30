@@ -1,8 +1,14 @@
-run:
-	ocamlbuild -pkgs yojson grid.byte dictionary.byte game.byte ai.byte
+OBJS=grid.cmo dictionary.cmo
+NAME=game
+OFIND=ocamlfind ocamlc -package yojson
 
-top:
-	ocamlbuild -pkgs yojson grid.cmo dictionary.cmo game.cmo
+$(NAME).byte: $(OBJS)
+		$(OFIND) -linkpkg -o $@ $(OBJS) $(NAME).ml
+
+%.cmo: %.ml
+		$(OFIND) -c $<i
+		$(OFIND) -c $<
 
 clean:
-	ocamlbuild -clean
+		rm *.cm*
+		rm *.byte
