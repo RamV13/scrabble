@@ -4,11 +4,6 @@ body {
   font-size: 14px;
 }
 
-td {
-    -webkit-transition: all 0.3s ease-in-out;
-    transition:         all 0.3s ease-in-out;
-}
-
 .scrabble-table {
     border-collapse: collapse;
     table-layout: fixed;
@@ -25,6 +20,8 @@ td {
     line-height: 0.9vw;
     display: inline-block;
     text-align: center;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition:         all 0.3s ease-in-out;
 }
 
 .tiles {
@@ -50,6 +47,8 @@ td {
     font-size: 18px;
     line-height: 18px;
     text-align: center !important;
+    -webkit-transition: all 0.1s ease-in-out;
+    transition:         all 0.1s ease-in-out;
 }
 
 .score {

@@ -358,6 +358,7 @@ let reset_player_tiles () =
   blur_current_tiles ();
   List.iter (fun ((row,col),_) -> reset_tile row col) !placed_tiles;
   placed_tiles := [];
+  replace_tiles := [];
   let rec aux col = 
     if col >= 0 then
       begin
