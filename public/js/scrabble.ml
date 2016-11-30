@@ -371,7 +371,9 @@ let reset_player_tiles () =
         tile##setAttribute (Js.string "draggable",Js.string "true");
         tile##ondragstart <- Dom_html.handler (fun _ ->
           let content = Js.to_string tile##innerHTML in
-          if content = "?" || content = "" then Js._false else 
+          if content = "?" || content = "" || (!cur_player).order <> !turn
+          then Js._false
+          else
             begin
               blur_current_tiles ();
               drag_value := content;
@@ -438,7 +440,7 @@ let init_state () =
         let check_tile = fun acc ((y,x),_) -> (y = y' && x = x') || acc in
         List.fold_left check_tile false !placed_tiles
       in
-      if placed_tile then 
+      if placed_tile && (!cur_player).order = !turn then 
         begin
           placed_tiles := 
             !placed_tiles
