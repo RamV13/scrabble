@@ -293,55 +293,56 @@ let register_player_tiles () =
   in
   aux (num_player_tiles - 1)
 
+(* [reset_tile row col] resets the tile at [row] and [col] *)
+let reset_tile row col = 
+  let tile = get_tile row col in
+  let check_tile ((r,c),_) = r = row && c = col in
+  let is_bonus = 
+    List.exists check_tile Grid.bonus_letter_tiles ||
+    List.exists check_tile Grid.bonus_word_tiles
+  in
+  if not is_bonus then
+    begin
+      tile##style##backgroundColor <- Js.string tile_background;
+      tile##innerHTML <- Js.string "&nbsp;"
+    end
+  else
+    begin
+      let second = 
+        if List.exists check_tile Grid.bonus_letter_tiles then "L" else "W"
+      in
+      let bonus = 
+        List.filter check_tile Grid.bonus_letter_tiles @
+        List.filter check_tile Grid.bonus_word_tiles
+        |> List.hd
+        |> snd
+        |> string_of_int
+      in
+      if row = (board_dimension - 1) / 2 && col = (board_dimension - 1) / 2
+      then 
+        begin
+          tile##innerHTML <- Js.string "★";
+          tile##style##backgroundColor <- Js.string double_word_background
+        end
+      else 
+        begin
+          let value = bonus ^ second in
+          tile##innerHTML <- Js.string value;
+          if value = "2L" then 
+            tile##style##backgroundColor <- Js.string double_letter_background
+          else if value = "2W" then 
+            tile##style##backgroundColor <- Js.string double_word_background
+          else if value = "3L" then 
+            tile##style##backgroundColor <- Js.string triple_letter_background
+          else if value = "3W" then 
+            tile##style##backgroundColor <- Js.string triple_word_background
+          else assert false
+        end
+    end
+
 (* [reset_player_tiles ()] resets player tiles based on the current player *)
 let reset_player_tiles () = 
   blur_current_tile ();
-  let reset_tile row col = 
-    let tile = get_tile row col in
-    let check_tile ((r,c),_) = r = row && c = col in
-    let is_bonus = 
-      List.exists check_tile Grid.bonus_letter_tiles ||
-      List.exists check_tile Grid.bonus_word_tiles
-    in
-    if not is_bonus then
-      begin
-        tile##style##backgroundColor <- Js.string tile_background;
-        tile##innerHTML <- Js.string "&nbsp;"
-      end
-    else
-      begin
-        let second = 
-          if List.exists check_tile Grid.bonus_letter_tiles then "L" else "W"
-        in
-        let bonus = 
-          List.filter check_tile Grid.bonus_letter_tiles @
-          List.filter check_tile Grid.bonus_word_tiles
-          |> List.hd
-          |> snd
-          |> string_of_int
-        in
-        if row = (board_dimension - 1) / 2 && col = (board_dimension - 1) / 2
-        then 
-          begin
-            tile##innerHTML <- Js.string "★";
-            tile##style##backgroundColor <- Js.string double_word_background
-          end
-        else 
-          begin
-            let value = bonus ^ second in
-            tile##innerHTML <- Js.string value;
-            if value = "2L" then 
-              tile##style##backgroundColor <- Js.string double_letter_background
-            else if value = "2W" then 
-              tile##style##backgroundColor <- Js.string double_word_background
-            else if value = "3L" then 
-              tile##style##backgroundColor <- Js.string triple_letter_background
-            else if value = "3W" then 
-              tile##style##backgroundColor <- Js.string triple_word_background
-            else assert false
-          end
-      end
-  in
   List.iter (fun ((row,col),_) -> reset_tile row col) !placed_tiles;
   placed_tiles := [];
   let rec aux col = 
@@ -359,6 +360,7 @@ let reset_player_tiles () =
           let content = Js.to_string tile##innerHTML in
           if content = "?" || content = "" then Js._false else 
             begin
+              blur_current_tile ();
               drag_value := content;
               dragging := true;
               current_tile := Some tile;
@@ -371,6 +373,17 @@ let reset_player_tiles () =
         );
         tile##ondrag <- Dom_html.handler (fun _ ->
           tile##innerHTML <- Js.string "&nbsp;";
+          Js._false
+        );
+        tile##ondragover <- Dom_html.handler (fun _ -> Js._false);
+        tile##ondrop <- Dom_html.handler (fun _ ->
+          let content = Js.to_string tile##innerHTML in
+          if content = "" then
+            begin
+              dragging := false;
+              blur_current_tile ();
+              tile##innerHTML <- Js.string !drag_value
+            end;
           Js._false
         );
         aux (col - 1)
@@ -405,13 +418,45 @@ let init_state () =
       end
     | None -> ());
     let tile = get_tile !y !x in
+    let x' = !x in
+    let y' = !y in
     tile##setAttribute (Js.string "draggable",Js.string "true");
-    tile##ondragover <- Dom_html.handler (fun event -> Js._false);
+    tile##ondragstart <- Dom_html.handler (fun _ ->
+      let placed_tile = 
+        let check_tile = fun acc ((y,x),_) -> (y = y' && x = x') || acc in
+        List.fold_left check_tile false !placed_tiles
+      in
+      if placed_tile then 
+        begin
+          placed_tiles := 
+            !placed_tiles
+            |> List.filter (fun ((y,x),_) -> y <> y' || x <> x');
+          dragging := true;
+          drag_value := Js.to_string tile##innerHTML;
+          Js._true
+        end
+      else Js._false
+    );
+    tile##ondrag <- Dom_html.handler (fun _ ->
+      reset_tile y' x';
+      Js._false
+    );
+    tile##ondragend <- Dom_html.handler (fun _ ->
+      if !dragging then 
+        begin
+          tile##innerHTML <- Js.string !drag_value;
+          tile##style##backgroundColor <- Js.string dark_tile_background;
+          placed_tiles := ((y',x'),(!drag_value).[0])::!placed_tiles
+        end;
+      Js._false
+    );
+    tile##ondragover <- Dom_html.handler (fun _ -> Js._false);
     tile##ondrop <- Dom_html.handler (fun _ ->
-      dragging := false;
       let filled = String.length (Js.to_string tile##innerHTML) = 1 in
       if not filled then 
         begin
+          dragging := false;
+          blur_current_tile ();
           let start = 5 in
           let id = (Js.to_string tile##id) in
           let comma_index = String.index id ',' in
@@ -422,12 +467,6 @@ let init_state () =
           let row = int_of_string row_str in
           let col = int_of_string col_str in
           place_tile row col !drag_value
-        end
-      else 
-        begin
-          match !current_tile with
-          | Some elt -> elt##innerHTML <- Js.string !drag_value
-          | None -> ()
         end;
       Js._false
     );
