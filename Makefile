@@ -6,3 +6,6 @@ top:
 
 clean:
 	ocamlbuild -clean
+
+test:
+	ocamlbuild -pkg oUnit ai_test.byte && ./ai_test.byte
