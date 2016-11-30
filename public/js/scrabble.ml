@@ -354,17 +354,23 @@ let reset_player_tiles () =
           |> Char.escaped
         in
         tile##innerHTML <- Js.string value;
-        if value <> "?" 
-        then tile##setAttribute (Js.string "draggable",Js.string "true");
+        tile##setAttribute (Js.string "draggable",Js.string "true");
+        tile##ondragstart <- Dom_html.handler (fun _ ->
+          let content = Js.to_string tile##innerHTML in
+          if content = "?" || content = "" then Js._false else 
+            begin
+              drag_value := content;
+              dragging := true;
+              current_tile := Some tile;
+              Js._true
+            end
+        );
         tile##ondragend <- Dom_html.handler (fun _ ->
-          if !dragging then tile##innerHTML <- Js.string value;
+          if !dragging then tile##innerHTML <- Js.string !drag_value;
           Js._false
         );
         tile##ondrag <- Dom_html.handler (fun _ ->
           tile##innerHTML <- Js.string "&nbsp;";
-          dragging := true;
-          drag_value := value;
-          current_tile := Some tile;
           Js._false
         );
         aux (col - 1)
