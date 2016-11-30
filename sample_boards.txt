@@ -5,7 +5,7 @@
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-[None;None;None;None;None;None;Some 'O';Some 'R';None;None;None;None;None;None;None];
+[None;None;None;None;None;None;Some 'a';Some 'p'; Some 'p'; Some 'l'; Some 'e';None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
@@ -26,6 +26,8 @@ apple becomes applets
 apple becomes applet
 apple becomes apples
 
+let t = ['t'; 's'];;
+
 let state = {
 Game.name = "a";
 grid = board;
@@ -36,8 +38,10 @@ turn = 0;
 
 let player = {
 Game.player_name = "a";
-tiles = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h'; 'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p'; 'q'; 'r'; 's'; 't'; 'u'; 'v'; 'w'; 'x'; 'y'; 'z'];
+tiles = t;
 score = 0;
 order = 0;
 ai = true;
 };;
+
+let anchors = find_slots board |> get_anchors board t;;
