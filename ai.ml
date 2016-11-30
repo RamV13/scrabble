@@ -92,21 +92,37 @@ let get_surroundings board slot =
   }
 
 
+let reverse_str s =
+  let open Str in
+  let spl = Str.split (Str.regexp "") s in
+  List.fold_left (fun acc b -> b ^ acc) "" spl;;
+
+
 (* [valid_chars surr tiles] returns the chars from [tiles] that
  * form valid words with the surrounding tiles in [surr]. *)
 let valid_chars surr tiles =
   let is_ok t =
     let s = to_str t in
     let ixes =
+      {
+      right = s ^ surr.right;
+      left = s ^ surr.left |> reverse_str;
+      below = s ^ surr.below;
+      above = s ^ surr.above |> reverse_str;
+      }
+    in
+    let bools =
       [
-        s ^ surr.right;
-        s ^ surr.left;
-        s ^ surr.below;
-        s ^ surr.above
+        Dictionary.in_dict ixes.right ||
+        Dictionary.has_back_extensions ixes.right;
+        Dictionary.in_dict ixes.left ||
+        Dictionary.has_extensions ixes.left;
+        Dictionary.in_dict ixes.above ||
+        Dictionary.has_extensions ixes.above;
+        Dictionary.in_dict ixes.below ||
+        Dictionary.has_back_extensions ixes.below;
       ]
     in
-    let not_empties = List.filter (fun a -> String.length a > 1) ixes in
-    let bools = List.map Dictionary.in_dict not_empties in
     List.fold_left (fun acc b -> acc && b) true bools
   in
   List.filter is_ok tiles
