@@ -77,7 +77,7 @@ let rec find_adj board slot acc dir =
   in
   match fst' adj with
   | None -> acc
-  | Some c -> find_adj board (snd' adj) ((to_str c) ^ acc) (thrd' adj)
+  | Some c -> find_adj board (snd' adj) (acc ^ (to_str c)) (thrd' adj)
 
 
 (* [get_surroundings b s] returns the surrounding words around slot [s]
