@@ -156,8 +156,10 @@
     </div>
 
     <div class="tile-values mdl-card mdl-shadow--16dp">
-      <button id="tile-values-tt" onclick="blur()" class="mdl-button mdl-button--colored">Tile Values</button>
-      <div class="mdl-tooltip tile-values-tooltip" for="tile-values-tt">
+      <div class="tile-values-btn-wrapper">
+        <button id="tile-values-tt" onclick="blur()" class="tile-values-btn mdl-button mdl-button--colored">Tile Values</button>
+      </div>
+      <div class="mdl-tooltip mdl-tooltip--top" for="tile-values-tt">
         <table>
           <tr>
             <td class="tile-values-td">E, A, I, O, N, <br> R, T, L, S, U</td>
@@ -469,14 +471,14 @@
     </div>
 
     <script type="text/javascript">
-      $(document).bind("contextmenu",function(e) {
+      /*$(document).bind("contextmenu",function(e) {
         e.preventDefault();
       });
       $(document).keydown(function(e){
         if(e.which === 123){
            return false;
         }
-      });
+      });*/
     </script>
 
   </body>
