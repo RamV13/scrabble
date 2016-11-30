@@ -30,7 +30,8 @@ type state = {
  * the player who performs the move *)
 type move = {
   tiles_placed : ((int * int) * char) list;
-  player : string
+  player : string;
+  swap : char list;
 }
 
 (* [diff] is a representation of the difference between two game states. There
@@ -363,22 +364,11 @@ let diff_tile_rack rack played =
   in
   aux rack played
 
-(* [execute state move] executes a [move] to produce a new game state from the 
- * previous game state [state] *)
-(* ram is assuming that players_diff is always list of length 1 *)
-let execute s move =
-  let tiles_pl = move.tiles_placed in
-
-  let p_n = move.player in
-  let cur_p = 
-    try List.find (fun p -> p.player_name = p_n) s.players
-    with Not_found -> assert false
-  in
-  assert (cur_p.order = s.turn);
+let create_diff s tiles_pl cur_p = 
   let (words,words_sc) = 
     List.split (get_words s.grid tiles_pl (get_word_dir s.grid tiles_pl)) in
   let words_cap = List.map (fun w -> String.lowercase_ascii w) words in
-  print_string "words: "; List.iter (fun x -> print_string (x ^ ", ")) words;
+  print_string "words: "; List.iter (fun x -> print_string (x ^ ", ")) words; print_endline "";
   let (is_valid,invalid_words) = List.fold_left
     (fun (acc_bool,invalid_w) w -> 
       if Dictionary.in_dict w then (acc_bool,invalid_w)
@@ -405,9 +395,41 @@ let execute s move =
     end
   else
     begin
-      let bad_words = List.fold_left (fun acc x -> acc ^ x ^ ", ") "" invalid_words in
+      let bad_words = List.fold_left (fun acc x -> acc ^ (if acc <> "" then ", " else "") ^ x) "" invalid_words in
       raise (FailedMove ("illegimate word(s) formed: " ^ bad_words))
     end
+
+(* [execute state move] executes a [move] to produce a new game state from the 
+ * previous game state [state] *)
+(* ram is assuming that players_diff is always list of length 1 *)
+let execute s move =
+  let tiles_pl = move.tiles_placed in
+  let p_n = move.player in
+  let cur_p = 
+    try List.find (fun p -> p.player_name = p_n) s.players
+    with Not_found -> assert false
+  in
+  assert (cur_p.order = s.turn);
+  if List.length move.swap <> 0  && List.length s.remaining_tiles > 6 then
+    begin
+      s.turn <- ((s.turn + 1) mod 4);
+      let tiles = move.swap in
+      let (tiles_taken,new_bag) = 
+        take_tiles s.remaining_tiles (List.length tiles) in
+      let new_tiles = (diff_tile_rack cur_p.tiles tiles) @ tiles_taken in
+      cur_p.tiles <- new_tiles;
+      s.remaining_tiles <- (new_bag @ tiles);
+      {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
+    end
+  else if List.length move.swap <> 0 && List.length s.remaining_tiles < 7 then
+    raise (FailedMove "less than 7 tiles remain in the bag")
+  else if List.length tiles_pl = 0 then 
+    begin
+      s.turn <- ((s.turn + 1) mod 4);
+      {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
+    end
+  else create_diff s tiles_pl cur_p
+  
 
 (* ===========================================================================
  * JSON methods below *)
@@ -538,13 +560,14 @@ let diff_from_json json =
 (* converts a move to its json representation *)
 let move_to_json m = 
   "{\"tilesPlaced\": [" ^ (board_diff_to_json m.tiles_placed) ^ 
-  "], \"playerName\": \"" ^ m.player ^ "\"}"
+  "], \"playerName\": \"" ^ m.player ^ "\", \"swappedTiles\":" ^ (char_list_to_json m.swap) ^ "}"
 
 (* converts json to its move representation *)
 let move_from_json json = 
   let p = member "playerName" json |> to_string in
   let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
-  {player = p; tiles_placed = tp}
+  let st = member "swappedTiles" json |> to_list |> List.map (fun x -> x |> to_string |> str_to_c) in
+  {player = p; tiles_placed = tp; swap = st}
 
 (* let _ = 
   let print_board b = 

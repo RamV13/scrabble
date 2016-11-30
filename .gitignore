@@ -25,3 +25,5 @@ setup.log
 # Log files
 *log.txt
 
+# Makefile
+Makefile
