@@ -277,8 +277,19 @@ let handle_player_tile col _ =
       if new_value = "?" then dialog col
       else if new_value <> "" then
         begin
-          (get_player_tile col)##style##backgroundColor <- Js.string "#fff";
-          replace_tiles := (get_player_tile col)::!replace_tiles
+          let tile = get_player_tile col in
+          if List.mem tile !replace_tiles then
+            begin
+              tile##style##backgroundColor <- Js.string tile_background;
+              replace_tiles := 
+                !replace_tiles
+                |> List.filter (fun tile' -> tile <> tile')
+            end
+          else
+            begin
+              tile##style##backgroundColor <- Js.string "#fff";
+              replace_tiles := tile::!replace_tiles
+            end
         end
     end;
   Js._false
