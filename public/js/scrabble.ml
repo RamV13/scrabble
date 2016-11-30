@@ -56,6 +56,8 @@ let triple_word_background = "#EF5350"
 
 (* [drag_value] is the current dragged value *)
 let drag_value : string ref = ref ""
+(* [dragging] is a boolean flag indicating a drag in progress *)
+let dragging = ref false
 (* [current_tile] is the current focused tile *)
 let current_tile : Dom_html.element Js.t option ref = ref None
 (* [placed_tiles] is the current list of placed tiles as an association list *)
@@ -354,8 +356,13 @@ let reset_player_tiles () =
         tile##innerHTML <- Js.string value;
         if value <> "?" 
         then tile##setAttribute (Js.string "draggable",Js.string "true");
+        tile##ondragend <- Dom_html.handler (fun _ ->
+          if !dragging then tile##innerHTML <- Js.string value;
+          Js._false
+        );
         tile##ondrag <- Dom_html.handler (fun _ ->
           tile##innerHTML <- Js.string "&nbsp;";
+          dragging := true;
           drag_value := value;
           current_tile := Some tile;
           Js._false
@@ -398,6 +405,7 @@ let init_state () =
       Js._false
     );
     tile##ondrop <- Dom_html.handler (fun _ ->
+      dragging := false;
       let filled = String.length (Js.to_string tile##innerHTML) = 1 in
       if not filled then 
         begin
