@@ -326,7 +326,7 @@ let get_word_dir b tp =
     let horiz_suffix = fst (get_suffix b t Horizontal) in
     if vert_prefix = "" && vert_suffix = "" && (horiz_prefix <> "" || horiz_suffix <> "") then Horizontal
     else if horiz_prefix = "" && horiz_suffix = "" && (vert_prefix <> "" || vert_suffix <> "") then Vertical
-    else if vert_prefix = "" && vert_suffix = "" && horiz_prefix = "" && horiz_suffix = "" then raise (FailedMove "cannot place single tile by itself")
+    else if vert_prefix = "" && vert_suffix = "" && horiz_prefix = "" && horiz_suffix = "" && not (b = Grid.empty) then raise (FailedMove "cannot place single tile by itself")
     else Horizontal
   in
   let get_dir_multiple_chars () = 
