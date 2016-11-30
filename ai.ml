@@ -295,6 +295,7 @@ let best_move state player =
   let init_board = lowercase_grid state.Game.grid in
   let new_state = {state with Game.grid = init_board} in
   let init_tiles = List.map (fun c -> Char.lowercase_ascii c) player.Game.tiles in
+  let _ = List.map print_char init_tiles in
   let slots = find_slots init_board in
   if slots = [] then
     let mv = build' center new_state player [] (center, true) Right in
