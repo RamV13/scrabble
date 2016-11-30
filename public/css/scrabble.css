@@ -4,6 +4,11 @@ body {
   font-size: 14px;
 }
 
+td {
+    -webkit-transition: all 0.3s ease-in-out;
+    transition:         all 0.3s ease-in-out;
+}
+
 .scrabble-table {
     border-collapse: collapse;
     table-layout: fixed;
