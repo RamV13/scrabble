@@ -27,7 +27,7 @@ let list_place l r c ch = (ch, (r,c))::l
 let flip' (a, b) = (b, a)
 
 
-(* [has_neighbors n] returns true if at least one of [neighbors] n
+(* [has_neighbors n] returns true if at least one of neighbors [n]s
  * is not empty. *)
 let has_neighbors n =
   if (n.Grid.top = None) && (n.Grid.left = None) &&
@@ -141,6 +141,19 @@ let makes_prefix dir surr ch =
   | Right -> (Dictionary.has_extensions (surr.left ^ s))
 
 
+(* [out_of_bounds s c] returns true if current location [curr] is out of the
+ * bounds of the grid found in state [s]. *)
+let out_of_bounds state curr =
+  let ((r, c), _) = curr in
+  let board = state.Game.grid in
+  if r > (List.length board - 1) || c > (List.length board - 1)
+  then false
+  else if r < 0 || c < 0 then false
+  else true
+
+
+(* [get_next dir curr] returns the next location from current position [curr]
+ * and in the given direction [dir]. *)
 let get_next dir curr =
   let ((r, c), _) = curr in
   match dir with
@@ -169,23 +182,14 @@ let intersect l1 l2 =
   in
   aux it []
 
-
+(* A printing function for the type surroundings [s]. *)
 let print_surr s =
-  let _ = List.map print_string
-      [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in
-  ()
+  let _ =
+    List.map print_string
+      [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in ()
 
 
-let out_of_bounds state curr =
-  let ((r, c), _) = curr in
-  let board = state.Game.grid in
-  if r > (List.length board - 1) || c > (List.length board - 1)
-  then false
-  else if r < 0 || c < 0 then false
-  else true
-
-
-(* might be a scoping issue here with valid_move and place_char *)
+(* need to write a really clear spec for this *)
 let build' start state player anchors curr dir =
   let rec aux state player dir curr acc =
     let ((row, col), _) = curr in
