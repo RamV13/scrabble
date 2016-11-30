@@ -275,9 +275,25 @@ let rank_moves moves = List.sort (fun a b -> 0) moves
 
 let center = (7, 7)
 
+let lowercase_grid grid =
+  let lowercase_list l =
+    List.fold_left
+      (
+        fun acc it ->
+          let low =
+            match it with
+            | None -> None
+            | Some c -> Some (Char.lowercase_ascii c)
+          in
+          (low::acc)
+      )
+      [] l
+  in
+  List.fold_left (fun acc li -> (lowercase_list li)::acc) [] grid
+
 let best_move state player =
-  let init_board = state.Game.grid in
-  let init_tiles = player.Game.tiles in
+  let init_board = lowercase_grid state.Game.grid in
+  let init_tiles = List.map (fun c -> Char.lowercase_ascii c) player.Game.tiles in
   let slots = find_slots init_board in
   if slots = [] then
     let mv = build' center state player [] (center, true) Right in
