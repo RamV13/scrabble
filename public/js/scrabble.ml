@@ -381,7 +381,6 @@ let reset_player_tiles () =
           if content = "" then
             begin
               dragging := false;
-              blur_current_tile ();
               tile##innerHTML <- Js.string !drag_value
             end;
           Js._false
