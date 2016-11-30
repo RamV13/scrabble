@@ -279,12 +279,11 @@ let get_words_dir b tp (y0,x0) dir =
     |> List.fold_left (fun acc x -> acc*x) 1
   in
   print_endline ("main word multiplier: " ^ string_of_int word_mult);
-  let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in
-  let final_words = word::words in
-  if final_words = [] && prefix = "" && suffix = "" && not (b = Grid.empty) then 
+  if words = [] && prefix = "" && suffix = "" && not (b = Grid.empty) then 
     raise (FailedMove "cannot place tiles apart from existing ones")
   else
-   final_words
+   let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in 
+   word::words
 
 (* get all new words and their scores formed when tiles [tp] are placed in 
  * direction [dir].
