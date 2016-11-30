@@ -54,6 +54,8 @@ let triple_letter_background = "#039BE5"
 (* [triple_word_background] is the background color of triple word tiles *)
 let triple_word_background = "#EF5350"
 
+(* [drag_value] is the current dragged value *)
+let drag_value : string ref = ref ""
 (* [current_tile] is the current focused tile *)
 let current_tile : Dom_html.element Js.t option ref = ref None
 (* [placed_tiles] is the current list of placed tiles as an association list *)
@@ -157,13 +159,16 @@ let dialog col =
             \"You already have a '\" + current.innerHTML + 
             \"' tile. Please place this first.\"});
           resetCurrent();
-          document.getElementById('select').removeEventListener('click', handleSelect);
+          document.getElementById('select').
+            removeEventListener('click', handleSelect);
           dialog.close();
         } else {
           var id = 'tile-" ^ string_of_int col ^ "';
           document.getElementById(id).innerHTML = current.innerHTML;
+          document.getElementById(id).draggable = true;
           resetCurrent();
-          document.getElementById('select').removeEventListener('click', handleSelect);
+          document.getElementById('select').
+            removeEventListener('click', handleSelect);
           dialog.close();
         }
       }
@@ -347,6 +352,14 @@ let reset_player_tiles () =
           |> Char.escaped
         in
         tile##innerHTML <- Js.string value;
+        if value <> "?" 
+        then tile##setAttribute (Js.string "draggable",Js.string "true");
+        tile##ondrag <- Dom_html.handler (fun _ ->
+          tile##innerHTML <- Js.string "&nbsp;";
+          drag_value := value;
+          current_tile := Some tile;
+          Js._false
+        );
         aux (col - 1)
       end
   in
@@ -378,6 +391,30 @@ let init_state () =
         |> place_tile !y !x
       end
     | None -> ());
+    let tile = get_tile !y !x in
+    tile##ondragover <- Dom_html.handler (fun event -> 
+      let target = Js.Opt.get event##target fail in
+      target##style##cursor <- Js.string "default"; (* TODO *)
+      Js._false
+    );
+    tile##ondrop <- Dom_html.handler (fun _ ->
+      let filled = String.length (Js.to_string tile##innerHTML) = 1 in
+      if not filled then 
+        begin
+          let row_char = String.get (Js.to_string tile##id) 5 in
+          let col_char = String.get (Js.to_string tile##id) 7 in
+          let row = (Char.code row_char) - (Char.code '0') in
+          let col = (Char.code col_char) - (Char.code '0') in
+          place_tile row col !drag_value
+        end
+      else 
+        begin
+          match !current_tile with
+          | Some elt -> elt##innerHTML <- Js.string !drag_value
+          | None -> ()
+        end;
+      Js._false
+    );
     x := 1 + !x
   in
   game_state.grid
@@ -399,7 +436,7 @@ let handle_submit _ =
   if List.length !placed_tiles > 0 then
     begin
       let move = 
-        {tiles_placed=(!placed_tiles);player=(!cur_player).player_name}
+        {tiles_placed=(!placed_tiles);player=(!cur_player).player_name;swap=[]}
       in
       ScrabbleClient.execute_move (!game_name) move >>= (fun result ->
         begin
@@ -426,7 +463,7 @@ let handle_reset _ =
 
 (* [handle_pass ()] is the callback for the pass button of the game *)
 let handle_pass _ = 
-  let move = {tiles_placed=[];player=(!cur_player).player_name} in
+  let move = {tiles_placed=[];player=(!cur_player).player_name;swap=[]} in
   ScrabbleClient.execute_move (!game_name) move >>= (fun result ->
     begin
       (

@@ -264,7 +264,7 @@ let to_moves player init_state boards =
         let mv =
           {
             Game.tiles_placed = gen_tiles_placed board added start dir;
-            player = player.Game.player_name;
+            player = player.Game.player_name
           }
         in
         mv::acc

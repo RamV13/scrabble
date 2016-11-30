@@ -29,7 +29,8 @@ type state = {
  * the player who performs the move *)
 type move = {
   tiles_placed : ((int * int) * char) list;
-  player : string
+  player : string;
+  swap : char list;
 }
 
 (* [diff] is a representation of the difference between two game states. There
@@ -178,10 +179,57 @@ let diff_from_json json =
 (* converts a move to its json representation *)
 let move_to_json m = 
   "{\"tilesPlaced\": [" ^ (board_diff_to_json m.tiles_placed) ^ 
-  "], \"playerName\": \"" ^ m.player ^ "\"}"
+  "], \"playerName\": \"" ^ m.player ^ "\", \"swappedTiles\":" ^ (char_list_to_json m.swap) ^ "}"
 
 (* converts json to its move representation *)
 let move_from_json json = 
   let p = member "playerName" json |> to_string in
   let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
-  {player = p; tiles_placed = tp}
+  let st = member "swappedTiles" json |> to_list |> List.map (fun x -> x |> to_string |> str_to_c) in
+  {player = p; tiles_placed = tp; swap = st}
+
+(* let _ = 
+  let print_board b = 
+    let print_row r = 
+      List.iter (fun x -> 
+        match x with 
+        | Some t -> print_string ((Char.escaped t) ^ " ");
+        | None -> print_string "# ";
+      ) r
+    in
+    List.iter (fun row -> print_row row; print_endline "";) b;
+  in
+  (*print_endline ("hello: " ^ (string_of_bool (Dictionary.in_dict "hello")));
+  print_endline ("hen: " ^ (string_of_bool (Dictionary.in_dict "hen")));
+  print_endline ("ten: " ^ (string_of_bool (Dictionary.in_dict "ten")));*)
+  init_names();
+  let s = create_game "Brian" "game" in
+  print_endline ("turn: " ^ (string_of_int s.turn));
+  print_board s.grid;  
+  (*let m_ten = {
+    tiles_placed = [((5,5),'h');((6,5),'e');((7,5),'n')];
+    player = "Brian"
+  } in
+  let _ = execute s m_ten in
+  print_board s.grid;
+  let player2 = List.nth (s.players) 1 in
+  let m_hen = {
+    tiles_placed = [((6,4),'t');((6,6),'n')];
+    player = player2.player_name
+  } in
+  let _ = execute s m_hen in*)
+  let m1 = {
+    tiles_placed = [((5,5),'z');((6,5),'e');((7,5),'n');((8,5),'i');((9,5),'t');((10,5),'h')];
+    player = "Brian"
+  } in
+  let _ = execute s m1 in
+  print_board s.grid;
+  (*let player2 = List.nth (s.players) 1 in
+  let m2 = {
+    tiles_placed = [((8,5),'l');((9,5),'s')];
+    player = player2.player_name
+  } in
+  let _ = execute s m2 in
+  print_endline ("turn: " ^ (string_of_int s.turn));
+  print_board s.grid;*)
+*)
