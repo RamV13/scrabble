@@ -405,11 +405,8 @@ let init_state () =
       end
     | None -> ());
     let tile = get_tile !y !x in
-    tile##ondragover <- Dom_html.handler (fun event -> 
-      let target = Js.Opt.get event##target fail in
-      target##style##cursor <- Js.string "default"; (* TODO *)
-      Js._false
-    );
+    tile##setAttribute (Js.string "draggable",Js.string "true");
+    tile##ondragover <- Dom_html.handler (fun event -> Js._false);
     tile##ondrop <- Dom_html.handler (fun _ ->
       dragging := false;
       let filled = String.length (Js.to_string tile##innerHTML) = 1 in
