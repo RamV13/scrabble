@@ -293,17 +293,18 @@ let lowercase_grid grid =
 
 let best_move state player =
   let init_board = lowercase_grid state.Game.grid in
+  let new_state = {state with Game.grid = init_board} in
   let init_tiles = List.map (fun c -> Char.lowercase_ascii c) player.Game.tiles in
   let slots = find_slots init_board in
   if slots = [] then
-    let mv = build' center state player [] (center, true) Right in
-    mv |> to_moves player state  |> rank_moves |> List.hd
+    let mv = build' center new_state player [] (center, true) Right in
+    mv |> to_moves player new_state  |> rank_moves |> List.hd
   else
     let anchors = get_anchors init_board init_tiles slots in
     let moves = List.fold_left
         (
           fun acc anc ->
-            let b = build' (fst anc) state player anchors anc
+            let b = build' (fst anc) new_state player anchors anc
             in
             let lm = b Left in
             let rm = b Right in
@@ -316,5 +317,5 @@ let best_move state player =
         )
         [] anchors
     in
-    let ranked = moves |> to_moves player state  |> rank_moves in
+    let ranked = moves |> to_moves player new_state  |> rank_moves in
     if ranked = [] then failwith "No more moves" else List.hd ranked

@@ -5,7 +5,7 @@
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-[None;None;None;None;None;None;Some 'H';Some 'U';Some 'T';None;None;None;None;None;None];
+[None;None;None;None;None;None;Some 'S';Some 'A';Some 'W';None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
