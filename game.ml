@@ -141,7 +141,7 @@ let create_game p_n g_n =
   let bag = create_bag () in
   let base_player = {player_name=""; tiles=[]; score=0; order=0; ai=true} in
   let create_ai order bag =
-    let player_name = (List.hd !names) ^ " (AI)" in
+    let player_name = (try List.hd !names with _ -> init_names (); List.hd !names) ^ " (AI)" in
     names := List.tl !names;
     let (tiles,bag') = take_tiles bag 7 in 
     ({base_player with player_name; order; tiles}, bag')
@@ -184,7 +184,7 @@ let remove_player (s : state) (p_n : string) : (string * int) =
     try List.find (fun player -> player.player_name = p_n) s.players
     with Not_found -> assert false
   in
-  substituted.player_name <- ((List.hd !names) ^ " (AI)");
+  substituted.player_name <- ((try List.hd !names with _ -> init_names (); List.hd !names) ^ " (AI)");
   names := List.tl !names;
   substituted.ai <- true;
   (substituted.player_name,substituted.order)
