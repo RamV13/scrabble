@@ -2,10 +2,10 @@
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-[None;None;None;None;None;None;Some 'f';None;None;None;None;None;None;None;None];
-[None;None;None;None;Some 'a';Some 'p';Some 'p';Some 'l';Some 'e';None;None;None;None;None;None];
-[None;None;None;None;None;None;Some 'a';None;None;None;None;None;None;None;None];
-[None;None;None;None;None;None;Some 'p';None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;Some 'H';Some 'U';Some 'T';None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
