@@ -145,9 +145,9 @@ let makes_move dir surr ch =
   let s = to_str ch in
   match dir with
   | Up -> Dictionary.in_dict (s ^ surr.below)
-  | Down -> Dictionary.in_dict (surr.above ^ s)
+  | Down -> Dictionary.in_dict (s ^ surr.above |> reverse_str)
   | Left -> Dictionary.in_dict (s ^ surr.right)
-  | Right -> Dictionary.in_dict (surr.left ^ s)
+  | Right -> Dictionary.in_dict (s ^ surr.left |> reverse_str)
 
 
 (* [makes_prefix d s c] returns true if the char [c] makes a valid prefix or
@@ -155,10 +155,10 @@ let makes_move dir surr ch =
 let makes_prefix dir surr ch =
   let s = to_str ch in
   match dir with
-  | Up -> (Dictionary.has_back_extensions (surr.below ^ s))
-  | Down -> (Dictionary.has_extensions (surr.above ^ s))
-  | Left -> (Dictionary.has_back_extensions (surr.right ^ s))
-  | Right -> (Dictionary.has_extensions (surr.left ^ s))
+  | Up -> (Dictionary.has_back_extensions (s ^ surr.below))
+  | Down -> (Dictionary.has_extensions (s ^ surr.above |> reverse_str))
+  | Left -> (Dictionary.has_back_extensions (s ^ surr.right))
+  | Right -> (Dictionary.has_extensions (s ^ surr.left |> reverse_str))
 
 
 (* [out_of_bounds s c] returns true if current location [curr] is out of the

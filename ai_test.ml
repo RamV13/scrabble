@@ -6,7 +6,10 @@ open Ai
  * find_slots (DONE)
  * get_surroundings (DONE)
  * valid_chars (DONE)
- * get_anchors *)
+ * makes_move (DONE)
+ * makes_prefix
+ * out_of_bounds
+ *)
 
 let empty_board = Grid.empty
 
@@ -154,8 +157,15 @@ let valid_chars_test = [
                            (valid_chars d_surr d_tiles |> List.sort sort_chars))
 ]
 
+let makes_move_test = [
+  "apples" >:: (fun _ -> assert_equal true (makes_move Right a_surr 's'));
+  "applet" >:: (fun _ -> assert_equal true (makes_move Right a_surr 't'));
+  "applea" >:: (fun _ -> assert_equal false (makes_move Right a_surr 'a'));
+]
+
 let suite = "A.I. test suite"
             >:::
             find_slots_test @ get_surroundings_test @ valid_chars_test
+            @ makes_move_test
 
 let _ = run_test_tt_main suite
