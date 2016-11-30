@@ -401,10 +401,15 @@ let init_state () =
       let filled = String.length (Js.to_string tile##innerHTML) = 1 in
       if not filled then 
         begin
-          let row_char = String.get (Js.to_string tile##id) 5 in
-          let col_char = String.get (Js.to_string tile##id) 7 in
-          let row = (Char.code row_char) - (Char.code '0') in
-          let col = (Char.code col_char) - (Char.code '0') in
+          let start = 5 in
+          let id = (Js.to_string tile##id) in
+          let comma_index = String.index id ',' in
+          let offset = comma_index - start in
+          let end_length = (String.length id) - (start + offset + 1) in
+          let row_str = String.sub id start offset in
+          let col_str = String.sub id (start + offset + 1) end_length in
+          let row = int_of_string row_str in
+          let col = int_of_string col_str in
           place_tile row col !drag_value
         end
       else 
