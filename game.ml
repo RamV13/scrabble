@@ -409,6 +409,7 @@ let execute s move =
     with Not_found -> assert false
   in
   assert (cur_p.order = s.turn);
+  if s.grid = Grid.empty && List.length (List.filter (fun ((y,x),_) -> y = 7 && x = 7) tiles_pl) = 0 then raise (FailedMove "first move must have one tile on star") else ();
   if List.length move.swap <> 0  && List.length s.remaining_tiles > 6 then
     begin
       s.turn <- ((s.turn + 1) mod 4);
