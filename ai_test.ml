@@ -5,7 +5,7 @@ open Ai
  * -------------------------------------------
  * find_slots (DONE)
  * get_surroundings (DONE)
- * valid_chars
+ * valid_chars (DONE)
  * get_anchors *)
 
 let empty_board = Grid.empty
@@ -18,6 +18,22 @@ let apple_board = [[None;None;None;None;None;None;None;None;None;None;None;None;
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;Some 'a';Some 'p'; Some 'p'; Some 'l'; Some 'e';None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
+
+let anti_board = [[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;Some 'a'; Some 'n'; Some 't'; Some 'i';None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
@@ -111,8 +127,35 @@ let get_surroundings_test = [
                       (get_surroundings all_board (7,7)))
 ]
 
+let a_surr = get_surroundings apple_board (7, 11)
+let a_tiles = ['s'; 'g'; 'f']
+let b_tiles = ['s'; 't'; 'a'; 'g']
+
+let c_tiles = ['a';'b';'c';'i';'g']
+let c_surr = get_surroundings anti_board (7, 11)
+
+let d_tiles = Ai.alphabet
+let d_surr = get_surroundings all_board (7, 11)
+
+let string_of_charlist ch = List.map (to_str) ch |> String.concat ""
+let sort_chars a b = Char.code a - Char.code b
+
+let valid_chars_test = [
+  "apple + s" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                      (['s']) (valid_chars a_surr a_tiles));
+  "apple + s/t" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                        (List.sort sort_chars ['t';'s'])
+                        (valid_chars a_surr b_tiles |> List.sort sort_chars));
+  "anti-everything" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                        (List.sort sort_chars ['a';'b';'c';'g'])
+                        (valid_chars c_surr c_tiles |> List.sort sort_chars));
+  "no valid chars" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                           (List.sort sort_chars [])
+                           (valid_chars d_surr d_tiles |> List.sort sort_chars))
+]
+
 let suite = "A.I. test suite"
             >:::
-            find_slots_test @ get_surroundings_test
+            find_slots_test @ get_surroundings_test @ valid_chars_test
 
 let _ = run_test_tt_main suite
