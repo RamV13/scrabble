@@ -225,6 +225,7 @@ let get_suffix board ((row,col),tile) dir =
   let (dx,dy) = if dir = Horizontal then (1,0) else (0,1) in
   get_next (row,col) ("",0) dx dy
 
+(* get all the words and their scores certain direction given the first tile of the main word placed *)
 let get_words_dir b tp breaks (y0,x0) dir = 
   let opp dir = 
     if dir = Horizontal then Vertical else Horizontal
