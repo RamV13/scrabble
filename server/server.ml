@@ -155,8 +155,8 @@ let join_game req =
 
 (* [leave_game req] removes a player from a game given the request [req] *)
 let leave_game req = 
+  let (player_name,game_name) = get_info req in
   try
-    let (player_name,game_name) = get_info req in
     let game = List.find (fun game -> game.name = game_name) !games in
     let (player_name,order) = Game.remove_player game player_name in
     if List.fold_left (fun acc player -> player.ai && acc) true game.players
@@ -164,6 +164,12 @@ let leave_game req =
     else send_new_player game_name player_name order;
     {headers;status=`OK;res_body=""}
   with
+  | Not_found -> {
+      headers=default_headers;
+      status=`Not_found;
+      res_body="Player with name '" ^ player_name ^ "' does not exist in " ^
+               "game with name '" ^ game_name ^ "'"
+    }
   | _ -> {
       headers=default_headers;
       status=`Internal_server_error;
