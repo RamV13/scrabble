@@ -263,14 +263,14 @@ let get_words_dir b tp breaks (y0,x0) dir =
       else 
         begin
           count := !count + 2; 
-          let tile = 
+          let (tile, tile_val) = 
             let (dx,dy) = if dir = Horizontal then (-1,0) else (0,-1) in
             match Grid.get_tile b (y + dy) (x + dx) with
-            | Some character -> character 
+            | Some character -> (character, List.assoc character tile_values)
             | None -> raise (FailedMove "gap in tiles placed")
           in
           let tile_mult = Grid.bonus_letter_at (y,x) in
-          (acc_w ^ (Char.escaped tile) ^ (Char.escaped c), tile_mult * (List.assoc c tile_values) + acc_s)
+          (acc_w ^ (Char.escaped tile) ^ (Char.escaped c), tile_mult * (List.assoc c tile_values) + tile_val + acc_s)
         end
     ) ("",0) tp 
   in
