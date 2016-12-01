@@ -250,20 +250,27 @@ let no_dups_append l1 l2 =
   aux l1 l2 l1
 
 
+(* [all_dirs_move s c] returns true if char [c] makes a valid move in all
+ * directions given surroundings [s].
+ * BUG: ONE LETTER WORDS RETURN FALSE, WHICH SCREWS THE WHOLE THING UP. *)
+let all_dirs_move surr c =
+  makes_move Left surr c &&
+  makes_move Right surr c &&
+  makes_move Up surr c &&
+  makes_move Down surr c
+
 (* need to write a really clear spec for this *)
 let build state player anchors curr dir =
   let rec aux state player dir curr acc =
     let (row, col) = curr in
     let valid_move surr curr c =
-      try
+      if List.mem_assoc curr anchors
+      then
         let allowed = List.assoc curr anchors in
-        if List.mem c allowed then
-          if makes_move dir surr c then
-            true
-          else false
+        if List.mem c allowed
+        then all_dirs_move surr c
         else false
-      with
-      | Not_found -> makes_move dir surr c
+      else all_dirs_move surr c
     in
     let place_char state (i, j) c =
       Grid.place (state.Game.grid) i j c
@@ -283,6 +290,11 @@ let build state player anchors curr dir =
           let t = List.nth tiles i in
           let new_tiles = rem tiles t in
           let new_board = place_char state (row, col) t in
+          print_string "placing tile\n";
+          let _ = print_char t in
+          let () = print_string " " in
+          let () = print_pair (row, col) in
+          let _ = print_newline () in
           let more_moves =
             if makes_prefix dir surr t
             then

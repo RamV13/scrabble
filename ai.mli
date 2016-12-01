@@ -30,13 +30,15 @@ val get_anchors :
   char list -> (int * int) list -> ((int * int) * char list) list
 val makes_move : direction -> surroundings -> char -> bool
 val makes_prefix : direction -> surroundings -> char -> bool
-val out_of_bounds : Game.state -> (int * int) * 'a -> bool
-val get_next : direction -> (int * int) * 'a -> (int * int) * 'a
+val out_of_bounds : Game.state -> int * int -> bool
+val is_none : 'a option -> bool
+val invalid_pos : Game.state -> int * int -> bool
+val get_next : direction -> int * int -> int * int
 val rem : 'a list -> 'a -> 'a list
 val intersect : 'a list -> 'a list -> 'a list
 val no_dups_append : 'a list -> 'a list -> 'a list
+val all_dirs_move : surroundings -> char -> bool
 val build :
   Game.state ->
   Game.player ->
-  ((int * int) * char list) list ->
-  (int * int) * 'a -> direction -> Grid.board list
+  ((int * int) * char list) list -> int * int -> direction -> Grid.board list

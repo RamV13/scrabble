@@ -173,11 +173,11 @@ let a_state =
 
 let out_of_bounds_test = [
   "inside" >:: (fun _ -> assert_equal false
-                   (out_of_bounds a_state ((1,1), true)));
+                   (out_of_bounds a_state (1,1)));
   "outside 1" >:: (fun _ -> assert_equal true
-                      (out_of_bounds a_state ((-1,10), true)));
+                      (out_of_bounds a_state (-1,10)));
   "outside 2" >:: (fun _ -> assert_equal true
-                   (out_of_bounds a_state ((100,1), true)));
+                   (out_of_bounds a_state (100,1)));
 ]
 
 let suite = "A.I. test suite"
