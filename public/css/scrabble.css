@@ -1,9 +1,4 @@
 
-@media (min-width: 2000em) and (min-height: 2000em)
-body {
-  font-size: 14px;
-}
-
 .no-transition {
     -webkit-transition: none !important;
     transition:         none !important;
@@ -21,9 +16,9 @@ body {
     color: rgba(0, 0, 0, 1);
     background-color: #EFEBE9;
     padding: 14px;
-    width: 0.8vw;
-    font-size: 0.9vw;
-    line-height: 0.9vw;
+    width: 1.6vmin;
+    font-size: 1.6vmin;
+    line-height: 1.6vmin;
     display: inline-block;
     text-align: center;
     -webkit-transition: all 0.3s ease-in-out;
