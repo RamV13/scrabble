@@ -29,33 +29,17 @@ let game_pushers = ref []
  * clients *)
 let msg_pushers = ref []
 
-(* [origin] is the allowed origin to request this server *)
-let origin = "*"
-
 (* [default_headers] are the set of default headers for plain text responses *)
 let default_headers =
   Header.init_with "content-type" "text/plain"
-  |> fun header -> Header.add header "Access-Control-Allow-Origin" origin
 
 (* [headers] are the default set of headers for JSON responses *)
 let headers = 
   Header.init_with "content-type" "application/json"
-  |> fun header -> Header.add header "Access-Control-Allow-Origin" origin
 
 (* [server_error_msg] is the default message for extraneous server errors *)
 let server_error_msg = 
   "Something went wrong. Please check the status of the server"
-
-(* [cors_control req] responds with Access-Control headers to enable CORS *)
-let cors_control req = 
-  let headers = 
-    Header.init_with "Access-Control-Allow-Origin" origin 
-    |> fun header -> Header.add header "Access-Control-Allow-Headers" 
-                                       "content-type"
-    |> fun header -> Header.add header "Access-Control-Allow-Methods"
-                                       "GET,POST,PUT,DELETE,OPTIONS"
-  in
-  {headers;status=`OK;res_body=""}
 
 (* [send main_pushers game_name sendable] sends an SSE with a [sendable] payload
  * to all valid clients of the game [game_name] in the [main_pushers] list *)
@@ -213,11 +197,7 @@ let execute_move req =
 let subscribe main_pushers req = 
   try
     let headers = 
-      Header.init_with "Access-Control-Allow-Origin" origin 
-      |> fun header -> Header.add header "Access-Control-Allow-Headers" 
-                                         "content-type"
-      |> fun header -> Header.add header "Access-Control-Allow-Methods" "GET"
-      |> fun header -> Header.add header "content-type" "text/event-stream"
+      Header.init_with "content-type" "text/event-stream"
       |> fun header -> Header.add header "cache-control" "no-cache"
     in
     let game_name = List.assoc "gameName" req.params in
@@ -295,14 +275,11 @@ let _ =
     keep_alive ()
     |> Lwt.return
   );
-  HttpServer.add_route (`OPTIONS,"/api/game") cors_control;
   HttpServer.add_custom_route (`GET,"/api/game") subscribe_updates;
   HttpServer.add_route (`PUT,"/api/game") create_game;
   HttpServer.add_route (`POST,"/api/game") join_game;
   HttpServer.add_route (`DELETE,"/api/game") leave_game;
-  HttpServer.add_route (`OPTIONS,"/api/move") cors_control;
   HttpServer.add_route (`POST,"/api/move") execute_move;
-  HttpServer.add_route (`OPTIONS,"/api/messaging") cors_control;
   HttpServer.add_custom_route (`GET,"/api/messaging") subscribe_messaging;
   HttpServer.add_route (`POST,"/api/messaging") send_message;
   HttpServer.run ~port:8000 ()
