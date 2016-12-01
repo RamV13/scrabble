@@ -5,7 +5,7 @@ top:
 	ocamlbuild -pkgs yojson,str grid.cmo dictionary.cmo game.cmo && ocamlbuild -pkg yojson ai.inferred.mli
 
 ai:
-	ocamlbuild -pkg yojson,str ai.cmi && ocamlbuild -pkg yojson ai.cmo
+	ocamlbuild -use-ocamlfind -pkg yojson,str ai.cmi && ocamlbuild -use-ocamlfind -pkg yojson ai.cmo
 
 clean:
 	ocamlbuild -clean
