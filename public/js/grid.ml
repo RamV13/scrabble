@@ -13,7 +13,7 @@ type neighbors = {
   - ((a,b),p) such that a = row, b = column, p = point multipler*)
 let bonus_letter_tiles = [((0,3),2);((0,11),2);
                           ((1,5),3);((1,9),3);
-                          ((2,6),2);((2,6),2);
+                          ((2,6),2);((2,8),2);
                           ((3,0),2);((3,7),2);((3,14),2);
                           ((5,1),3);((5,5),3);((5,9),3);((5,13),3);
                           ((6,2),2);((6,6),2);((6,8),2);((6,12),2);
@@ -62,11 +62,37 @@ let is_empty board x y = List.nth (List.nth board x) y = None
 
 let get_tile board x y = try (List.nth (List.nth board x) y) with _ -> None
 
-let bonus_letter_at (x,y) = 
-  try List.assoc (x,y) bonus_letter_tiles with _ -> 1
+(* The "newer" list comes second *)
+let get_diff b1 b2 =
+  let med =
+    List.fold_left2
+      (
+        fun acc sub1 sub2 ->
+          let sub_diff =
+            List.fold_left2
+              (
+                fun a b c ->
+                  if b = c then a else c::a
+              )
+              [] sub1 sub2
+          in
+          List.rev_append sub_diff acc
+      )
+      [] b1 b2
+  in
+  List.fold_left
+    (
+      fun acc ch ->
+        match ch with
+        | None -> assert false
+        | Some c -> c::acc
+    ) [] med
 
-let bonus_word_at (x,y) = 
-  try List.assoc (x,y) bonus_word_tiles with _ -> 1
+let bonus_letter_at (y,x) = 
+  try List.assoc (y,x) bonus_letter_tiles with _ -> 1
+
+let bonus_word_at (y,x) = 
+  try List.assoc (y,x) bonus_word_tiles with _ -> 1
 
 let rec place_helper1 (row:(char option) list) y c new_row = match row with
 |[] -> new_row
@@ -110,5 +136,5 @@ let rec dejsonify board result = match board with
 |[] -> List.rev(result)
 |h::t -> dejsonify t ((dejsonify_row h) :: result)
 
-let from_json j = 
+let from_json j =
   dejsonify (Yojson.Basic.Util.to_list j) []

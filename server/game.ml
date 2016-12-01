@@ -225,6 +225,7 @@ let get_suffix board ((row,col),tile) dir =
   let (dx,dy) = if dir = Horizontal then (1,0) else (0,1) in
   get_next (row,col) ("",0) dx dy
 
+(* get all the words and their scores certain direction given the first tile of the main word placed *)
 let get_words_dir b tp breaks (y0,x0) dir = 
   let opp dir = 
     if dir = Horizontal then Vertical else Horizontal
@@ -273,12 +274,12 @@ let get_words_dir b tp breaks (y0,x0) dir =
         end
     ) ("",0) tp 
   in
-  print_endline ("prefix: "^prefix ^ " infix: " ^ infix ^ " suffix: " ^ suffix);
+  print_endline ("\tprefix: " ^ (if prefix = "" then "N/A" else prefix) ^ " infix: " ^ infix ^ " suffix: " ^ (if suffix = "" then "N/A" else suffix));
   let word_mult = 
     List.map (fun ((y,x),_) -> Grid.bonus_word_at (y,x)) tp 
     |> List.fold_left (fun acc x -> acc*x) 1
   in
-  print_endline ("main word multiplier: " ^ string_of_int word_mult);
+  print_endline ("\tmain word multiplier: " ^ string_of_int word_mult);
   if words = [] && prefix = "" && suffix = "" && breaks = [] && not (b = Grid.empty) then 
     raise (FailedMove "cannot place tiles apart from existing ones")
   else
@@ -369,7 +370,7 @@ let create_diff s tiles_pl cur_p =
   let (words,words_sc) = 
     List.split (get_words s.grid tiles_pl (get_word_dir s.grid tiles_pl)) in
   let words_cap = List.map (fun w -> String.lowercase_ascii w) words in
-  print_string "words: "; List.iter (fun x -> print_string (x ^ ", ")) words; print_endline "";
+  print_string "\twords: "; List.iter (fun x -> print_string (x ^ ", ")) words; print_endline "";
   let (is_valid,invalid_words) = List.fold_left
     (fun (acc_bool,invalid_w) w -> 
       if Dictionary.in_dict w then (acc_bool,invalid_w)
@@ -411,6 +412,7 @@ let execute s move =
     with Not_found -> assert false
   in
   assert (cur_p.order = s.turn);
+  print_endline ("PLAYER: " ^ p_n);
   if List.length move.swap <> 0  && List.length s.remaining_tiles > 6 then
     begin
       s.turn <- ((s.turn + 1) mod 4);
@@ -420,17 +422,23 @@ let execute s move =
       let new_tiles = (diff_tile_rack cur_p.tiles tiles) @ tiles_taken in
       cur_p.tiles <- new_tiles;
       s.remaining_tiles <- (new_bag @ tiles);
+      print_endline "MOVE: swap (successful)";
       {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else if List.length move.swap <> 0 && List.length s.remaining_tiles < 7 then
-    raise (FailedMove "less than 7 tiles remain in the bag")
+    begin
+      print_endline "MOVE: swap (failed)";
+      raise (FailedMove "less than 7 tiles remain in the bag")
+    end
   else if List.length tiles_pl = 0 then 
     begin
+      print_endline "MOVE: pass";
       s.turn <- ((s.turn + 1) mod 4);
       {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else 
     begin
+      print_endline "MOVE: place tiles";
       if s.grid = Grid.empty && List.length (List.filter (fun ((y,x),_) -> y = 7 && x = 7) tiles_pl) = 0 then raise (FailedMove "first move must have one tile on star") else ();
       create_diff s tiles_pl cur_p
     end
