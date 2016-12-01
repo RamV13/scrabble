@@ -186,7 +186,7 @@ let makes_prefix dir surr ch =
 (* [out_of_bounds s c] returns true if current location [curr] is out of the
  * bounds of the grid found in state [s]. *)
 let out_of_bounds state curr =
-  let ((r, c), _) = curr in
+  let (r, c) = curr in
   let board = state.Game.grid in
   if r > (List.length board - 1) || c > (List.length board - 1)
   then true
@@ -194,15 +194,29 @@ let out_of_bounds state curr =
   else false
 
 
+let is_none o =
+  match o with
+  | None -> true
+  | Some _ -> false
+
+
+(* [invalid_pos s c] returns true if the position specified by [c] in the
+ * given state [s] is not a valid position on which to place a tile. *)
+let invalid_pos state curr =
+  let (r, c) = curr in
+  let t = Grid.get_tile (state.Game.grid) r c in
+  out_of_bounds state curr || not (is_none t)
+
+
 (* [get_next dir curr] returns the next location from current position [curr]
  * and in the given direction [dir]. *)
 let get_next dir curr =
-  let ((r, c), _) = curr in
+  let (r, c) = curr in
   match dir with
-  | Up -> ((r - 1, c), snd curr)
-  | Down -> ((r + 1, c), snd curr)
-  | Left -> ((r, c - 1), snd curr)
-  | Right -> ((r, c + 1), snd curr)
+  | Up -> (r - 1, c)
+  | Down -> (r + 1, c)
+  | Left -> (r, c - 1)
+  | Right -> (r, c + 1)
 
 
 (* Removes only the first occurence of element [el] from list [li].
@@ -239,12 +253,14 @@ let no_dups_append l1 l2 =
 (* need to write a really clear spec for this *)
 let build state player anchors curr dir =
   let rec aux state player dir curr acc =
-    let ((row, col), _) = curr in
+    let (row, col) = curr in
     let valid_move surr curr c =
       try
-        let allowed = List.assoc (fst curr) anchors in
+        let allowed = List.assoc curr anchors in
         if List.mem c allowed then
-          makes_move dir surr c
+          if makes_move dir surr c then
+            true
+          else false
         else false
       with
       | Not_found -> makes_move dir surr c
@@ -261,13 +277,11 @@ let build state player anchors curr dir =
     let new_curr = get_next dir curr in
     let collector = ref [] in
     collector := new_acc;
-    if out_of_bounds state new_curr then new_acc else
+    if invalid_pos state new_curr then new_acc else
       let () =
       for i = 0 to len do
         let t = List.nth tiles i in
         let new_tiles = rem tiles t in
-        let _ = List.map print_char new_tiles in
-        let () = print_newline () in
         let new_board = place_char state (row, col) t in
         let more_moves =
           if makes_prefix dir surr t
