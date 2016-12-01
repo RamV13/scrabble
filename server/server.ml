@@ -95,20 +95,28 @@ exception Exists
 
 (* [create_game req] creates a game given the request [req] *)
 let create_game req = 
-  let (player_name,game_name) = get_info req in
   try
-    if List.exists (fun game -> game.name = game_name) !games then raise Exists;
-    let new_game = Game.create_game player_name game_name in
-    games := new_game::!games;
-    msg_pushers := (game_name,ref [])::!msg_pushers;
-    game_pushers := (game_name,ref [])::!game_pushers;
-    let res_body = Game.state_to_json new_game in
-    {headers;status=`OK;res_body}
+    let (player_name,game_name) = get_info req in
+    try
+      if List.exists (fun game -> game.name = game_name) !games 
+      then raise Exists;
+      let new_game = Game.create_game player_name game_name in
+      games := new_game::!games;
+      msg_pushers := (game_name,ref [])::!msg_pushers;
+      game_pushers := (game_name,ref [])::!game_pushers;
+      let res_body = Game.state_to_json new_game in
+      {headers;status=`OK;res_body}
+    with
+    | Exists -> {
+        headers=default_headers;
+        status=`Bad_request;
+        res_body="Game with name '" ^ game_name ^ "' already exists"
+      }
   with
-  | Exists -> {
+  | Yojson.Basic.Util.Type_error _ -> {
       headers=default_headers;
       status=`Bad_request;
-      res_body="Game with name '" ^ game_name ^ "' already exists"
+      res_body="Bad JSON"
     }
   | _ -> {
       headers=default_headers;
@@ -121,31 +129,38 @@ exception Full
 
 (* [join_game req] joins a player to a game given the request [req] *)
 let join_game req = 
-  let (player_name,game_name) = get_info req in
   try
-    let game = List.find (fun game -> game.name = game_name) !games in
-    if List.exists (fun player -> player.player_name = player_name) game.players
-    then raise Exists;
-    let order = Game.add_player game player_name in
-    send_new_player game.name player_name order;
-    let res_body = Game.state_to_json game in
-    {headers;status=`OK;res_body}
+    let (player_name,game_name) = get_info req in
+    try
+      let game = List.find (fun game -> game.name = game_name) !games in
+      List.exists (fun player -> player.player_name = player_name) game.players
+      |> fun exists -> if exists then raise Exists;
+      let order = Game.add_player game player_name in
+      send_new_player game.name player_name order;
+      let res_body = Game.state_to_json game in
+      {headers;status=`OK;res_body}
+    with
+    | Not_found -> {
+        headers=default_headers;
+        status=`Not_found;
+        res_body="Game with name '" ^ game_name ^ "' not found"
+      }
+    | Full -> {
+        headers=default_headers;
+        status=`Bad_request;
+        res_body="Game with name '" ^ game_name ^ "' is full"
+      }
+    | Exists -> {
+        headers=default_headers;
+        status=`Not_acceptable;
+        res_body="Player with name '" ^ player_name ^ "' already exists in " ^
+                 "game with name '" ^ game_name ^ "'"
+      }
   with
-  | Not_found -> {
-      headers=default_headers;
-      status=`Not_found;
-      res_body="Game with name '" ^ game_name ^ "' not found"
-    }
-  | Full -> {
+  | Yojson.Basic.Util.Type_error _ -> {
       headers=default_headers;
       status=`Bad_request;
-      res_body="Game with name '" ^ game_name ^ "' is full"
-    }
-  | Exists -> {
-      headers=default_headers;
-      status=`Not_acceptable;
-      res_body="Player with name '" ^ player_name ^ "' already exists in " ^
-               "game with name '" ^ game_name ^ "'"
+      res_body="Bad JSON"
     }
   | _ -> {
       headers=default_headers;
@@ -155,20 +170,27 @@ let join_game req =
 
 (* [leave_game req] removes a player from a game given the request [req] *)
 let leave_game req = 
-  let (player_name,game_name) = get_info req in
   try
-    let game = List.find (fun game -> game.name = game_name) !games in
-    let (player_name,order) = Game.remove_player game player_name in
-    if List.fold_left (fun acc player -> player.ai && acc) true game.players
-    then games := List.filter (fun game -> game.name <> game_name) !games
-    else send_new_player game_name player_name order;
-    {headers;status=`OK;res_body=""}
+    let (player_name,game_name) = get_info req in
+    try
+      let game = List.find (fun game -> game.name = game_name) !games in
+      let (player_name,order) = Game.remove_player game player_name in
+      if List.fold_left (fun acc player -> player.ai && acc) true game.players
+      then games := List.filter (fun game -> game.name <> game_name) !games
+      else send_new_player game_name player_name order;
+      {headers;status=`OK;res_body=""}
+    with
+    | Not_found -> {
+        headers=default_headers;
+        status=`Not_found;
+        res_body="Player with name '" ^ player_name ^ "' does not exist in " ^
+                 "game with name '" ^ game_name ^ "'"
+      }
   with
-  | Not_found -> {
+  | Yojson.Basic.Util.Type_error _ -> {
       headers=default_headers;
-      status=`Not_found;
-      res_body="Player with name '" ^ player_name ^ "' does not exist in " ^
-               "game with name '" ^ game_name ^ "'"
+      status=`Bad_request;
+      res_body="Bad JSON"
     }
   | _ -> {
       headers=default_headers;
@@ -191,6 +213,11 @@ let execute_move req =
       headers=default_headers;
       status=`Bad_request;
       res_body=msg
+    }
+  | Yojson.Basic.Util.Type_error _ -> {
+      headers=default_headers;
+      status=`Bad_request;
+      res_body="Bad JSON"
     }
   | _ -> {
       headers=default_headers;
@@ -216,6 +243,9 @@ let subscribe main_pushers req =
   with 
   | Not_found -> Server.respond ~headers:default_headers ~status:`Not_found 
                                 ~body:(Cohttp_lwt_body.of_string "") ()
+  | Yojson.Basic.Util.Type_error _ -> 
+      Server.respond ~headers:default_headers ~status:`Bad_request
+                     ~body:(Cohttp_lwt_body.of_string "Bad JSON") ()
   | _ -> Server.respond ~headers:default_headers ~status:`Internal_server_error
                         ~body:(Cohttp_lwt_body.of_string server_error_msg) ()
 
@@ -242,18 +272,25 @@ let send_message req =
     in
     Some result
   in
-  let json = Yojson.Basic.from_string req.req_body in
-  let (player_name,game_name) = get_info req in
-  let msg = json |> member "msg" |> to_string in
   try
-    send msg_pushers game_name (create_msg player_name msg);
-    {headers;status=`OK;res_body=""}
+    let json = Yojson.Basic.from_string req.req_body in
+    let (player_name,game_name) = get_info req in
+    let msg = json |> member "msg" |> to_string in
+    try
+      send msg_pushers game_name (create_msg player_name msg);
+      {headers;status=`OK;res_body=""}
+    with
+    | Not_found -> {
+        headers=default_headers;
+        status=`Not_found;
+        res_body="Game with name '" ^ game_name ^ "' not found or player " ^ 
+                 "with name '" ^ player_name ^ "' not found in game"
+      }
   with
-  | Not_found -> {
+  | Yojson.Basic.Util.Type_error _ -> {
       headers=default_headers;
-      status=`Not_found;
-      res_body="Game with name '" ^ game_name ^ "' not found or player with " ^ 
-               "name '" ^ player_name ^ "' not found in game"
+      status=`Bad_request;
+      res_body="Bad JSON"
     }
   | _ -> {
       headers=default_headers;
