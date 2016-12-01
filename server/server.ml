@@ -41,6 +41,13 @@ let headers =
 let server_error_msg = 
   "Something went wrong. Please check the status of the server"
 
+(* [bad_json_response] is the response for requests with bad JSON *)
+let bad_json_response = {
+    headers=default_headers;
+    status=`Bad_request;
+    res_body="Bad JSON"
+  }
+
 (* [send main_pushers game_name sendable] sends an SSE with a [sendable] payload
  * to all valid clients of the game [game_name] in the [main_pushers] list *)
 let send main_pushers game_name sendable = 
@@ -113,11 +120,8 @@ let create_game req =
         res_body="Game with name '" ^ game_name ^ "' already exists"
       }
   with
-  | Yojson.Basic.Util.Type_error _ -> {
-      headers=default_headers;
-      status=`Bad_request;
-      res_body="Bad JSON"
-    }
+  | Yojson.Basic.Util.Type_error _
+  | Yojson.Json_error _ -> bad_json_response
   | _ -> {
       headers=default_headers;
       status=`Internal_server_error;
@@ -157,11 +161,8 @@ let join_game req =
                  "game with name '" ^ game_name ^ "'"
       }
   with
-  | Yojson.Basic.Util.Type_error _ -> {
-      headers=default_headers;
-      status=`Bad_request;
-      res_body="Bad JSON"
-    }
+  | Yojson.Basic.Util.Type_error _
+  | Yojson.Json_error _ -> bad_json_response
   | _ -> {
       headers=default_headers;
       status=`Internal_server_error;
@@ -187,11 +188,8 @@ let leave_game req =
                  "game with name '" ^ game_name ^ "'"
       }
   with
-  | Yojson.Basic.Util.Type_error _ -> {
-      headers=default_headers;
-      status=`Bad_request;
-      res_body="Bad JSON"
-    }
+  | Yojson.Basic.Util.Type_error _
+  | Yojson.Json_error _ -> bad_json_response
   | _ -> {
       headers=default_headers;
       status=`Internal_server_error;
@@ -214,11 +212,8 @@ let execute_move req =
       status=`Bad_request;
       res_body=msg
     }
-  | Yojson.Basic.Util.Type_error _ -> {
-      headers=default_headers;
-      status=`Bad_request;
-      res_body="Bad JSON"
-    }
+  | Yojson.Basic.Util.Type_error _
+  | Yojson.Json_error _ -> bad_json_response
   | _ -> {
       headers=default_headers;
       status=`Internal_server_error;
@@ -243,7 +238,8 @@ let subscribe main_pushers req =
   with 
   | Not_found -> Server.respond ~headers:default_headers ~status:`Not_found 
                                 ~body:(Cohttp_lwt_body.of_string "") ()
-  | Yojson.Basic.Util.Type_error _ -> 
+  | Yojson.Basic.Util.Type_error _
+  | Yojson.Json_error _ -> 
       Server.respond ~headers:default_headers ~status:`Bad_request
                      ~body:(Cohttp_lwt_body.of_string "Bad JSON") ()
   | _ -> Server.respond ~headers:default_headers ~status:`Internal_server_error
@@ -287,11 +283,8 @@ let send_message req =
                  "with name '" ^ player_name ^ "' not found in game"
       }
   with
-  | Yojson.Basic.Util.Type_error _ -> {
-      headers=default_headers;
-      status=`Bad_request;
-      res_body="Bad JSON"
-    }
+  | Yojson.Basic.Util.Type_error _
+  | Yojson.Json_error _ -> bad_json_response
   | _ -> {
       headers=default_headers;
       status=`Internal_server_error;
