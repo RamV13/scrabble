@@ -127,10 +127,10 @@ let valid_chars surr tiles =
     let s = to_str t in
     let ixes =
       {
-      right = s ^ surr.right;
-      left = s ^ surr.left |> reverse_str;
-      below = s ^ surr.below;
-      above = s ^ surr.above |> reverse_str;
+        right = s ^ surr.right;
+        left = s ^ surr.left |> reverse_str;
+        below = s ^ surr.below;
+        above = s ^ surr.above |> reverse_str;
       }
     in
     let bools =
@@ -279,20 +279,20 @@ let build state player anchors curr dir =
     collector := new_acc;
     if invalid_pos state new_curr then new_acc else
       let () =
-      for i = 0 to len do
-        let t = List.nth tiles i in
-        let new_tiles = rem tiles t in
-        let new_board = place_char state (row, col) t in
-        let more_moves =
-          if makes_prefix dir surr t
-          then
-            aux {state with Game.grid = new_board}
-            {player with Game.tiles = new_tiles} dir new_curr new_acc
-          else
-            []
-        in
-        collector := no_dups_append !collector more_moves;
-      done
+        for i = 0 to len do
+          let t = List.nth tiles i in
+          let new_tiles = rem tiles t in
+          let new_board = place_char state (row, col) t in
+          let more_moves =
+            if makes_prefix dir surr t
+            then
+              aux {state with Game.grid = new_board}
+                {player with Game.tiles = new_tiles} dir new_curr new_acc
+            else
+              []
+          in
+          collector := no_dups_append !collector more_moves;
+        done
       in
       !collector
   in
