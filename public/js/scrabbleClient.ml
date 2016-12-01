@@ -19,8 +19,8 @@ let to_list = Yojson.Basic.Util.to_list
 (* [to_int] is Yojson.Basic.Util.to_int *)
 let to_int = Yojson.Basic.Util.to_int
 
-(* [baseURL] is the base URL to request to *)
-let baseURL = "http://127.0.0.1" (* "http://128.253.51.200" *)
+(* [baseURL] is the base URL to request to (currently in relative path mode) *)
+let baseURL = ""
 
 (* [event_source_constructor] is a function to construct event sources *)
 let event_source_constructor = Js.Unsafe.global##_EventSource
