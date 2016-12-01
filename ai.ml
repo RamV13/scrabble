@@ -26,6 +26,28 @@ let to_str c = String.make 1 c
 let list_place l r c ch = (ch, (r,c))::l
 let flip' (a, b) = (b, a)
 
+(* A printing function for the type surroundings [s]. *)
+let print_surr s =
+  let _ =
+    List.map print_string
+      [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in ()
+
+
+(* print_pair (r,c) prints the integer pair. *)
+let print_pair (r, c) =
+  print_int r;
+  print_newline ();
+  print_int c;
+  print_newline ()
+
+
+(* Prints a boolean. *)
+let print_bool b =
+  match b with
+  | true -> print_string "True"
+  | false -> print_string "False"
+
+
 let alphabet = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h';
                 'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p';
                 'q'; 'r'; 's'; 't'; 'u'; 'v'; 'w'; 'x';
@@ -201,26 +223,6 @@ let intersect l1 l2 =
     | h::t -> if List.mem h l2 then aux t (h::acc) else aux t acc
   in
   aux it []
-
-(* A printing function for the type surroundings [s]. *)
-let print_surr s =
-  let _ =
-    List.map print_string
-      [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in ()
-
-
-(* print_pair (r,c) prints the integer pair. *)
-let print_pair (r, c) =
-  print_int r;
-  print_newline ();
-  print_int c;
-  print_newline ()
-
-(* Prints a boolean. *)
-let print_bool b =
-  match b with
-  | true -> print_string "True"
-  | false -> print_string "False"
 
 
 (* [no_dups_append l1 l2] appends all of list [l2] contents to list [l1],
