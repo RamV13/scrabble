@@ -17,12 +17,11 @@ open Ai
  * rem (DONE)
  * no_dups_append (DONE)
  * other_dirs_move (DONE)
- * place_char
- * valid_move
+ * valid_move (DONE)
  * valid_prefix
- * lowercasing functions (basic tests)
- * build (basic tests)
- * best_move (basic tests)
+ * lowercasing functions
+ * build (only edge tests)
+ * best_move (only edge tests)
  *)
 
 let empty_board = Grid.empty
@@ -459,12 +458,45 @@ let other_dirs_move_tests = [
                         (get_surroundings anti_board (6, 7)) 'q'));
 ]
 
+
+let valid_move_tests = [
+  "Empty board" >:: (fun _ -> assert_equal false
+                        (valid_move [] Left empty_surr (7, 7) 'a'));
+  "Wrong word Left" >:: (fun _ -> assert_equal
+                            false
+                            (valid_move [] Left
+                               (get_surroundings app_board (7,5)) (7,5) 't'));
+  "Wrong word Right" >:: (fun _ -> assert_equal
+                             false
+                             (valid_move [] Right a_surr (7,11) 'g'));
+  "Correct word corner" >:: (fun _ -> assert_equal
+                                true
+                                (valid_move [] Left
+                                   (get_surroundings all_board (13, 0))
+                                   (13, 0) 'z'));
+  "Correct word top" >:: (fun _ -> assert_equal
+                             true
+                             (valid_move [] Right po_surr (0, 2) 'd'));
+  "Middle correct word" >:: (fun _ -> assert_equal
+                                true
+                                (valid_move [] Right a_surr (7, 11) 't'));
+  "Correct word, wrong dir" >:: (fun _ -> assert_equal
+                                false
+                                (valid_move [] Down a_surr (7, 11) 't'));
+]
+
+
+let valid_prefix_tests = []
+let lowercase_tests = []
+let build_tests = []
+let best_move_tests = []
+
 let suite = "A.I. test suite"
             >:::
             find_slots_test @ get_surroundings_test @ valid_chars_test
             @ makes_move_test @ makes_prefix_test @ out_of_bounds_test
             @ reverse_str_test @ find_anchors_tests @ invalid_pos_tests
             @ get_next_tests @ search_next_tests @ rem_tests
-            @ no_dups_append_tests @ other_dirs_move_tests
+            @ no_dups_append_tests @ other_dirs_move_tests @ valid_move_tests
 
 let _ = run_test_tt_main suite
