@@ -397,7 +397,7 @@ let best_move state player =
   let anchors =
     if slots = [] && board = Grid.empty then [(center, tiles)]
     else if slots = [] && board <> Grid.empty then raise GameOver
-    else get_anchors board tiles slots
+    else find_anchors board tiles slots
   in
   let build_base = build real_state real_player anchors in
   let gen_moves acc anchor =
