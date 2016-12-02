@@ -33,34 +33,29 @@ let snd' (_, a, _) = a
 let thrd' (_, _, a) = a
 let to_str c = String.make 1 c
 
-(* A printing function for the type surroundings [s]. *)
-let print_surr s =
-  let _ =
-    List.map print_string
-      [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in ()
+
+let string_of_surr s =
+  let surr =
+    [
+      "LEFT: " ^ s.left^"\n";
+      "RIGHT: " ^ s.right^"\n";
+      "ABOVE: " ^ s.above^"\n";
+      "BELOW: " ^ s.below^"\n"
+    ]
+  in
+  String.concat "" surr
 
 
-(* print_pair (r,c) prints the integer pair. *)
-let print_pair (r, c) =
-  print_int r;
-  print_newline ();
-  print_int c;
-  print_newline ()
+let string_of_pair (r, c) =
+  "(" ^ (string_of_int r) ^ ", " ^ (string_of_int c) ^ ")\n"
 
 
-(* Prints a boolean. *)
-let print_bool b =
-  match b with
-  | true -> print_string "True"
-  | false -> print_string "False"
-
-
-let print_dir d =
+let string_of_dir d =
   match d with
-  | Left -> print_string "Left"
-  | Right -> print_string "Right"
-  | Up -> print_string "Up"
-  | Down -> print_string "Down"
+  | Left -> "Left\n"
+  | Right -> "Right\n"
+  | Up -> "Up\n"
+  | Down -> "Down\n"
 
 
 (* [has_neighbors n] returns true if at least one of neighbors [n]s
@@ -161,9 +156,9 @@ let valid_chars surr tiles =
   List.filter is_ok tiles
 
 
-(* [get_anchors b t s] returns a list of anchors given a list of
+(* [find_anchors b t s] returns a list of anchors given a list of
  * slots [s], a game board [b] and the player's tile list [t]. *)
-let get_anchors board tiles slots =
+let find_anchors board tiles slots =
   let aux acc slot =
     let surr = get_surroundings board slot in
     let chrs = valid_chars surr tiles in
@@ -244,18 +239,6 @@ let rec rem li el =
   match li with
   | [] -> []
   | h::t -> if h = el then t else h::(rem t el)
-
-
-(* [intersect l1 l2] returns the elements that are common to both of
- * lists l1 AND l2. *)
-let intersect l1 l2 =
-  let it = l1 in
-  let rec aux it acc =
-    match it with
-    | [] -> acc
-    | h::t -> if List.mem h l2 then aux t (h::acc) else aux t acc
-  in
-  aux it []
 
 
 (* [no_dups_append l1 l2] appends all of list [l2] contents to list [l1],
@@ -415,7 +398,7 @@ let best_move state player =
     if slots = [] && board = Grid.empty then [(center, tiles)]
     else
     if board <> Grid.empty then raise GameOver
-    else get_anchors board tiles slots
+    else find_anchors board tiles slots
   in
   let build_base = build real_state real_player anchors in
   let gen_moves acc anchor =

@@ -14,10 +14,9 @@ val fst' : 'a * 'b * 'c -> 'a
 val snd' : 'a * 'b * 'c -> 'b
 val thrd' : 'a * 'b * 'c -> 'c
 val to_str : char -> string
-val print_surr : surroundings -> unit
-val print_pair : int * int -> unit
-val print_bool : bool -> unit
-val print_dir : direction -> unit
+val string_of_surr : surroundings -> string
+val string_of_pair : int * int -> string
+val string_of_dir : direction -> string
 val has_neighbors : Grid.neighbors -> bool
 val is_slot : Grid.board -> int -> int -> bool
 val find_slots : Grid.board -> (int * int) list
@@ -25,7 +24,7 @@ val find_adj : Grid.board -> int * int -> string -> direction -> string
 val get_surroundings : Grid.board -> int * int -> surroundings
 val reverse_str : string -> string
 val valid_chars : surroundings -> char list -> char list
-val get_anchors :
+val find_anchors :
   Grid.board ->
   char list -> (int * int) list -> ((int * int) * char list) list
 val makes_move : direction -> surroundings -> char -> bool
@@ -36,7 +35,6 @@ val invalid_pos : Game.state -> int * int -> bool
 val get_next : direction -> int * int -> int * int
 val search_next : Game.state -> direction -> int * int -> (int * int) option
 val rem : 'a list -> 'a -> 'a list
-val intersect : 'a list -> 'a list -> 'a list
 val no_dups_append : 'a list -> 'a list -> 'a list
 val other_dirs_move : direction -> surroundings -> char -> bool
 val place_char : Game.state -> int * int -> char -> Grid.board
