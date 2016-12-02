@@ -2,7 +2,7 @@ run:
 	ocamlbuild -pkgs yojson,str grid.byte dictionary.byte game.byte ai.byte
 
 top:
-	ocamlbuild -pkgs yojson,str grid.cmo dictionary.cmo game.cmo && ocamlbuild -pkg yojson ai.inferred.mli
+	ocamlbuild -pkgs yojson,str grid.cmo dictionary.cmo game.cmo && ocamlbuild -pkg yojson ai.inferred.mli && cp _build/ai.inferred.mli ai.mli
 
 ai:
 	ocamlbuild -use-ocamlfind -pkg yojson,str ai.cmi && ocamlbuild -use-ocamlfind -pkg yojson ai.cmo

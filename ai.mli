@@ -17,6 +17,7 @@ val flip' : 'a * 'b -> 'b * 'a
 val print_surr : surroundings -> unit
 val print_pair : int * int -> unit
 val print_bool : bool -> unit
+val print_dir : direction -> unit
 val alphabet : char list
 val has_neighbors : Grid.neighbors -> bool
 val is_slot : Grid.board -> int -> int -> bool
@@ -37,10 +38,11 @@ val get_next : direction -> int * int -> int * int
 val rem : 'a list -> 'a -> 'a list
 val intersect : 'a list -> 'a list -> 'a list
 val no_dups_append : 'a list -> 'a list -> 'a list
-val all_dirs_move : direction -> surroundings -> char -> bool
+val other_dirs_move : direction -> surroundings -> char -> bool
 val place_char : Game.state -> int * int -> char -> Grid.board
 val valid_move :
   ('a * char list) list -> direction -> surroundings -> 'a -> char -> bool
+val valid_prefix : direction -> surroundings -> char -> bool
 val build :
   Game.state ->
   Game.player ->

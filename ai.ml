@@ -259,9 +259,9 @@ let no_dups_append l1 l2 =
   aux l1 l2 l1
 
 
-(* [all_dirs_move s c] returns true if char [c] makes a valid move in all
- * directions given surroundings [s]. *)
-let all_dirs_move dir surr c =
+(* [other_dirs_move d s c] returns true if char [c] makes a valid move in all
+ * directions given surroundings [s] except for direction [d]. *)
+let other_dirs_move dir surr c =
   let surr_list =
     [
     (surr.left, Right);
@@ -272,15 +272,15 @@ let all_dirs_move dir surr c =
   in
   let main =
     match dir with
-    | Up -> (makes_move Up surr c, rem surr_list (surr.below, Up))
-    | Down -> (makes_move Down surr c, rem surr_list (surr.above, Down))
-    | Left -> (makes_move Left surr c, rem surr_list (surr.right, Left))
-    | Right -> (makes_move Right surr c, rem surr_list (surr.left, Right))
+    | Up -> rem surr_list (surr.below, Up)
+    | Down -> rem surr_list (surr.above, Down)
+    | Left -> rem surr_list (surr.right, Left)
+    | Right -> rem surr_list (surr.left, Right)
   in
-  let others = List.filter (fun a -> fst a <> "") (snd main)
+  let others = List.filter (fun a -> fst a <> "") main
                |> List.map (fun (s, d) -> makes_move d surr c)
   in
-  fst main && List.fold_left (fun a b -> a && b) true others
+  List.fold_left (fun a b -> a && b) true others
 
 
 let place_char state (i, j) c = Grid.place state.Game.grid i j c
@@ -294,9 +294,15 @@ let valid_move anchors dir surr curr c =
   then
     let allowed = List.assoc curr anchors in
     if List.mem c allowed
-    then all_dirs_move dir surr c
+    then makes_move dir surr c && other_dirs_move dir surr c
     else false
-  else all_dirs_move dir surr c
+  else makes_move dir surr c && other_dirs_move dir surr c
+
+
+(* [valid_prefix d s c] returns true if char [c] makes a valid prefix
+ * in direction [d] with surroundings [s]. *)
+let valid_prefix dir surr c =
+  makes_prefix dir surr c && other_dirs_move dir surr c
 
 
 (* need to write a really clear spec for this *)
@@ -318,7 +324,7 @@ let build state player anchors curr dir =
           let new_tiles = rem tiles t in
           let new_board = place_char state (row, col) t in
           let more_moves =
-            if makes_prefix dir surr t
+            if valid_prefix dir surr t
             then
               aux {state with Game.grid = new_board}
                 {player with Game.tiles = new_tiles} dir new_curr new_acc
