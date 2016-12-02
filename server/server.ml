@@ -169,6 +169,30 @@ let join_game req =
       res_body=server_error_msg
     }
 
+(* [loop_ai game] runs the AI moves on a game until a human player is found *)
+let rec loop_ai game = 
+  Lwt_unix.sleep 2. >>= fun () ->
+    let player = 
+      game.players
+      |> List.find (fun player -> player.order = game.turn)
+    in
+    if player.ai then 
+      begin
+        let move = 
+          try Ai.best_move game player 
+          with 
+          | _ -> {
+              tiles_placed=[];
+              player=player.player_name;
+              swap=[]
+            }
+        in
+        let diff_string = Game.execute game move |> Game.diff_to_json in
+        send_diff game.name diff_string;
+        loop_ai game
+      end
+    else Lwt.return ()
+
 (* [leave_game req] removes a player from a game given the request [req] *)
 let leave_game req = 
   try
@@ -179,6 +203,7 @@ let leave_game req =
       if List.fold_left (fun acc player -> player.ai && acc) true game.players
       then games := List.filter (fun game -> game.name <> game_name) !games
       else send_new_player game_name player_name order;
+      Lwt.async (fun () -> loop_ai game);
       {headers;status=`OK;res_body=""}
     with
     | Not_found -> {
@@ -205,6 +230,7 @@ let execute_move req =
     let move = json |> member "move" |> Game.move_from_json in
     let diff_string = Game.execute game move |> Game.diff_to_json in
     send_diff game_name diff_string;
+    Lwt.async (fun () -> loop_ai game);
     {headers;status=`OK;res_body=""}
   with
   | FailedMove msg -> {
