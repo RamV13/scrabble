@@ -49,7 +49,8 @@ val build :
   Game.player ->
   ((int * int) * char list) list ->
   int * int -> direction -> (Grid.board * ((int * int) * char) list) list
-val rank_moves : ('a * 'b list) list -> ('a * 'b list) list
+val rank_moves :
+  ((int * int) * char) list list -> ((int * int) * char) list list
 val pick_best : 'a list -> 'a option
 val lowercase_tiles : char list -> char list
 val lowercase_list : char option list -> char option list

@@ -296,9 +296,10 @@ let other_dirs_move dir surr c =
 let place_char state (i, j) c = Grid.place state.Game.grid i j c
 
 
-(* the move MUST be a valid move in the direction we're building, no exceptions.
- * However, it must only be a valid move in the other directions if those ones are not empty.
- * If the surroundings are empty, we shouldn't check makes_move for them. *)
+(* the move MUST be valid in the direction we're building, no exceptions.
+ * However, it must only be a valid move in the other directions
+ * if those ones are not empty. If the surroundings are empty, we shouldn't
+ * check makes_move for them. *)
 let valid_move anchors dir surr curr c =
   if List.mem_assoc curr anchors
   then
@@ -363,7 +364,18 @@ let build state player anchors curr dir =
   aux state player dir curr [] []
 
 let rank_moves moves =
-  List.sort (fun (_, a) (_, b) -> List.length b - List.length a) moves
+  let values = Game.tile_values in
+  let rank acc ((r,c), m) =
+    List.assoc (Char.uppercase_ascii m) values +
+    Grid.bonus_letter_at (r,c) +
+    acc
+  in
+  let compare move1 move2 =
+    let a = List.fold_left rank 0 move1 in
+    let b = List.fold_left rank 0 move2 in
+    b - a
+  in
+  List.sort compare moves
 
 
 let pick_best moves =
@@ -416,14 +428,16 @@ let best_move state player =
     List.rev_append acc left_moves |> List.rev_append right_moves
     |> List.rev_append up_moves |> List.rev_append down_moves
   in
-  let moves = List.fold_left gen_moves [] anchors in
+  let moves =
+    List.fold_left gen_moves [] anchors |> List.map (fun a -> snd a)
+  in
   let ranked = rank_moves moves in
   let best = pick_best ranked in
   match best with
   | None -> raise GameOver
   | Some m ->
     {
-      Game.tiles_placed = snd m;
+      Game.tiles_placed = m;
       Game.player = player.Game.player_name;
       Game.swap = [];
     }

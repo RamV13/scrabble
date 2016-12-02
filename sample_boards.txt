@@ -1,3 +1,4 @@
+let board =
 [[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
@@ -12,7 +13,7 @@
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]];;
 
 let t = ['p';'a';'o';'t';'e';'x';'e'];;
 
