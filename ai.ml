@@ -183,7 +183,9 @@ let makes_move dir surr ch =
 
 
 (* [makes_prefix d s c] returns true if the char [c] makes a valid prefix or
- * suffix in the direction [d] with current surroundings [s]. *)
+ * suffix in the direction [d] with current surroundings [s].
+ * NOTE: just like makes_move, makes_prefix does not check whether char [ch]
+ * forms a valid move with other surroundings. valid_prefix checks for that. *)
 let makes_prefix dir surr ch =
   let s = to_str ch in
   match dir with
