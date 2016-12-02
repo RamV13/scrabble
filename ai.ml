@@ -433,6 +433,15 @@ let best_move state player =
       Game.swap = [];
     }
 
+let string_of_move m =
+  let tp = m.Game.tiles_placed in
+  let strs =
+    List.map
+      (fun ((r, c), ch) -> string_of_pair (r, c) ^ to_str ch)
+      tp
+  in
+  String.concat "\n" strs
+
 
 let rec simulate_game state =
   try
@@ -442,6 +451,7 @@ let rec simulate_game state =
       (
         fun acc player ->
           let move = best_move acc player in
+          let () = print_string (string_of_move move) in
           let _ = Game.execute acc move in
           acc
       )
