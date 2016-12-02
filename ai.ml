@@ -231,6 +231,9 @@ let get_next dir curr =
   | Right -> (r, c + 1)
 
 
+(* [search_next state dir curr] returns either the new position or None
+ * in the given direction [dir] given our current position [curr]
+ * and state [state]. Recursively called. *)
 let rec search_next state dir curr =
   let n = get_next dir curr in
   if out_of_bounds state n then None
