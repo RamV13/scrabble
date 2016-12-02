@@ -16,7 +16,16 @@ type surroundings = {
   below : string
 }
 
+exception GameOver
+
 type direction = Up | Down | Left | Right
+
+let alphabet = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h';
+                'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p';
+                'q'; 'r'; 's'; 't'; 'u'; 'v'; 'w'; 'x';
+                'y'; 'z']
+
+let center = (7, 7)
 
 (* A bunch of tiny utility functions. *)
 let fst' (a, _, _) = a
@@ -53,11 +62,6 @@ let print_dir d =
   | Up -> print_string "Up"
   | Down -> print_string "Down"
 
-
-let alphabet = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h';
-                'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p';
-                'q'; 'r'; 's'; 't'; 'u'; 'v'; 'w'; 'x';
-                'y'; 'z']
 
 (* [has_neighbors n] returns true if at least one of neighbors [n]s
  * is not empty. *)
@@ -395,7 +399,12 @@ let best_move state player =
   let real_state = {state with Game.grid = board} in
   let real_player = {player with Game.tiles = tiles} in
   let slots = find_slots board in
-  let anchors = get_anchors board tiles slots in
+  let anchors =
+    if slots = [] && board = Grid.empty then [(center, tiles)]
+    else
+    if board <> Grid.empty then raise GameOver
+    else get_anchors board tiles slots
+  in
   let build_base = build real_state real_player anchors in
   let gen_moves acc anchor =
     let ((r, c), _) = anchor in
@@ -411,5 +420,5 @@ let best_move state player =
   let ranked = rank_moves moves in
   let best = pick_best ranked in
   match best with
-  | None -> failwith "No more moves to make"
-  | Some m -> m
+  | None -> raise GameOver
+  | Some m -> snd m
