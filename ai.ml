@@ -367,12 +367,36 @@ let pick_best moves =
   else Some (List.hd moves)
 
 
+let lowercase_tiles tiles = List.map Char.lowercase_ascii tiles
+
+let lowercase_list l =
+  List.fold_left
+    (
+      fun acc it ->
+        match it with
+        | None -> None::acc
+        | Some c -> (Some (Char.lowercase_ascii c))::acc
+    )
+    [] l |> List.rev
+
+let lowercase_grid grid =
+  let acc = ref [] in
+  let len = List.length grid - 1 in
+  for i = 0 to len do
+    let row = List.nth grid i in
+    acc := (lowercase_list row)::(!acc)
+  done;
+  List.rev (!acc)
+
+
 let best_move state player =
-  let board = state.Game.grid in
-  let tiles = player.Game.tiles in
+  let board = state.Game.grid |> lowercase_grid in
+  let tiles = player.Game.tiles |> lowercase_tiles in
+  let real_state = {state with Game.grid = board} in
+  let real_player = {player with Game.tiles = tiles} in
   let slots = find_slots board in
   let anchors = get_anchors board tiles slots in
-  let build_base = build state player anchors in
+  let build_base = build real_state real_player anchors in
   let gen_moves acc anchor =
     let ((r, c), _) = anchor in
     let stub = build_base (r, c) in

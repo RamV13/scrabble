@@ -41,6 +41,7 @@ val place_char : Game.state -> int * int -> char -> Grid.board
 val valid_move :
   ('a * char list) list -> direction -> surroundings -> 'a -> char -> bool
 val valid_prefix : direction -> surroundings -> char -> bool
+val unpack_opt : 'a option -> 'a
 val build :
   Game.state ->
   Game.player ->
@@ -48,5 +49,8 @@ val build :
   int * int -> direction -> (Grid.board * ((int * int) * char) list) list
 val rank_moves : ('a * 'b list) list -> ('a * 'b list) list
 val pick_best : 'a list -> 'a option
+val lowercase_tiles : char list -> char list
+val lowercase_list : char option list -> char option list
+val lowercase_grid : char option list list -> char option list list
 val best_move :
   Game.state -> Game.player -> Grid.board * ((int * int) * char) list
