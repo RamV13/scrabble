@@ -579,10 +579,15 @@ let handle_input event =
 let handle_message json = 
   let player_name = json |> member "playerName" |> to_string in
   let msg = json |> member "msg" |> to_string in
-  let current_chat = Js.to_string ((get_element_by_id "chat")##innerHTML) in
-  let new_chat = current_chat ^ "\n" ^ player_name ^ ": " ^ msg in
   let chat_window = get_element_by_id "chat" in
-  chat_window##innerHTML <- Js.string new_chat;
+  let current_chat = Js.to_string (chat_window##innerHTML) in
+  let content = player_name ^ ": " ^ msg in
+  let new_chat = 
+    if player_name = (!cur_player).player_name
+    then "<div class=\"chat-message chat-sender\">" ^ content ^ "</div>"
+    else "<div class=\"chat-message\">" ^ content ^ "</div>"
+  in
+  chat_window##innerHTML <- Js.string (current_chat ^ new_chat);
   chat_window##scrollTop <- chat_window##scrollHeight
 
 (* [contains json key] is true only if the [key] is contained in the [json] *)

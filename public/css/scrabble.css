@@ -77,6 +77,27 @@
     padding-top: 0;
 }
 
+.chat-content {
+    list-style: none;
+    display: block;
+}
+
+.chat-message {
+    float: left;
+    width: 60%;
+    padding: 10px;
+    background-color: #EEEEEE;
+    border-radius: 10px;
+    word-wrap: break-word;
+    text-align: left;
+    margin-top: 10px;
+}
+
+.chat-sender {
+    background-color: #B2DFDB;
+    float: right;
+}
+
 .double-word {
     background-color:#EF9A9A;
 }
