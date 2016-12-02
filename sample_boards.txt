@@ -35,4 +35,4 @@ ai = true;
 };;
 
 
-let anchors = find_slots board |> get_anchors board t;;
+let anchors = find_slots board |> find_anchors board t;;
