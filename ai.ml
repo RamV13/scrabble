@@ -23,8 +23,6 @@ let fst' (a, _, _) = a
 let snd' (_, a, _) = a
 let thrd' (_, _, a) = a
 let to_str c = String.make 1 c
-let list_place l r c ch = (ch, (r,c))::l
-let flip' (a, b) = (b, a)
 
 (* A printing function for the type surroundings [s]. *)
 let print_surr s =
@@ -307,12 +305,15 @@ let valid_prefix dir surr c =
 
 (* need to write a really clear spec for this *)
 let build state player anchors curr dir =
-  let rec aux state player dir curr acc =
+  let rec aux state player dir curr acc path =
     let (row, col) = curr in
     let tiles = player.Game.tiles in
     let surr = get_surroundings state.Game.grid (row, col) in
     let final_tiles = List.filter (valid_move anchors dir surr curr) tiles in
-    let moves = List.map (place_char state (row, col)) final_tiles in
+    let moves = List.map
+        (fun t -> (place_char state (row, col) t, ((row, col), t)::path))
+        final_tiles
+    in
     let new_acc = no_dups_append moves acc in
     let len = List.length tiles - 1 in
     let new_curr = get_next dir curr in
@@ -323,11 +324,13 @@ let build state player anchors curr dir =
           let t = List.nth tiles i in
           let new_tiles = rem tiles t in
           let new_board = place_char state (row, col) t in
+          let new_path = ((row, col), t)::path in
           let more_moves =
             if valid_prefix dir surr t
             then
               aux {state with Game.grid = new_board}
-                {player with Game.tiles = new_tiles} dir new_curr new_acc
+                {player with Game.tiles = new_tiles}
+                dir new_curr new_acc new_path
             else
               []
           in
@@ -336,4 +339,7 @@ let build state player anchors curr dir =
       in
       !collector
   in
-  aux state player dir curr []
+  aux state player dir curr [] []
+
+
+let best_move state player = failwith "Unimplemented"

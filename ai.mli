@@ -11,9 +11,6 @@ val fst' : 'a * 'b * 'c -> 'a
 val snd' : 'a * 'b * 'c -> 'b
 val thrd' : 'a * 'b * 'c -> 'c
 val to_str : char -> string
-val list_place :
-  ('a * ('b * 'c)) list -> 'b -> 'c -> 'a -> ('a * ('b * 'c)) list
-val flip' : 'a * 'b -> 'b * 'a
 val print_surr : surroundings -> unit
 val print_pair : int * int -> unit
 val print_bool : bool -> unit
@@ -46,4 +43,6 @@ val valid_prefix : direction -> surroundings -> char -> bool
 val build :
   Game.state ->
   Game.player ->
-  ((int * int) * char list) list -> int * int -> direction -> Grid.board list
+  ((int * int) * char list) list ->
+  int * int -> direction -> (Grid.board * ((int * int) * char) list) list
+val best_move : 'a -> 'b -> 'c

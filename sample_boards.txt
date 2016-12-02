@@ -14,20 +14,7 @@
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
 
-LIst.nth1
-['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h'; 'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p'; 'q'; 'r'; 's'; 't'; 'u'; 'v'; 'w'; 'x'; 'y'; 'z']
-5,8
-
-build' (4,4) state player (find_slots board |> get_anchors board t) ((4,4), true) Left;;
-
-Here are the resulting boards from the command:
-    build' (5,9) state player anchors ((5,9), true) Right;;
-
-apple becomes applets
-apple becomes applet
-apple becomes apples
-
-let t = ['b';'a';'k';'e'];;
+let t = ['t'];;
 
 let state = {
 Game.name = "a";
@@ -37,6 +24,7 @@ remaining_tiles = [];
 turn = 0;
 };;
 
+
 let player = {
 Game.player_name = "a";
 tiles = t;
@@ -44,5 +32,6 @@ score = 0;
 order = 0;
 ai = true;
 };;
+
 
 let anchors = find_slots board |> get_anchors board t;;
