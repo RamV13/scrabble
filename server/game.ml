@@ -226,7 +226,7 @@ let get_suffix board ((row,col),tile) dir =
   get_next (row,col) ("",0) dx dy
 
 (* get all the words and their scores certain direction given the first tile of the main word placed *)
-let get_words_dir b tp breaks (y0,x0) dir = 
+let get_words_dir b tp (y0,x0) dir = 
   let opp dir = 
     if dir = Horizontal then Vertical else Horizontal
   in
@@ -249,38 +249,41 @@ let get_words_dir b tp breaks (y0,x0) dir =
     get_prefix b (try List.hd tp with _ -> assert false) dir in
   let (suffix,s_sc) = 
     get_suffix b (try List.hd (List.rev tp) with _ -> assert false) dir in
-  let z0 = if dir = Horizontal then x0 else y0 in
-  let count = ref z0 in
-  let (infix,i_sc) = List.fold_left 
-    (fun (acc_w,acc_s) ((y,x),c) -> 
-      let z = if dir = Horizontal then x else y in
-      if z = !count then 
-        begin
-          count := !count + 1;
-          let tile_mult = Grid.bonus_letter_at (y,x) in
-          (acc_w ^ Char.escaped c,tile_mult*(List.assoc c tile_values) + acc_s)
-        end
-      else 
-        begin
-          count := !count + 2; 
-          let tile = 
-            let (dx,dy) = if dir = Horizontal then (-1,0) else (0,-1) in
-            match Grid.get_tile b (y + dy) (x + dx) with
-            | Some character -> character 
-            | None -> raise (FailedMove "gap in tiles placed")
-          in
-          let tile_mult = Grid.bonus_letter_at (y,x) in
-          (acc_w ^ (Char.escaped tile) ^ (Char.escaped c), tile_mult * (List.assoc c tile_values) + acc_s)
-        end
-    ) ("",0) tp 
+
+  let fill_list (start,finish) = 
+    let rec aux acc cur fin = 
+      if cur = fin then acc @ [cur] 
+      else aux (acc @ [cur]) (cur + 1) fin 
+    in
+    aux [] start finish
   in
-  print_endline ("\tprefix: " ^ (if prefix = "" then "N/A" else prefix) ^ " infix: " ^ infix ^ " suffix: " ^ (if suffix = "" then "N/A" else suffix));
+  (*fill_list from start to end of infix, then fold_left. for each one, check that its either in the tiles placed or on the board
+  can check no gaps by comparing length of filled list to tiles placed*)
+  let ((yn,xn),_) = List.rev tp |> List.hd in
+  let infix_coords = 
+    fill_list (if dir = Horizontal then (x0,xn) else (y0,yn)) 
+    |> List.map (fun t -> if dir = Horizontal then (y0,t) else (t,x0)) 
+  in
+  let (infix,i_sc) = List.fold_left
+    (fun (acc_w,acc_s) (y,x) ->
+      let (tile,tile_val) =
+        match Grid.get_tile b y x with
+        | Some c -> (c, List.assoc c tile_values)
+        | None -> 
+          let tile_in_tp = try List.assoc (y,x) tp with _ -> raise (FailedMove "gap in tiles placed") in
+          let tile_mult = Grid.bonus_letter_at (y,x) in
+          (tile_in_tp, tile_mult * (List.assoc tile_in_tp tile_values))
+      in
+      (acc_w ^ (Char.escaped tile),acc_s + tile_val)
+    ) ("",0) infix_coords 
+  in
+  (*print_endline ("\tprefix: " ^ (if prefix = "" then "N/A" else prefix) ^ " infix: " ^ infix ^ " suffix: " ^ (if suffix = "" then "N/A" else suffix));*)
   let word_mult = 
     List.map (fun ((y,x),_) -> Grid.bonus_word_at (y,x)) tp 
     |> List.fold_left (fun acc x -> acc*x) 1
   in
-  print_endline ("\tmain word multiplier: " ^ string_of_int word_mult);
-  if words = [] && prefix = "" && suffix = "" && breaks = [] && not (b = Grid.empty) then 
+  (*print_endline ("\tmain word multiplier: " ^ string_of_int word_mult);*)
+  if words = [] && prefix = "" && suffix = "" && (List.length tp = List.length infix_coords) && not (b = Grid.empty) then 
     raise (FailedMove "cannot place tiles apart from existing ones")
   else
    let word = (prefix ^ infix ^ suffix,(p_sc + i_sc + s_sc)*word_mult) in 
@@ -290,31 +293,15 @@ let get_words_dir b tp breaks (y0,x0) dir =
  * direction [dir].
  * the actual work is done in the two functions below *)
 let get_words board tp dir = 
-  let valid_skips lst dir (y0,x0) = 
-    let z0 = if dir = Horizontal then x0 else y0 in
-    let (_,break) = List.fold_left 
-      (fun (acc,found) ((y,x),_) -> 
-        let z = if dir = Horizontal then x else y in
-        if z = acc + 2 then (z,found @ [acc + 1])
-        else if z > acc + 2 then raise (FailedMove "skip too large")
-        else (z,found)) 
-      (z0 - 1,[]) lst
-    in
-    break
-  in
   match dir with
   | Horizontal -> 
     let t = List.sort (fun ((_,x1),_) ((_,x2),_) -> Pervasives.compare x1 x2) tp in
     let ((y0,x0),_) = try List.hd t with _ -> assert false in
-    get_words_dir board t (valid_skips t Horizontal (y0,x0)) (y0,x0) Horizontal
-    (*if valid_skips t Horizontal (y0,x0) then get_words_dir board t (y0,x0) Horizontal
-    else raise (FailedMove "skip too large")*)
+    get_words_dir board t (y0,x0) Horizontal
   | Vertical -> 
     let t = List.sort (fun ((y1,_),_) ((y2,_),_) -> Pervasives.compare y1 y2) tp in
     let ((y0,x0),_) = try List.hd t with _ -> assert false in
-    get_words_dir board t (valid_skips t Vertical (y0,x0)) (y0,x0) Vertical
-    (*if valid_skips t Vertical (y0,x0) then get_words_dir board t (y0,x0) Vertical
-    else raise (FailedMove "skip too large")*)
+    get_words_dir board t (y0,x0) Vertical
   
 (* get the direction a word was placed in *)
 let get_word_dir b tp = 
@@ -370,7 +357,7 @@ let create_diff s tiles_pl cur_p =
   let (words,words_sc) = 
     List.split (get_words s.grid tiles_pl (get_word_dir s.grid tiles_pl)) in
   let words_cap = List.map (fun w -> String.lowercase_ascii w) words in
-  print_string "\twords: "; List.iter (fun x -> print_string (x ^ ", ")) words; print_endline "";
+  print_string "words: "; List.iter (fun x -> print_string (x ^ ", ")) words; print_endline "\n";
   let (is_valid,invalid_words) = List.fold_left
     (fun (acc_bool,invalid_w) w -> 
       if Dictionary.in_dict w then (acc_bool,invalid_w)
@@ -414,7 +401,7 @@ let execute s move =
     try List.find (fun p -> p.player_name = p_n) s.players
     with Not_found -> assert false
   in
-  assert (cur_p.order = s.turn);
+  if not (cur_p.order = s.turn) then raise (FailedMove "it's not your turn") else ();
   print_endline ("PLAYER: " ^ p_n);
   if List.length move.swap <> 0  && List.length s.remaining_tiles > 6 then
     begin
