@@ -12,9 +12,9 @@ open Ai
  * reverse_str (DONE)
  * find_anchors (DONE)
  * invalid_pos (DONE)
- * get_next
- * search_next
- * rem (basic tests)
+ * get_next (DONE)
+ * search_next (DONE)
+ * rem (DONE)
  * no_dups_append
  * other_dirs_move
  * place_char
@@ -339,10 +339,60 @@ let invalid_pos_tests = [
                         {a_state with Game.grid = Grid.empty} (3, 3)))
 ]
 
+let get_next_tests = [
+  "Up" >:: (fun _ -> assert_equal ~printer:string_of_pair
+               (2,6) (get_next Up (3,6)));
+  "Down" >:: (fun _ -> assert_equal ~printer:string_of_pair
+                 (12,101) (get_next Down (11, 101)));
+  "Left" >:: (fun _ -> assert_equal ~printer:string_of_pair
+                 (10, 12) (get_next Left (10, 13)));
+  "Right" >:: (fun _ -> assert_equal ~printer:string_of_pair
+                  (15, 100) (get_next Right (15, 99)));
+]
+
+let next_state = {a_state with Game.grid = all_board}
+
+let search_next_tests = [
+  "No new pos 1" >:: (fun _ -> assert_equal None
+                         (search_next next_state Down (13, 0)));
+  "No new pos 2" >:: (fun _ -> assert_equal None
+                         (search_next next_state Right (0, 14)));
+  "No new pos 3" >:: (fun _ -> assert_equal None
+                         (search_next
+                            {a_state with Game.grid = po_board} Left (0, 2)));
+  "Some pos 1" >:: (fun _ -> assert_equal (Some (13,3))
+                       (search_next next_state Right (13, 0)));
+  "Some pos 2" >:: (fun _ -> assert_equal (Some (7,11))
+                       (search_next next_state Right (7,3)));
+  "Full board" >:: (fun _ -> assert_equal None
+                       (search_next
+                          {a_state with Game.grid = full_board} Left (7, 7)));
+]
+
+let three = ['a'; 'b'; 'c']
+let rando = ['f'; 'g'; 'h'; 'i'; 'q']
+let mult = ['a'; 'a'; 'a'; 'b']
+
+let rem_tests = [
+  "Empty list" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                       [] (rem [] 'a'));
+  "One element, remove" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                                [] (rem ['b'] 'b'));
+  "One element, stay" >:: (fun _ -> assert_equal  ~printer:string_of_charlist
+                              ['c'] (rem ['c'] 'a'));
+  "Not in list" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                        three (rem three 'z'));
+  "Regular, in list" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                             ['f'; 'g'; 'h'; 'i'] (rem rando 'q'));
+  "Mulitple occurrences" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                                 ['a'; 'a'; 'b'] (rem mult 'a'));
+]
+
 let suite = "A.I. test suite"
             >:::
             find_slots_test @ get_surroundings_test @ valid_chars_test
             @ makes_move_test @ makes_prefix_test @ out_of_bounds_test
             @ reverse_str_test @ find_anchors_tests @ invalid_pos_tests
+            @ get_next_tests @ search_next_tests @ rem_tests
 
 let _ = run_test_tt_main suite

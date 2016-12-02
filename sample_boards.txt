@@ -5,12 +5,12 @@ let board =
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-[None;None;None;None;None;None;None;Some 'R';None;None;None;None;None;None;None];
-[None;None;None;None;None;None;None;Some 'H';None;None;None;None;None;None;None];
-[None;None;None;None;None;None;None;Some 'U';None;None;None;None;None;None;None];
-[None;None;None;None;None;None;None;Some 'M';None;None;None;None;None;None;None];
-[None;None;None;None;None;None;None;Some 'B';None;None;None;None;None;None;None];
-[None;None;None;None;None;None;None;Some 'A';None;None;None;None;None;None;None];
+[None;None;None;None;Some 'a';Some 'p';Some 'p';Some 'l';Some 'e';None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]];;
