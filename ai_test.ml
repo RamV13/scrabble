@@ -5,9 +5,24 @@ open Ai
  * -------------------------------------------
  * find_slots (DONE)
  * get_surroundings (DONE)
- * valid_chars (DONE)
- * makes_move (DONE)
+ * valid_chars (needs more tests)
+ * makes_move (needs more tests)
  * out_of_bounds (DONE)
+ * reverse_str
+ * find_anchors
+ * makes_prefix
+ * invalid_pos
+ * get_next
+ * search_next
+ * rem (basic tests)
+ * no_dups_append
+ * other_dirs_move
+ * place_char
+ * valid_move
+ * valid_prefix
+ * lowercasing functions (all)
+ * build (basic tests)
+ * best_move (basic tests)
  *)
 
 let empty_board = Grid.empty
@@ -71,9 +86,9 @@ let all_board = [[None;None;None;None;None;None;None;None;None;None;None;None;No
                  [None;None;None;None;None;None;None;Some 'a';None;None;None;None;None;None;None];
                  [None;None;None;None;None;None;None;Some 's';None;None;None;None;None;None;None];
                  [None;None;None;None;None;None;None;Some 'e';None;None;None;None;None;None;None];
-                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;Some 'b';Some 'a';None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;Some 'c'];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;Some 'd'];
                  [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
 
 let sort_slots a b =
@@ -120,13 +135,39 @@ let all_surr = {
   below = "ase"
 }
 
+let empty_surr = {
+  left = "";
+  right = "";
+  above = "";
+  below = ""
+}
+
+let partial_empty_surr = {
+  left = "ab";
+  below = "cd";
+  right = "";
+  above = "";
+}
+
+let one_surr = {empty_surr with Ai.above = "esapfed"}
+
+let diag_surr = {empty_surr with Ai.right = "d"}
+
 let get_surroundings_test = [
   "No surroundings" >:: (fun _ -> assert_equal blank_surr
                             (get_surroundings empty_board (7,7)));
-  "Left right" >:: (fun _ -> assert_equal ~printer:string_of_surr apple_surr
+  "Left right" >:: (fun _ -> assert_equal ~printer:Ai.string_of_surr apple_surr
                        (get_surroundings apple_board (7,8)));
-  "All sides" >:: (fun _ -> assert_equal ~printer:string_of_surr all_surr
-                      (get_surroundings all_board (7,7)))
+  "All sides" >:: (fun _ -> assert_equal ~printer:Ai.string_of_surr all_surr
+                      (get_surroundings all_board (7,7)));
+  "Empty surroundings" >:: (fun _ -> assert_equal ~printer:Ai.string_of_surr
+                    empty_surr (get_surroundings all_board (0, 0)));
+  "Partial empty surr" >:: (fun _ -> assert_equal ~printer:Ai.string_of_surr
+                               partial_empty_surr (get_surroundings all_board (11, 14)));
+  "One surr" >:: (fun _ -> assert_equal ~printer:Ai.string_of_surr
+                    one_surr (get_surroundings all_board (11, 7)));
+  "Diag surr" >:: (fun _ -> assert_equal ~printer:Ai.string_of_surr
+                      diag_surr (get_surroundings all_board (4, 6)));
 ]
 
 let a_surr = get_surroundings apple_board (7, 11)

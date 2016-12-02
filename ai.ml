@@ -37,7 +37,7 @@ let to_str c = String.make 1 c
 let string_of_surr s =
   let surr =
     [
-      "LEFT: " ^ s.left^"\n";
+      "\nLEFT: " ^ s.left^"\n";
       "RIGHT: " ^ s.right^"\n";
       "ABOVE: " ^ s.above^"\n";
       "BELOW: " ^ s.below^"\n"
@@ -423,3 +423,25 @@ let best_move state player =
       Game.player = player.Game.player_name;
       Game.swap = [];
     }
+
+
+let rec simulate_game state =
+  try
+    let players = state.Game.players in
+    let final_state =
+      List.fold_left
+      (
+        fun acc player ->
+          let move = best_move acc player in
+          let _ = Game.execute acc move in
+          acc
+      )
+      state players
+    in
+    simulate_game final_state
+  with
+  | GameOver -> print_string "Game has ended." |> print_newline
+
+let run_games n =
+  let game_state = Game.create_game "Kirk" "Simulation N" in
+  simulate_game game_state
