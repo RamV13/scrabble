@@ -226,6 +226,14 @@ let get_next dir curr =
   | Right -> (r, c + 1)
 
 
+let rec search_next state dir curr =
+  let n = get_next dir curr in
+  if out_of_bounds state n then None
+  else
+  if invalid_pos state n then search_next state dir n
+  else Some n
+
+
 (* Removes only the first occurence of element [el] from list [li].
  * It is not tail recursive. *)
 let rec rem li el =
@@ -303,6 +311,12 @@ let valid_prefix dir surr c =
   makes_prefix dir surr c && other_dirs_move dir surr c
 
 
+let unpack_opt o =
+  match o with
+  | Some a -> a
+  | None -> failwith "Cannot unpack None"
+
+
 (* need to write a really clear spec for this *)
 let build state player anchors curr dir =
   let rec aux state player dir curr acc path =
@@ -316,9 +330,12 @@ let build state player anchors curr dir =
     in
     let new_acc = no_dups_append moves acc in
     let len = List.length tiles - 1 in
-    let new_curr = get_next dir curr in
+    let new_curr = search_next state dir curr in
     let collector = ref new_acc in
-    if invalid_pos state new_curr then new_acc else
+    if new_curr = None
+    then new_acc
+    else
+      let next = unpack_opt new_curr in
       let () =
         for i = 0 to len do
           let t = List.nth tiles i in
@@ -330,7 +347,7 @@ let build state player anchors curr dir =
             then
               aux {state with Game.grid = new_board}
                 {player with Game.tiles = new_tiles}
-                dir new_curr new_acc new_path
+                dir next new_acc new_path
             else
               []
           in

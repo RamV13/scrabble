@@ -32,6 +32,7 @@ val out_of_bounds : Game.state -> int * int -> bool
 val is_none : 'a option -> bool
 val invalid_pos : Game.state -> int * int -> bool
 val get_next : direction -> int * int -> int * int
+val search_next : Game.state -> direction -> int * int -> (int * int) option
 val rem : 'a list -> 'a -> 'a list
 val intersect : 'a list -> 'a list -> 'a list
 val no_dups_append : 'a list -> 'a list -> 'a list
