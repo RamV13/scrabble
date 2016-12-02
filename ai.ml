@@ -341,5 +341,34 @@ let build state player anchors curr dir =
   in
   aux state player dir curr [] []
 
+let rank_moves moves =
+  List.sort (fun (_, a) (_, b) -> List.length b - List.length a) moves
 
-let best_move state player = failwith "Unimplemented"
+
+let pick_best moves =
+  if List.length moves = 0 then None
+  else Some (List.hd moves)
+
+
+let best_move state player =
+  let board = state.Game.grid in
+  let tiles = player.Game.tiles in
+  let slots = find_slots board in
+  let anchors = get_anchors board tiles slots in
+  let build_base = build state player anchors in
+  let gen_moves acc anchor =
+    let ((r, c), _) = anchor in
+    let stub = build_base (r, c) in
+    let left_moves = stub Left in
+    let right_moves = stub Right in
+    let up_moves = stub Up in
+    let down_moves = stub Down in
+    List.rev_append acc left_moves |> List.rev_append right_moves
+    |> List.rev_append up_moves |> List.rev_append down_moves
+  in
+  let moves = List.fold_left gen_moves [] anchors in
+  let ranked = rank_moves moves in
+  let best = pick_best ranked in
+  match best with
+  | None -> failwith "No more moves to make"
+  | Some m -> m
