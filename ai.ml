@@ -251,12 +251,16 @@ let rec rem li el =
 
 
 (* [no_dups_append l1 l2] appends all of list [l2] contents to list [l1],
- * and it ensures that there are no duplicates in the result. *)
+ * and it ensures that there are no duplicates from [l2], although not
+ * necessarily in the result itself. *)
 let no_dups_append l1 l2 =
   let rec aux l1 l2 acc =
     match l2 with
     | [] -> acc
-    | h::t -> if List.mem h l1 then aux l1 t acc else aux l1 t (h::acc)
+    | h::t ->
+      if List.mem h l1 || List.mem h t || List.mem h acc
+      then aux l1 t acc
+      else aux l1 t (h::acc)
   in
   aux l1 l2 l1
 

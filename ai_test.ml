@@ -15,7 +15,7 @@ open Ai
  * get_next (DONE)
  * search_next (DONE)
  * rem (DONE)
- * no_dups_append
+ * no_dups_append (DONE)
  * other_dirs_move
  * place_char
  * valid_move
@@ -388,11 +388,50 @@ let rem_tests = [
                                  ['a'; 'a'; 'b'] (rem mult 'a'));
 ]
 
+let sort_chars a b = Char.code a - Char.code b
+let cmp_chars a b = (List.sort sort_chars a) = (List.sort sort_chars b)
+
+let no_dups_append_tests = [
+  "Both empty" >:: (fun _ -> assert_equal
+                       ~printer:string_of_charlist [] (no_dups_append [] []));
+  "First empty only" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                             ['b'; 'a']
+                             (no_dups_append [] ['a'; 'b']));
+  "Second empty only" >:: (fun _ -> assert_equal
+                              ~printer:string_of_charlist
+                              ['a'] (no_dups_append ['a'] []));
+  "First empty, second dups" >:: (fun _ -> assert_equal
+                                     ~printer:string_of_charlist
+                                     (List.sort sort_chars ['a'; 'b'; 'c'])
+                                     (List.sort sort_chars
+                                        (no_dups_append
+                                           []
+                                           ['a'; 'b'; 'a'; 'c'])));
+  "Regular dups 1" >:: (fun _ -> assert_equal
+                           ~printer:string_of_charlist
+                           ~cmp:cmp_chars
+                           ['a'; 'x'; 'g'; 'm'; 'n']
+                           (no_dups_append
+                              ['a'; 'm'; 'n']
+                              ['g';'g';'x';'g';'x']));
+  "Regular dups 2" >:: (fun _ -> assert_equal
+                           ~printer:string_of_charlist
+                           ~cmp:cmp_chars
+                           ['a'; 'b'; 'c'; 'd']
+                           (no_dups_append ['a'; 'b'] ['c'; 'd'; 'c']));
+  "Normal append" >:: (fun _ -> assert_equal
+                          ~printer:string_of_charlist
+                          ~cmp:cmp_chars
+                          ['a'; 'b'; 'c'; 'd']
+                          (no_dups_append ['a'; 'd'] ['c'; 'b']));
+]
+
 let suite = "A.I. test suite"
             >:::
             find_slots_test @ get_surroundings_test @ valid_chars_test
             @ makes_move_test @ makes_prefix_test @ out_of_bounds_test
             @ reverse_str_test @ find_anchors_tests @ invalid_pos_tests
             @ get_next_tests @ search_next_tests @ rem_tests
+            @ no_dups_append_tests
 
 let _ = run_test_tt_main suite
