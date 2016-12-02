@@ -405,7 +405,10 @@ let create_diff s tiles_pl cur_p =
  * previous game state [state] *)
 (* ram is assuming that players_diff is always list of length 1 *)
 let execute s move =
-  let tiles_pl = move.tiles_placed in
+  let tiles_pl = 
+    move.tiles_placed
+    |> List.map (fun ((row,col),c) -> ((row,col),Char.uppercase_ascii c))
+  in
   let p_n = move.player in
   let cur_p = 
     try List.find (fun p -> p.player_name = p_n) s.players
