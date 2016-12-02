@@ -7,11 +7,11 @@ open Ai
  * get_surroundings (DONE)
  * valid_chars (DONE)
  * makes_move (DONE)
- * makes_prefix
+ * makes_prefix (DONE)
  * out_of_bounds (DONE)
- * reverse_str
- * find_anchors (simple edge cases))
- * invalid_pos
+ * reverse_str (DONE)
+ * find_anchors (DONE)
+ * invalid_pos (DONE)
  * get_next
  * search_next
  * rem (basic tests)
@@ -73,7 +73,23 @@ let app_board = [[None;None;None;None;None;None;None;None;None;None;None;None;No
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
+
+let po_board = [[Some 'p';Some 'o';None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
 
 let all_board = [[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                  [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
@@ -90,6 +106,23 @@ let all_board = [[None;None;None;None;None;None;None;None;None;None;None;None;No
                  [None;None;None;None;None;None;None;None;None;None;None;None;None;None;Some 'c'];
                  [None;Some 'a';Some 'p';None;None;None;None;None;None;None;None;None;None;None;Some 'd'];
                  [Some 'a';None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
+
+
+let full_board = [[Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'p';Some 'o';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a'];
+                  [Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a';Some 'a']]
 
 let sort_slots a b =
   let (r, c) = a in
@@ -163,7 +196,8 @@ let get_surroundings_test = [
   "Empty surroundings" >:: (fun _ -> assert_equal ~printer:Ai.string_of_surr
                     empty_surr (get_surroundings all_board (0, 0)));
   "Partial empty surr" >:: (fun _ -> assert_equal ~printer:Ai.string_of_surr
-                               partial_empty_surr (get_surroundings all_board (11, 14)));
+                               partial_empty_surr
+                               (get_surroundings all_board (11, 14)));
   "One surr" >:: (fun _ -> assert_equal ~printer:Ai.string_of_surr
                     one_surr (get_surroundings all_board (11, 7)));
   "Diag surr" >:: (fun _ -> assert_equal ~printer:Ai.string_of_surr
@@ -217,7 +251,27 @@ let makes_move_test = [
 ]
 
 
-let makes_prefix_test = []
+let makes_prefix_test = [
+  "Edge z 1" >:: (fun _ -> assert_equal false (makes_prefix Left z_surr 'z'));
+  "Edge z 2" >:: (fun _ -> assert_equal true (makes_prefix Up z_surr 'z'));
+  "Main 1 apple+s" >:: (fun _ -> assert_equal true
+                           (makes_prefix Right
+                              (get_surroundings apple_board (7, 11)) 's'));
+  "Main 2 e+apple" >:: (fun _ -> assert_equal
+                           true
+                           (makes_prefix Left
+                              (get_surroundings apple_board (7, 5)) 'e'));
+  "No surrs" >:: (fun _ -> assert_equal true (makes_prefix Up empty_surr 'a'));
+]
+
+
+let reverse_str_test = [
+  "Empty string" >:: (fun _ -> assert_equal "" (Ai.reverse_str ""));
+  "One char string" >:: (fun _ -> assert_equal "a" (Ai.reverse_str "a"));
+  "Multi-char 1" >:: (fun _ -> assert_equal "apples" (Ai.reverse_str "selppa"));
+  "Multi-char 2" >:: (fun _ -> assert_equal "happy" (Ai.reverse_str "yppah"));
+  "Multi-char 3" >:: (fun _ -> assert_equal "ha ha" (Ai.reverse_str "ah ah"));
+]
 
 let a_state =
   {
@@ -234,12 +288,61 @@ let out_of_bounds_test = [
   "outside 1" >:: (fun _ -> assert_equal true
                       (out_of_bounds a_state (-1,10)));
   "outside 2" >:: (fun _ -> assert_equal true
-                   (out_of_bounds a_state (100,1)));
+                      (out_of_bounds a_state (100,1)));
+  "both outside 1" >:: (fun _ -> assert_equal true
+                           (out_of_bounds a_state (10000, 10000)));
+  "both outside 2" >:: (fun _ -> assert_equal true
+                           (out_of_bounds a_state (-1, -1)));
+]
+
+let sort_anchors = (fun a b -> (fst (fst a)) - (fst (fst b)))
+let po_board_anchors = List.sort sort_anchors
+    [((0, 2),['d']); ((1,0), []); ((1, 1), ['d'])]
+let string_of_anchor a =
+  let ((r, c), al) = a in
+  string_of_pair (r,c) ^ string_of_charlist al
+
+let string_of_anchor_list al =
+  List.fold_left
+    (fun acc s -> (string_of_anchor s) ^ "\n" ^ acc)
+    ""
+    al
+
+let find_anchors_tests = [
+  "Empty board" >:: (fun _ -> assert_equal []
+                        (find_anchors Grid.empty Ai.alphabet
+                           (find_slots Grid.empty)));
+  "Full board" >:: (fun _ -> assert_equal []
+                       (find_anchors full_board Ai.alphabet
+                          (find_slots full_board)));
+  "Normal board" >:: (fun _ -> assert_equal ~printer:string_of_anchor_list
+                         po_board_anchors
+                         (List.sort sort_anchors
+                            (find_anchors po_board ['d']
+                               (find_slots po_board))));
+]
+
+let invalid_pos_tests = [
+  "Has char 1" >:: (fun _ -> assert_equal true
+                       (invalid_pos {a_state with Game.grid = po_board}
+                          (0, 0)));
+  "Has char 2" >:: (fun _ -> assert_equal true
+                       (invalid_pos {a_state with Game.grid = full_board}
+                          (10, 10)));
+  "Out of bounds 1" >:: (fun _ -> assert_equal true
+                            (invalid_pos a_state (100, 100)));
+  "Out of bounds 2" >:: (fun _ -> assert_equal true
+                            (invalid_pos a_state (-1, 5)));
+  "Good one" >:: (fun _ -> assert_equal
+                     false
+                     (invalid_pos
+                        {a_state with Game.grid = Grid.empty} (3, 3)))
 ]
 
 let suite = "A.I. test suite"
             >:::
             find_slots_test @ get_surroundings_test @ valid_chars_test
             @ makes_move_test @ makes_prefix_test @ out_of_bounds_test
+            @ reverse_str_test @ find_anchors_tests @ invalid_pos_tests
 
 let _ = run_test_tt_main suite
