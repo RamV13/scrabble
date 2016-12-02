@@ -265,8 +265,9 @@ let no_dups_append l1 l2 =
   aux l1 l2 l1
 
 
-(* [other_dirs_move d s c] returns true if char [c] makes a valid move in all
- * directions given surroundings [s] except for direction [d]. *)
+(* [other_dirs_move d s c] returns true if char [c] makes a valid move, or is
+ * an otherwise acceptable tile placement in all directions given
+ * surroundings [s] except for in direction [d]. *)
 let other_dirs_move dir surr c =
   let surr_list =
     [
