@@ -35,10 +35,10 @@ val dict_from_file : string -> t * t
 
 (*END OF INTERNAL FUNCTIONS*)
 
-(*[fmem] returns true if a string is in the offical scrabble dictionary*)
+(*[in_dict] returns true if a string is in the offical scrabble dictionary*)
 val in_dict : string -> bool
 
-(*[bmem] returns true if a string appears in the backwards dictionary*)
+(*[in_back_dict] returns true if a string appears in the backwards dictionary*)
 val in_back_dict : string -> bool
 
 (*[has_extensions] takes in a string and returns whether or not it
