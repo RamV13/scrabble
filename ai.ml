@@ -23,9 +23,41 @@ let fst' (a, _, _) = a
 let snd' (_, a, _) = a
 let thrd' (_, _, a) = a
 let to_str c = String.make 1 c
-let list_place l r c ch = (ch, (r,c))::l
-let flip' (a, b) = (b, a)
 
+(* A printing function for the type surroundings [s]. *)
+let print_surr s =
+  let _ =
+    List.map print_string
+      [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in ()
+
+
+(* print_pair (r,c) prints the integer pair. *)
+let print_pair (r, c) =
+  print_int r;
+  print_newline ();
+  print_int c;
+  print_newline ()
+
+
+(* Prints a boolean. *)
+let print_bool b =
+  match b with
+  | true -> print_string "True"
+  | false -> print_string "False"
+
+
+let print_dir d =
+  match d with
+  | Left -> print_string "Left"
+  | Right -> print_string "Right"
+  | Up -> print_string "Up"
+  | Down -> print_string "Down"
+
+
+let alphabet = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h';
+                'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p';
+                'q'; 'r'; 's'; 't'; 'u'; 'v'; 'w'; 'x';
+                'y'; 'z']
 
 (* [has_neighbors n] returns true if at least one of neighbors [n]s
  * is not empty. *)
@@ -73,7 +105,7 @@ let rec find_adj board slot acc dir =
   in
   match fst' adj with
   | None -> acc
-  | Some c -> find_adj board (snd' adj) ((to_str c) ^ acc) (thrd' adj)
+  | Some c -> find_adj board (snd' adj) (acc ^ (to_str c)) (thrd' adj)
 
 
 (* [get_surroundings b s] returns the surrounding words around slot [s]
@@ -88,21 +120,38 @@ let get_surroundings board slot =
   }
 
 
+(* Reverses string [s]. *)
+let reverse_str s =
+  let open Str in
+  let spl = Str.split (Str.regexp "") s in
+  List.fold_left (fun acc b -> b ^ acc) "" spl;;
+
+
 (* [valid_chars surr tiles] returns the chars from [tiles] that
- * form valid words with the surrounding tiles in [surr]. *)
+ * form valid words or *ixes with the surrounding tiles in [surr]. *)
 let valid_chars surr tiles =
   let is_ok t =
     let s = to_str t in
     let ixes =
+      {
+        right = s ^ surr.right;
+        left = s ^ surr.left |> reverse_str;
+        below = s ^ surr.below;
+        above = s ^ surr.above |> reverse_str;
+      }
+    in
+    let bools =
       [
-        s ^ surr.right;
-        surr.left ^ s;
-        s ^ surr.below;
-        surr.above ^ s
+        Dictionary.in_dict ixes.right ||
+        Dictionary.has_back_extensions ixes.right;
+        Dictionary.in_dict ixes.left ||
+        Dictionary.has_extensions ixes.left;
+        Dictionary.in_dict ixes.above ||
+        Dictionary.has_extensions ixes.above;
+        Dictionary.in_dict ixes.below ||
+        Dictionary.has_back_extensions ixes.below;
       ]
     in
-    let not_empties = List.filter (fun a -> String.length a > 1) ixes in
-    let bools = List.map Dictionary.in_dict not_empties in
     List.fold_left (fun acc b -> acc && b) true bools
   in
   List.filter is_ok tiles
@@ -125,9 +174,9 @@ let makes_move dir surr ch =
   let s = to_str ch in
   match dir with
   | Up -> Dictionary.in_dict (s ^ surr.below)
-  | Down -> Dictionary.in_dict (surr.above ^ s)
+  | Down -> Dictionary.in_dict (s ^ surr.above |> reverse_str)
   | Left -> Dictionary.in_dict (s ^ surr.right)
-  | Right -> Dictionary.in_dict (surr.left ^ s)
+  | Right -> Dictionary.in_dict (s ^ surr.left |> reverse_str)
 
 
 (* [makes_prefix d s c] returns true if the char [c] makes a valid prefix or
@@ -135,32 +184,54 @@ let makes_move dir surr ch =
 let makes_prefix dir surr ch =
   let s = to_str ch in
   match dir with
-  | Up -> (Dictionary.has_back_extensions (surr.below ^ s))
-  | Down -> (Dictionary.has_extensions (surr.above ^ s))
-  | Left -> (Dictionary.has_back_extensions (surr.right ^ s))
-  | Right -> (Dictionary.has_extensions (surr.left ^ s))
+  | Up -> (Dictionary.has_back_extensions (s ^ surr.below))
+  | Down -> (Dictionary.has_extensions (s ^ surr.above |> reverse_str))
+  | Left -> (Dictionary.has_back_extensions (s ^ surr.right))
+  | Right -> (Dictionary.has_extensions (s ^ surr.left |> reverse_str))
 
 
 (* [out_of_bounds s c] returns true if current location [curr] is out of the
  * bounds of the grid found in state [s]. *)
 let out_of_bounds state curr =
-  let ((r, c), _) = curr in
+  let (r, c) = curr in
   let board = state.Game.grid in
   if r > (List.length board - 1) || c > (List.length board - 1)
-  then false
-  else if r < 0 || c < 0 then false
-  else true
+  then true
+  else if r < 0 || c < 0 then true
+  else false
+
+
+let is_none o =
+  match o with
+  | None -> true
+  | Some _ -> false
+
+
+(* [invalid_pos s c] returns true if the position specified by [c] in the
+ * given state [s] is not a valid position on which to place a tile. *)
+let invalid_pos state curr =
+  let (r, c) = curr in
+  let t = Grid.get_tile (state.Game.grid) r c in
+  out_of_bounds state curr || not (is_none t)
 
 
 (* [get_next dir curr] returns the next location from current position [curr]
  * and in the given direction [dir]. *)
 let get_next dir curr =
-  let ((r, c), _) = curr in
+  let (r, c) = curr in
   match dir with
-  | Up -> ((r - 1, c), snd curr)
-  | Down -> ((r + 1, c), snd curr)
-  | Left -> ((r, c - 1), snd curr)
-  | Right -> ((r, c + 1), snd curr)
+  | Up -> (r - 1, c)
+  | Down -> (r + 1, c)
+  | Left -> (r, c - 1)
+  | Right -> (r, c + 1)
+
+
+let rec search_next state dir curr =
+  let n = get_next dir curr in
+  if out_of_bounds state n then None
+  else
+  if invalid_pos state n then search_next state dir n
+  else Some n
 
 
 (* Removes only the first occurence of element [el] from list [li].
@@ -182,147 +253,139 @@ let intersect l1 l2 =
   in
   aux it []
 
-(* A printing function for the type surroundings [s]. *)
-let print_surr s =
-  let _ =
-    List.map print_string
-      [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in ()
+
+(* [no_dups_append l1 l2] appends all of list [l2] contents to list [l1],
+ * and it ensures that there are no duplicates in the result. *)
+let no_dups_append l1 l2 =
+  let rec aux l1 l2 acc =
+    match l2 with
+    | [] -> acc
+    | h::t -> if List.mem h l1 then aux l1 t acc else aux l1 t (h::acc)
+  in
+  aux l1 l2 l1
+
+
+(* [other_dirs_move d s c] returns true if char [c] makes a valid move in all
+ * directions given surroundings [s] except for direction [d]. *)
+let other_dirs_move dir surr c =
+  let surr_list =
+    [
+    (surr.left, Right);
+    (surr.right, Left);
+    (surr.above, Down);
+    (surr.below, Up)
+    ]
+  in
+  let main =
+    match dir with
+    | Up -> rem surr_list (surr.below, Up)
+    | Down -> rem surr_list (surr.above, Down)
+    | Left -> rem surr_list (surr.right, Left)
+    | Right -> rem surr_list (surr.left, Right)
+  in
+  let others = List.filter (fun a -> fst a <> "") main
+               |> List.map (fun (s, d) -> makes_move d surr c)
+  in
+  List.fold_left (fun a b -> a && b) true others
+
+
+let place_char state (i, j) c = Grid.place state.Game.grid i j c
+
+
+(* the move MUST be a valid move in the direction we're building, no exceptions.
+ * However, it must only be a valid move in the other directions if those ones are not empty.
+ * If the surroundings are empty, we shouldn't check makes_move for them. *)
+let valid_move anchors dir surr curr c =
+  if List.mem_assoc curr anchors
+  then
+    let allowed = List.assoc curr anchors in
+    if List.mem c allowed
+    then makes_move dir surr c && other_dirs_move dir surr c
+    else false
+  else makes_move dir surr c && other_dirs_move dir surr c
+
+
+(* [valid_prefix d s c] returns true if char [c] makes a valid prefix
+ * in direction [d] with surroundings [s]. *)
+let valid_prefix dir surr c =
+  makes_prefix dir surr c && other_dirs_move dir surr c
+
+
+let unpack_opt o =
+  match o with
+  | Some a -> a
+  | None -> failwith "Cannot unpack None"
 
 
 (* need to write a really clear spec for this *)
-let build' start state player anchors curr dir =
-  let rec aux state player dir curr acc =
-    let ((row, col), _) = curr in
-    let valid_move surr c =
-      try
-        let allowed = List.assoc (fst curr) anchors in
-        if List.mem c allowed then
-          makes_move dir surr c
-        else false
-      with
-      | Not_found -> makes_move dir surr c
-    in
-    let place_char c =
-      Grid.place (state.Game.grid) row col c
-    in
+let build state player anchors curr dir =
+  let rec aux state player dir curr acc path =
+    let (row, col) = curr in
     let tiles = player.Game.tiles in
-    match tiles with
-    | [] -> acc
-    | h::t ->
-      let surr = get_surroundings state.Game.grid (row, col) in
-      let good_ends = List.filter (valid_move surr) tiles in
-      let moves = List.map (place_char) good_ends in
-      let dir_moves = List.map (fun m -> (start, dir, m)) moves in
-      let new_acc = List.rev_append dir_moves acc in
-      let good_ixes = List.filter (makes_prefix dir surr) player.Game.tiles in
-      let new_curr = get_next dir curr in
-      if good_ixes = [] then new_acc else
-      if out_of_bounds state new_curr then new_acc else
-        List.fold_left
-          (
-            fun a p ->
-              let new_board = place_char p in
-              let new_tiles = rem tiles p in
-              aux
-                {state with Game.grid = new_board}
+    let surr = get_surroundings state.Game.grid (row, col) in
+    let final_tiles = List.filter (valid_move anchors dir surr curr) tiles in
+    let moves = List.map
+        (fun t -> (place_char state (row, col) t, ((row, col), t)::path))
+        final_tiles
+    in
+    let new_acc = no_dups_append moves acc in
+    let len = List.length tiles - 1 in
+    let new_curr = search_next state dir curr in
+    let collector = ref new_acc in
+    if new_curr = None
+    then new_acc
+    else
+      let next = unpack_opt new_curr in
+      let () =
+        for i = 0 to len do
+          let t = List.nth tiles i in
+          let new_tiles = rem tiles t in
+          let new_board = place_char state (row, col) t in
+          let new_path = ((row, col), t)::path in
+          let more_moves =
+            if valid_prefix dir surr t
+            then
+              aux {state with Game.grid = new_board}
                 {player with Game.tiles = new_tiles}
-                dir new_curr new_acc
-          )
-          [] good_ixes
-  in
-  aux state player dir curr []
-
-
-(* Given the board, the character list, the starting point, and the direction,
- * generate the tiles_placed field of game. *)
-let gen_tiles_placed board cl start dir =
-  let rec aux board cl start dir acc =
-    match cl with
-    | [] -> acc
-    | h::t ->
-      let (r,c) = start in
-      match Grid.get_tile board r c with
-      | None -> failwith "This should never happen"
-      | Some ch ->
-        let (nr, nc) =
-          match dir with
-          | Up -> (r - 1, c)
-          | Down -> (r + 1, c)
-          | Left -> (r, c - 1)
-          | Right -> (r, c + 1)
-        in
-        aux board t (nr, nc) dir (((r,c),ch)::acc)
-  in
-  aux board cl start dir []
-
-
-(* Get the diff of all boards, generate moves as a result *)
-let to_moves player init_state boards =
-  List.fold_left
-    (
-      fun acc b ->
-        let (start, dir, board) = b in
-        let added =
-          Grid.get_diff init_state.Game.grid board
-        in
-        let mv =
-          {
-            Game.tiles_placed = gen_tiles_placed board added start dir;
-            player = player.Game.player_name;
-            swap = [];
-          }
-        in
-        mv::acc
-    )
-    [] boards
-
-let rank_moves moves = List.sort (fun a b -> 0) moves
-
-let center = (7, 7)
-
-let lowercase_grid grid =
-  let lowercase_list l =
-    List.fold_left
-      (
-        fun acc it ->
-          let low =
-            match it with
-            | None -> None
-            | Some c -> Some (Char.lowercase_ascii c)
+                dir next new_acc new_path
+            else
+              []
           in
-          (low::acc)
-      )
-      [] l
+          collector := no_dups_append !collector more_moves;
+        done
+      in
+      !collector
   in
-  List.fold_left (fun acc li -> (lowercase_list li)::acc) [] grid
+  aux state player dir curr [] []
+
+let rank_moves moves =
+  List.sort (fun (_, a) (_, b) -> List.length b - List.length a) moves
+
+
+let pick_best moves =
+  if List.length moves = 0 then None
+  else Some (List.hd moves)
+
 
 let best_move state player =
-  let init_board = lowercase_grid state.Game.grid in
-  let new_state = {state with Game.grid = init_board} in
-  let init_tiles = List.map (fun c -> Char.lowercase_ascii c) player.Game.tiles in
-  let new_player = {player with Game.tiles = init_tiles} in
-  let _ = List.map print_char init_tiles in
-  let slots = find_slots init_board in
-  if slots = [] then
-    let mv = build' center new_state new_player [] (center, true) Right in
-    mv |> to_moves new_player new_state  |> rank_moves |> List.hd
-  else
-    let anchors = get_anchors init_board init_tiles slots in
-    let moves = List.fold_left
-        (
-          fun acc anc ->
-            let b = build' (fst anc) new_state new_player anchors anc
-            in
-            let lm = b Left in
-            let rm = b Right in
-            let um = b Up in
-            let dm = b Down in
-            let mvs =
-              lm |> List.rev_append rm |> List.rev_append um |> List.rev_append dm
-            in
-            List.rev_append mvs acc
-        )
-        [] anchors
-    in
-    let ranked = moves |> to_moves new_player new_state  |> rank_moves in
-    if ranked = [] then failwith "No more moves" else List.hd ranked
+  let board = state.Game.grid in
+  let tiles = player.Game.tiles in
+  let slots = find_slots board in
+  let anchors = get_anchors board tiles slots in
+  let build_base = build state player anchors in
+  let gen_moves acc anchor =
+    let ((r, c), _) = anchor in
+    let stub = build_base (r, c) in
+    let left_moves = stub Left in
+    let right_moves = stub Right in
+    let up_moves = stub Up in
+    let down_moves = stub Down in
+    List.rev_append acc left_moves |> List.rev_append right_moves
+    |> List.rev_append up_moves |> List.rev_append down_moves
+  in
+  let moves = List.fold_left gen_moves [] anchors in
+  let ranked = rank_moves moves in
+  let best = pick_best ranked in
+  match best with
+  | None -> failwith "No more moves to make"
+  | Some m -> m

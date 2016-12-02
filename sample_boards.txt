@@ -15,7 +15,6 @@
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
 
 let t = ['t'];;
-fsoeomr poss
 
 let state = {
 Game.name = "a";
