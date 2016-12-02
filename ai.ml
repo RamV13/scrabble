@@ -127,7 +127,9 @@ let reverse_str s =
 
 
 (* [valid_chars surr tiles] returns the chars from [tiles] that
- * form valid words or *ixes with the surrounding tiles in [surr]. *)
+ * form valid words or *ixes with the surrounding tiles in [surr].
+ * NOTE: Only used for anchor generation, NOT for checking if a particular
+ * tile would make a valid char given the surroundings. *)
 let valid_chars surr tiles =
   let is_ok t =
     let s = to_str t in
@@ -168,7 +170,9 @@ let find_anchors board tiles slots =
 
 
 (* [makes_move d s c] returns true if the char [c] makes a valid word move
- * in the direction [s] with current surroundings [s]. *)
+ * in the direction [s] with current surroundings [s].
+ * NOTE: makes_move does not concern itself with the surroundings to see
+ * if a move is completely valid. valid_move is the function for that. *)
 let makes_move dir surr ch =
   let s = to_str ch in
   match dir with

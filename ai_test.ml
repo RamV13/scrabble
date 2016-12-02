@@ -5,12 +5,12 @@ open Ai
  * -------------------------------------------
  * find_slots (DONE)
  * get_surroundings (DONE)
- * valid_chars (needs more tests)
- * makes_move (needs more tests)
+ * valid_chars (DONE)
+ * makes_move (DONE)
+ * makes_prefix
  * out_of_bounds (DONE)
  * reverse_str
- * find_anchors
- * makes_prefix
+ * find_anchors (simple edge cases))
  * invalid_pos
  * get_next
  * search_next
@@ -88,8 +88,8 @@ let all_board = [[None;None;None;None;None;None;None;None;None;None;None;None;No
                  [None;None;None;None;None;None;None;Some 'e';None;None;None;None;None;None;None];
                  [None;None;None;None;None;None;None;None;None;None;None;None;Some 'b';Some 'a';None];
                  [None;None;None;None;None;None;None;None;None;None;None;None;None;None;Some 'c'];
-                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;Some 'd'];
-                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
+                 [None;Some 'a';Some 'p';None;None;None;None;None;None;None;None;None;None;None;Some 'd'];
+                 [Some 'a';None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
 
 let sort_slots a b =
   let (r, c) = a in
@@ -193,15 +193,31 @@ let valid_chars_test = [
                         (List.sort sort_chars ['a';'b';'c';'g'])
                         (valid_chars c_surr c_tiles |> List.sort sort_chars));
   "no valid chars" >:: (fun _ -> assert_equal ~printer:string_of_charlist
-                           (List.sort sort_chars [])
-                           (valid_chars d_surr d_tiles |> List.sort sort_chars))
+                           []
+                           (valid_chars d_surr d_tiles |> List.sort sort_chars));
+  "Empty board" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                        Ai.alphabet (valid_chars empty_surr Ai.alphabet));
+  "Edge of board 1" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                            [] (valid_chars partial_empty_surr Ai.alphabet));
+  "Edge of board 2" >:: (fun _ -> assert_equal ~printer:string_of_charlist
+                            ['z'; 'a'; 'e'] (valid_chars
+                                     (get_surroundings all_board (13, 0))
+                                     ['z'; 'a'; 'e']));
 ]
+
+let z_surr = get_surroundings all_board (13, 0)
 
 let makes_move_test = [
   "apples" >:: (fun _ -> assert_equal true (makes_move Right a_surr 's'));
   "applet" >:: (fun _ -> assert_equal true (makes_move Right a_surr 't'));
   "applea" >:: (fun _ -> assert_equal false (makes_move Right a_surr 'a'));
+  "Edge case 1" >:: (fun _ -> assert_equal true (makes_move Left z_surr 'z'));
+  "Edge case 2" >:: (fun _ -> assert_equal true (makes_move Up z_surr 'z'));
+  "Edge case 3" >:: (fun _ -> assert_equal false (makes_move Right z_surr 'z'));
 ]
+
+
+let makes_prefix_test = []
 
 let a_state =
   {
@@ -224,6 +240,6 @@ let out_of_bounds_test = [
 let suite = "A.I. test suite"
             >:::
             find_slots_test @ get_surroundings_test @ valid_chars_test
-            @ makes_move_test @ out_of_bounds_test
+            @ makes_move_test @ makes_prefix_test @ out_of_bounds_test
 
 let _ = run_test_tt_main suite
