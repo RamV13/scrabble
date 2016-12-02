@@ -37,7 +37,10 @@ val get_next : direction -> int * int -> int * int
 val rem : 'a list -> 'a -> 'a list
 val intersect : 'a list -> 'a list -> 'a list
 val no_dups_append : 'a list -> 'a list -> 'a list
-val all_dirs_move : surroundings -> char -> bool
+val all_dirs_move : direction -> surroundings -> char -> bool
+val place_char : Game.state -> int * int -> char -> Grid.board
+val valid_move :
+  ('a * char list) list -> direction -> surroundings -> 'a -> char -> bool
 val build :
   Game.state ->
   Game.player ->

@@ -48,6 +48,14 @@ let print_bool b =
   | false -> print_string "False"
 
 
+let print_dir d =
+  match d with
+  | Left -> print_string "Left"
+  | Right -> print_string "Right"
+  | Up -> print_string "Up"
+  | Down -> print_string "Down"
+
+
 let alphabet = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h';
                 'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p';
                 'q'; 'r'; 's'; 't'; 'u'; 'v'; 'w'; 'x';
@@ -114,6 +122,7 @@ let get_surroundings board slot =
   }
 
 
+(* Reverses string [s]. *)
 let reverse_str s =
   let open Str in
   let spl = Str.split (Str.regexp "") s in
@@ -121,7 +130,7 @@ let reverse_str s =
 
 
 (* [valid_chars surr tiles] returns the chars from [tiles] that
- * form valid words with the surrounding tiles in [surr]. *)
+ * form valid words or *ixes with the surrounding tiles in [surr]. *)
 let valid_chars surr tiles =
   let is_ok t =
     let s = to_str t in
@@ -240,7 +249,7 @@ let intersect l1 l2 =
 
 
 (* [no_dups_append l1 l2] appends all of list [l2] contents to list [l1],
- * but it ensures that there are no duplicates in the result. *)
+ * and it ensures that there are no duplicates in the result. *)
 let no_dups_append l1 l2 =
   let rec aux l1 l2 acc =
     match l2 with
@@ -251,50 +260,63 @@ let no_dups_append l1 l2 =
 
 
 (* [all_dirs_move s c] returns true if char [c] makes a valid move in all
- * directions given surroundings [s].
- * BUG: ONE LETTER WORDS RETURN FALSE, WHICH SCREWS THE WHOLE THING UP. *)
-let all_dirs_move surr c =
-  makes_move Left surr c &&
-  makes_move Right surr c &&
-  makes_move Up surr c &&
-  makes_move Down surr c
+ * directions given surroundings [s]. *)
+let all_dirs_move dir surr c =
+  let surr_list =
+    [
+    (surr.left, Right);
+    (surr.right, Left);
+    (surr.above, Down);
+    (surr.below, Up)
+    ]
+  in
+  let main =
+    match dir with
+    | Up -> (makes_move Up surr c, rem surr_list (surr.below, Up))
+    | Down -> (makes_move Down surr c, rem surr_list (surr.above, Down))
+    | Left -> (makes_move Left surr c, rem surr_list (surr.right, Left))
+    | Right -> (makes_move Right surr c, rem surr_list (surr.left, Right))
+  in
+  let others = List.filter (fun a -> fst a <> "") (snd main)
+               |> List.map (fun (s, d) -> makes_move d surr c)
+  in
+  fst main && List.fold_left (fun a b -> a && b) true others
+
+
+let place_char state (i, j) c = Grid.place state.Game.grid i j c
+
+
+(* the move MUST be a valid move in the direction we're building, no exceptions.
+ * However, it must only be a valid move in the other directions if those ones are not empty.
+ * If the surroundings are empty, we shouldn't check makes_move for them. *)
+let valid_move anchors dir surr curr c =
+  if List.mem_assoc curr anchors
+  then
+    let allowed = List.assoc curr anchors in
+    if List.mem c allowed
+    then all_dirs_move dir surr c
+    else false
+  else all_dirs_move dir surr c
+
 
 (* need to write a really clear spec for this *)
 let build state player anchors curr dir =
   let rec aux state player dir curr acc =
     let (row, col) = curr in
-    let valid_move surr curr c =
-      if List.mem_assoc curr anchors
-      then
-        let allowed = List.assoc curr anchors in
-        if List.mem c allowed
-        then all_dirs_move surr c
-        else false
-      else all_dirs_move surr c
-    in
-    let place_char state (i, j) c =
-      Grid.place (state.Game.grid) i j c
-    in
     let tiles = player.Game.tiles in
     let surr = get_surroundings state.Game.grid (row, col) in
-    let final_tiles = List.filter (valid_move surr curr) tiles in
+    let final_tiles = List.filter (valid_move anchors dir surr curr) tiles in
     let moves = List.map (place_char state (row, col)) final_tiles in
     let new_acc = no_dups_append moves acc in
     let len = List.length tiles - 1 in
     let new_curr = get_next dir curr in
-    let collector = ref [] in
-    collector := new_acc;
+    let collector = ref new_acc in
     if invalid_pos state new_curr then new_acc else
       let () =
         for i = 0 to len do
           let t = List.nth tiles i in
           let new_tiles = rem tiles t in
           let new_board = place_char state (row, col) t in
-          print_string "placing tile\n";
-          let _ = print_char t in
-          let () = print_string " " in
-          let () = print_pair (row, col) in
-          let _ = print_newline () in
           let more_moves =
             if makes_prefix dir surr t
             then
