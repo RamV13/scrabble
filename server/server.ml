@@ -202,8 +202,11 @@ let leave_game req =
       let (player_name,order) = Game.remove_player game player_name in
       if List.fold_left (fun acc player -> player.ai && acc) true game.players
       then games := List.filter (fun game -> game.name <> game_name) !games
-      else send_new_player game_name player_name order;
-      Lwt.async (fun () -> loop_ai game);
+      else
+        begin
+          send_new_player game_name player_name order;
+          Lwt.async (fun () -> loop_ai game)
+        end;
       {headers;status=`OK;res_body=""}
     with
     | Not_found -> {
