@@ -14,7 +14,7 @@
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
 
-let t = ['t'];;
+let t = ['p';'a';'o';'t';'e';'x';'e'];;
 
 let state = {
 Game.name = "a";

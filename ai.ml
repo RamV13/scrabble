@@ -421,4 +421,9 @@ let best_move state player =
   let best = pick_best ranked in
   match best with
   | None -> raise GameOver
-  | Some m -> snd m
+  | Some m ->
+    {
+      Game.tiles_placed = snd m;
+      Game.player = player.Game.player_name;
+      Game.swap = [];
+    }

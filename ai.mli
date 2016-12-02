@@ -6,7 +6,10 @@ type surroundings = {
   above : string;
   below : string;
 }
+exception GameOver
 type direction = Up | Down | Left | Right
+val alphabet : char list
+val center : int * int
 val fst' : 'a * 'b * 'c -> 'a
 val snd' : 'a * 'b * 'c -> 'b
 val thrd' : 'a * 'b * 'c -> 'c
@@ -15,7 +18,6 @@ val print_surr : surroundings -> unit
 val print_pair : int * int -> unit
 val print_bool : bool -> unit
 val print_dir : direction -> unit
-val alphabet : char list
 val has_neighbors : Grid.neighbors -> bool
 val is_slot : Grid.board -> int -> int -> bool
 val find_slots : Grid.board -> (int * int) list
@@ -52,5 +54,4 @@ val pick_best : 'a list -> 'a option
 val lowercase_tiles : char list -> char list
 val lowercase_list : char option list -> char option list
 val lowercase_grid : char option list list -> char option list list
-val best_move :
-  Game.state -> Game.player -> Grid.board * ((int * int) * char) list
+val best_move : Game.state -> Game.player -> Game.move
