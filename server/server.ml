@@ -20,6 +20,12 @@ let to_list = Yojson.Basic.Util.to_list
 (* [to_int] is Yojson.Basic.Util.to_int *)
 let to_int = Yojson.Basic.Util.to_int
 
+(* [ai_sleep_time] is the sleeping time for an AI to perform a move *)
+let ai_sleep_time = 5.
+
+(* [keep_alive_time] is the time between keep alive server sent events *)
+let keep_alive_time = 15.
+
 (* [games] is the list of games currently running *)
 let games = ref []
 (* [game_pushers] is an association list from games to their respective game
@@ -171,7 +177,7 @@ let join_game req =
 
 (* [loop_ai game] runs the AI moves on a game until a human player is found *)
 let rec loop_ai game = 
-  Lwt_unix.sleep 2. >>= fun () ->
+  Lwt_unix.sleep ai_sleep_time >>= fun () ->
     let player = 
       game.players
       |> List.find (fun player -> player.order = game.turn)
@@ -324,7 +330,7 @@ let _ =
   Game.init_names ();
   Lwt.async (fun () -> 
     let rec keep_alive () = 
-      Lwt_unix.sleep 15. >>= fun () -> 
+      Lwt_unix.sleep keep_alive_time >>= fun () -> 
         begin
           let send_keep_alives game = 
             let sendable = Some (Printf.sprintf ": \n\n") in
