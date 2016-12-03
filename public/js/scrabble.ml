@@ -425,6 +425,8 @@ let init_state () =
     "gameState" |> get |> Yojson.Basic.from_string |> Game.state_from_json
   in
   remove "gameState";
+  let chat_title = "Chat - " ^ game_state.name in
+  (get_element_by_id "chat-title")##innerHTML <- Js.string chat_title;
   let set_scoreboard player = 
     let name_id = "scorename-" ^ (string_of_int player.order) in
     let score_id = "score-" ^ (string_of_int player.order) in
