@@ -4,72 +4,30 @@ HOST: http://polls.apiblueprint.org/
 # Scrabble
 
 This API outlines the HTTP interface between the server and clients for the CS 3110 final project Scrabble.
-
-## Games [/api/games]
-
-### List All Game IDs and Names [GET]
-
-+ Response 200 (application/json)
-
-            [
-                {
-                    "id": 0,
-                    "name": "<GAME_NAME>"
-                },
-                {
-                    "id": 1,
-                    "name": "<GAME_NAME>"
-                }
-            ]
         
-## Game [/api/game/{id}]
+## Game [/api/game{?gameName,playerName}]
+
+### Subscribe to Game [GET]
 
 + Parameters
-    + id - game ID
+    + gameName - name of the game
+    + playerName - name of the player
 
-### Get Game State [GET]
-
-+ Response 200 (application/json)
-
-            {
-                "id": 0,
-                "name": "<GAME_NAME>",
-                "grid": [
-                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
-                    [...],
-                    [...],
-                    ...
-                ],
-                "players": [
-                    {
-                        "id": 0,
-                        "name": "<PLAYER_NAME>",
-                        "tiles": ['a','b','z',...,'t'],
-                        "score": 0,
-                        "order": 1,
-                        "ai": false
-                    },
-                    ...
-                ],
-                "remainingTiles": ['a','w',...,'f'],
-                "turn": 0
-            }
++ Response 200 (text/event-stream)
 
 ### Join a Game [POST]
 
 + Request (application/json)
 
             {
-                "id": 0,
-                "name": "<PLAYER_NAME>",
+                "gameName": "<GAME_NAME>",
+                "playerName": "<PLAYER_NAME>"
             }
 
 + Response 200 (application/json)
 
             {
-                "playerID": 0,
-                "id": 0,
-                "name": "<GAME_NAME>",
+                "gameName": "<GAME_NAME>",
                 "grid": [
                     [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
                     [...],
@@ -78,8 +36,7 @@ This API outlines the HTTP interface between the server and clients for the CS 3
                 ],
                 "players": [
                     {
-                        "id": 0,
-                        "name": "<PLAYER_NAME>",
+                        "playerName": "<PLAYER_NAME>",
                         "tiles": ['a','b','z',...,'t'],
                         "score": 0,
                         "order": 1,
@@ -96,15 +53,14 @@ This API outlines the HTTP interface between the server and clients for the CS 3
 + Request (application/json)
 
             {
-                "name": "<PLAYER_NAME>"
+                "gameName": "<GAME_NAME>",
+                "playerName": "<PLAYER_NAME>"
             }
 
 + Response 200 (application/json)
 
             {
-                "playerID": 0,
-                "id": 1,
-                "name": "<GAME_NAME>",
+                "gameName": "<GAME_NAME>",
                 "grid": [
                     [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
                     [...],
@@ -113,8 +69,7 @@ This API outlines the HTTP interface between the server and clients for the CS 3
                 ],
                 "players": [
                     {
-                        "id": 0,
-                        "name": "<PLAYER_NAME>",
+                        "player_name": "<PLAYER_NAME>",
                         "tiles": ['a','b','z',...,'t'],
                         "score": 0,
                         "order": 1,
@@ -133,53 +88,45 @@ This API outlines the HTTP interface between the server and clients for the CS 3
 + Request (application/json)
 
             {
-                "id": 0,
-                "tilesPlaced": [
-                    {
-                        "character": 'a',
-                        "row": 0,
-                        "col": 12
-                    },
-                    {
-                        "character": 't',
-                        "row": 0,
-                        "col": 13
-                    },
-                ]
+                "gameName": "<GAME_NAME>",
+                "move": {
+                    "playerName": "<PLAYER_NAME>",
+                    "tilesPlaced": [
+                        {
+                            "character": 'a',
+                            "row": 0,
+                            "col": 12
+                        },
+                        {
+                            "character": 't',
+                            "row": 0,
+                            "col": 13
+                        },
+                    ],
+                    "swappedTiles": []
+                }
             }
 
 + Response 200 (application/json)
 
-            {
-                "id": 0,
-                "name": "<GAME_NAME>",
-                "grid": [
-                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
-                    [...],
-                    [...],
-                    ...
-                ],
-                "players": [
-                    {
-                        "id": 0,
-                        "name": "<PLAYER_NAME>",
-                        "tiles": ['a','b','z',...,'t'],
-                        "score": 0,
-                        "order": 1,
-                        "ai": false
-                    },
-                    ...
-                ],
-                "remainingTiles": ['a','w',...,'f'],
-                "turn": 0
-            }
-            
-## Subscribe [/api/subscribe{?gameID,playerID}]
+## Messaging [/api/messaging{?gameName,playerName}]
 
-### Subscribe [GET]
+### Subscribe to Messages [GET]
 
 + Parameters
-    + gameID - ID of the game
-    + playerID - ID of the player
+    + gameName - name of the game
+    + playerName - name of the player
 
 + Response 200 (text/event-stream)
+
+### Send Message [POST]
+
++ Request (application/json)
+
+            {
+                "playerName": "<PLAYER_NAME>",
+                "gameName": "<GAME_NAME>",
+                "msg": "<MESSAGE>"
+            }
+            
++ Response 200
