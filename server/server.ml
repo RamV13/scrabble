@@ -178,11 +178,13 @@ let join_game req =
 (* [loop_ai game] runs the AI moves on a game until a human player is found *)
 let rec loop_ai game = 
   Lwt_unix.sleep ai_sleep_time >>= fun () ->
-    let player = 
-      game.players
-      |> List.find (fun player -> player.order = game.turn)
+    let running = 
+      List.fold_left (fun acc player -> not player.ai || acc) false game.players
     in
-    if player.ai then 
+    let player = 
+      List.find (fun player -> player.order = game.turn) game.players
+    in
+    if running && player.ai then 
       begin
         let move = 
           try Ai.best_move game player 
