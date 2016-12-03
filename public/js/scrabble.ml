@@ -591,7 +591,7 @@ let handle_message json =
     else 
       begin
         "<tr class=\"chat-row\"><td align=\"left\" class=\"chat-td\">" ^ 
-        "<div class=\"chat-message\"><strong>" ^ player_name ^ "</strong> " ^ 
+        "<div class=\"chat-message\"><strong>" ^ player_name ^ "</strong><br>" ^
         msg ^ "</div></td></tr>"
       end
   in
