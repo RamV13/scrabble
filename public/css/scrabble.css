@@ -1,4 +1,8 @@
 
+body {
+    background: #009688;
+}
+
 .no-transition {
     -webkit-transition: none !important;
     transition:         none !important;
@@ -21,9 +25,9 @@
     color: rgba(0, 0, 0, 1);
     background-color: #EFEBE9;
     padding: 1.2em;
-    width: 1.6vmin;
-    font-size: 1.6vmin;
-    line-height: 1.6vmin;
+    width: 0.8vw;
+    font-size: 0.8vw;
+    line-height: 0.8vw;
     display: inline-block;
     text-align: center;
     -webkit-transition: all 0.3s ease-in-out;
