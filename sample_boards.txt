@@ -5,7 +5,7 @@ let board =
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+[None;None;None;None;Some 'a';Some 'p';Some 'p';Some 'l';Some 'e';None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
@@ -15,7 +15,7 @@ let board =
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]];;
 
-let t = ['p';'a';'o';'t';'e';'x';'e'];;
+let t = ['p';'a';'o';'t';'e';'x';'e'; '?'];;
 
 let state = {
 Game.name = "a";
@@ -35,4 +35,4 @@ ai = true;
 };;
 
 
-let anchors = find_slots board |> get_anchors board t;;
+let anchors = find_slots board |> find_anchors board t;;
