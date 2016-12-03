@@ -43,6 +43,7 @@ type diff = {
   players_diff : player list
 }
 
+(* point values of different tiles *)
 val tile_values : (char * int) list
 
 (* initialize list of names from names.txt *)
