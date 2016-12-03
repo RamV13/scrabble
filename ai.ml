@@ -174,13 +174,22 @@ let find_anchors board tiles slots =
  * in the direction [s] with current surroundings [s].
  * NOTE: makes_move does not concern itself with the surroundings to see
  * if a move is completely valid. valid_move is the function for that. *)
-let makes_move dir surr ch =
+(* let makes_move dir surr ch =
   let s = to_str ch in
   match dir with
   | Up -> Dictionary.in_dict (s ^ surr.below)
   | Down -> Dictionary.in_dict (s ^ surr.above |> reverse_str)
   | Left -> Dictionary.in_dict (s ^ surr.right)
-  | Right -> Dictionary.in_dict (s ^ surr.left |> reverse_str)
+  | Right -> Dictionary.in_dict (s ^ surr.left |> reverse_str) *)
+
+let makes_move dir surr ch =
+  let s = to_str ch in
+  let w =
+    match dir with
+    | Up | Down -> (reverse_str surr.above) ^ s ^ (surr.below)
+    | Left | Right -> (reverse_str surr.left) ^ s ^ (surr.right)
+  in
+  Dictionary.in_dict w
 
 
 (* [makes_prefix d s c] returns true if the char [c] makes a valid prefix or
@@ -271,7 +280,7 @@ let no_dups_append l1 l2 =
  * surroundings [s] except for in direction [d].
  * BUG: What about a nested grid? n _ t? _ = o, but it would be rejected
  * because "ot" isn't a word. *)
-let other_dirs_move dir surr c =
+(* let other_dirs_move dir surr c =
   let surr_list =
     [
     (surr.left, Right);
@@ -291,7 +300,16 @@ let other_dirs_move dir surr c =
                |> List.map (fun (s, d) -> makes_move d surr c)
   in
   let almost = List.fold_left (fun a b -> a && b) true others in
-  almost
+  almost *)
+
+let other_dirs_move dir surr c =
+  let s = to_str c in
+  let w =
+    match dir with
+    | Up | Down-> (reverse_str surr.left) ^ s ^ (surr.right)
+    | Left | Right -> (reverse_str surr.above) ^ s ^ (surr.below)
+  in
+  if String.length w = 1 then true else Dictionary.in_dict w
 
 let place_char state (i, j) c = Grid.place state.Game.grid i j c
 

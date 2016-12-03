@@ -278,7 +278,7 @@ let makes_move_test = [
   "applea" >:: (fun _ -> assert_equal false (makes_move Right a_surr 'a'));
   "Edge case 1" >:: (fun _ -> assert_equal true (makes_move Left z_surr 'z'));
   "Edge case 2" >:: (fun _ -> assert_equal true (makes_move Up z_surr 'z'));
-  "Edge case 3" >:: (fun _ -> assert_equal false (makes_move Right z_surr 'z'));
+  "Edge case 3" >:: (fun _ -> assert_equal true (makes_move Right z_surr 'z'));
 ]
 
 
