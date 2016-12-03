@@ -42,14 +42,14 @@ let apple_board = [[None;None;None;None;None;None;None;None;None;None;None;None;
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
 
-let nest_board = [[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+let nest_board = [[Some 'n';None;Some 't';None;None;None;None;None;None;None;None;None;None;None;None];
+                   [Some 'i';None;Some 'e';None;None;None;None;None;None;None;None;None;None;None;None];
+                   [Some 'c';None;Some 'a';None;None;None;None;None;None;None;None;None;None;None;None];
+                   [Some 'e';Some 'a';Some 't';None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
-                   [None;None;None;None;None;None;Some 'a';Some 'p'; Some 'p'; Some 'l'; Some 'e';None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
@@ -515,6 +515,13 @@ let valid_move_tests = [
   "Correct word, wrong dir" >:: (fun _ -> assert_equal
                                 false
                                 (valid_move [] Down a_surr (7, 11) 't'));
+  "Nested word" >:: (fun _ -> assert_equal true
+                        (valid_move
+                           (find_slots nest_board
+                            |> find_anchors nest_board alphabet)
+                           Left
+                           (get_surroundings nest_board (0,1))
+                           (0,1) 'o'));
 ]
 
 let valid_prefix_tests = [
@@ -555,6 +562,7 @@ let suite = "A.I. test suite"
             @ reverse_str_test @ find_anchors_tests @ invalid_pos_tests
             @ get_next_tests @ search_next_tests @ rem_tests
             @ no_dups_append_tests @ other_dirs_move_tests @ valid_move_tests
-            @ valid_prefix_tests @ lowercase_tests
+            @ valid_prefix_tests @ lowercase_tests @ build_tests
+            @ best_move_tests
 
 let _ = run_test_tt_main suite
