@@ -18,15 +18,31 @@ open Ai
  * no_dups_append (DONE)
  * other_dirs_move (DONE)
  * valid_move (DONE)
- * valid_prefix
- * lowercasing functions
- * build (only edge tests)
- * best_move (only edge tests)
+ * valid_prefix (DONE)
+ * lowercasing functions (DONE)
+ * build
+ * best_move
  *)
 
 let empty_board = Grid.empty
 
 let apple_board = [[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;Some 'a';Some 'p'; Some 'p'; Some 'l'; Some 'e';None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                   [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
+
+let nest_board = [[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
@@ -72,6 +88,22 @@ let app_board = [[None;None;None;None;None;None;None;None;None;None;None;None;No
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                    [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
+
+let upper_app_board = [[None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;Some 'A';Some 'P'; Some 'P';None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
+                 [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None];
                  [None;None;None;None;None;None;None;None;None;None;None;None;None;None;None]]
 
 let po_board = [[Some 'p';Some 'o';None;None;None;None;None;None;None;None;None;None;None;None;None];
@@ -485,9 +517,34 @@ let valid_move_tests = [
                                 (valid_move [] Down a_surr (7, 11) 't'));
 ]
 
+let valid_prefix_tests = [
+  "Empty board" >:: (fun _ -> assert_equal true
+                        (valid_prefix Down empty_surr 'a'));
+  "Valid forwards" >:: (fun _ -> assert_equal
+                           true
+                           (valid_prefix Down
+                              (get_surroundings po_board (1,1)) 'f'));
+  "Valid backwards" >:: (fun _ -> assert_equal true
+                            (valid_prefix Left
+                               (get_surroundings apple_board (7,5)) 'e'));
+  "Invalid forwards" >:: (fun _ -> assert_equal false
+                             (valid_prefix Right
+                                (get_surroundings apple_board (7,11)) 'g'));
+  "Invalid backwards" >:: (fun _ -> assert_equal false
+                              (valid_prefix Left
+                                 (get_surroundings apple_board (7,5)) 'z'));
+]
 
-let valid_prefix_tests = []
-let lowercase_tests = []
+let lowercase_tests = [
+  "Tile lowercase" >:: (fun _ -> assert_equal ['a'; 'b'; 'c'; 'd'; '?']
+                           (lowercase_tiles ['A'; 'B'; 'C'; 'D'; '?']));
+  "Empty tiles" >:: (fun _ -> assert_equal [] (lowercase_tiles []));
+  "Empty grid lowercase" >:: (fun _ -> assert_equal empty_board
+                                 (lowercase_grid empty_board));
+  "Regular grid lowercase" >:: (fun _ -> assert_equal
+                                   app_board (lowercase_grid upper_app_board));
+]
+
 let build_tests = []
 let best_move_tests = []
 
@@ -498,5 +555,6 @@ let suite = "A.I. test suite"
             @ reverse_str_test @ find_anchors_tests @ invalid_pos_tests
             @ get_next_tests @ search_next_tests @ rem_tests
             @ no_dups_append_tests @ other_dirs_move_tests @ valid_move_tests
+            @ valid_prefix_tests @ lowercase_tests
 
 let _ = run_test_tt_main suite
