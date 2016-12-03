@@ -80,12 +80,21 @@
 .chat-content {
     width: 100%;
     font-size: 0.925em;
+    table-layout: fixed;
 }
 
 .chat-row {
     width: 100%;
     padding: 0;
     margin: 0;
+    display: table-row;
+}
+
+.chat-td {
+    width: 40%;
+    max-width: 40%;
+    word-wrap: break-word;
+    overflow: hidden;
 }
 
 .chat-message {
@@ -94,8 +103,9 @@
     padding: 10px;
     border-radius: 10px;
     word-wrap: break-word;
-    text-align: center;
-    display: table;
+    text-align: left;
+    display: table-cell;
+    max-width: 18em;
 }
 
 .chat-sender {

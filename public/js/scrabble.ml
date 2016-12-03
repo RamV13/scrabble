@@ -585,13 +585,14 @@ let handle_message json =
   let new_chat = 
     if player_name = (!cur_player).player_name then 
       begin
-        "<tr class=\"chat-row\"><td align=\"right\">" ^ 
+        "<tr class=\"chat-row\"><td align=\"right\" class=\"chat-td\">" ^ 
         "<div class=\"chat-message chat-sender\">" ^ msg ^ "</div></td></tr>"
       end
     else 
       begin
-        "<tr class=\"chat-row\"><td align=\"left\"><div class=\"chat-message\">" 
-        ^ player_name ^ ": " ^ msg ^ "</div></td></tr>"
+        "<tr class=\"chat-row\"><td align=\"left\" class=\"chat-td\">" ^ 
+        "<div class=\"chat-message\"><strong>" ^ player_name ^ "</strong> " ^ 
+        msg ^ "</div></td></tr>"
       end
   in
   chat_content##innerHTML <- Js.string (current_chat ^ new_chat);

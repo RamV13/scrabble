@@ -21,7 +21,7 @@ let to_list = Yojson.Basic.Util.to_list
 let to_int = Yojson.Basic.Util.to_int
 
 (* [ai_sleep_time] is the sleeping time for an AI to perform a move *)
-let ai_sleep_time = 5.
+let ai_sleep_time = 3.5
 
 (* [keep_alive_time] is the time between keep alive server sent events *)
 let keep_alive_time = 15.
