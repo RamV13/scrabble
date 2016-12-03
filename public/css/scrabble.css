@@ -5,17 +5,22 @@
 }
 
 .scrabble-table {
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     table-layout: fixed;
     border: 20px solid rgba(0,0,0,0.6);
+    background-clip: content-box;
+    background-color: #FAFAFA;
+    min-width: 400px;
+    min-height: 400px;
 }
 
 .scrabble-td {
     font-family: "Source Code Pro";
-    border: 1px solid #FAFAFA;
+    border: 0.1em solid #FAFAFA;
     color: rgba(0, 0, 0, 1);
     background-color: #EFEBE9;
-    padding: 14px;
+    padding: 1.2em;
     width: 1.6vmin;
     font-size: 1.6vmin;
     line-height: 1.6vmin;
