@@ -56,5 +56,5 @@ val lowercase_list : char option list -> char option list
 val lowercase_grid : char option list list -> char option list list
 val best_move : Game.state -> Game.player -> Game.move
 val string_of_move : Game.move -> string
-val simulate_game : Game.state -> unit
-val run_games : 'a -> unit
+val simulate_game : Game.state -> 'a
+val run_games : int -> unit

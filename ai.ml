@@ -269,9 +269,7 @@ let no_dups_append l1 l2 =
 
 (* [other_dirs_move d s c] returns true if char [c] makes a valid move, or is
  * an otherwise acceptable tile placement in all directions given
- * surroundings [s] except for in direction [d].
- * BUG: What about a nested grid? n _ t? _ = o, but it would be rejected
- * because "ot" isn't a word. *)
+ * surroundings [s] except for in direction [d]. *)
 let other_dirs_move dir surr c =
   let s = to_str c in
   let w =
@@ -455,8 +453,16 @@ let rec simulate_game state =
     in
     simulate_game final_state
   with
-  | GameOver -> print_string "Game has ended." |> print_newline
+  | GameOver ->
+    print_string "Game has ended." |> print_newline;
+    raise GameOver
 
 let run_games n =
   let game_state = Game.create_game "Kirk" "Simulation N" in
-  simulate_game game_state
+  for i = 1 to n do
+    try
+      simulate_game game_state;
+    with
+    | GameOver -> print_string "GAME HAS FINISHED."
+  done;
+  print_string "Finished."
