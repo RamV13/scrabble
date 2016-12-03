@@ -473,12 +473,24 @@
     </div>
 
     <script type="text/javascript">
+      var command = false;
+
       $(document).bind("contextmenu",function(e) {
         e.preventDefault();
       });
-      $(document).keydown(function(e){
-        if(e.which === 123){
+      
+      $(document).keydown(function(e) {
+        if (command) return false;
+
+        if (e.which === 91) {
+          command = true;
+        } else if (e.which === 123) {
            return false;
+        }
+      });
+      $(document).keyup(function(e) {
+        if (e.which === 91) {
+          command = false;
         }
       });
     </script>
