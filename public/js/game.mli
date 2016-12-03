@@ -21,7 +21,8 @@ type state = {
   mutable grid: Grid.board;
   players : player list;
   mutable remaining_tiles : char list;
-  mutable turn: int
+  mutable turn: int;
+  mutable score_history : int list
 }
 
 (* [move] is a representation of a game move containing an association list of

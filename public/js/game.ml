@@ -21,7 +21,8 @@ type state = {
   mutable grid: Grid.board;
   players : player list;
   mutable remaining_tiles : char list;
-  mutable turn: int
+  mutable turn: int;
+  mutable score_history : int list
 }
 
 (* [move] is a representation of a game move containing an association list of
@@ -64,6 +65,15 @@ let char_list_to_json lst =
   in
   "[" ^ aux lst "" ^ "]"
 
+let int_list_to_json lst = 
+  let rec aux l acc =
+    match l with
+    | h::[] -> acc ^ (string_of_int h)
+    | h::t -> aux t (acc ^ (string_of_int h) ^ ",")
+    | [] -> acc
+  in
+  "[" ^ aux lst "" ^ "]"  
+
 (* converts a list of players to its json representation. players are 
  * represented with json objects. helper function for state_to_json and 
  * diff_to_json *)
@@ -90,7 +100,8 @@ let state_to_json state =
   "{\"name\": \"" ^ state.name ^ "\",\"grid\":" ^ (Grid.to_json state.grid) ^ 
   ",\"players\":[" ^ (players_to_json state.players) ^ "],\"remaining_tiles\": " 
   ^ (char_list_to_json state.remaining_tiles) ^ ",\"turn\": " ^ 
-  (string_of_int state.turn) ^ "}"
+  (string_of_int state.turn) ^ ",\"score_history\": " ^ 
+  (int_list_to_json state.score_history) ^ "}"
 
 (* converts json list of players to list of players. helper function for 
  * state_from_json and diff_from_json *)
@@ -120,9 +131,12 @@ let state_from_json json =
   let g = member "grid" json |> Grid.from_json in
   let p = member "players" json |> to_list |> json_players_to_players in
   let r = 
-    member "remaining_tiles" json 
-    |> to_list 
+    member "remaining_tiles" json |> to_list 
     |> List.map (fun x -> x |> to_string |> str_to_c) 
+  in
+  let s = 
+    member "score_history" json |> to_list
+    |> List.map (fun x -> x |> to_int)
   in
   let t = member "turn" json |> to_int in
   {
@@ -130,7 +144,8 @@ let state_from_json json =
     grid = g;
     players = p;
     remaining_tiles = r;
-    turn = t
+    turn = t;
+    score_history = s
   }
 
 (* converts a board_diff or tiles_placed to json object. It can be used for both

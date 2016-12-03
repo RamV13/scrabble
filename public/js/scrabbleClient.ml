@@ -44,15 +44,6 @@ type 'a result = Val of 'a
 let server_error_msg =
   "Something went wrong. Please ensure that the server is running properly."
 
-let empty_state =
-  {
-    name = "";
-    grid = Grid.empty;
-    players = [];
-    remaining_tiles = [];
-    turn = 0
-  }
-
 let join_game player_name game_name = 
   {
     headers;

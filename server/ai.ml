@@ -19,6 +19,7 @@ type surroundings = {
 exception GameOver
 
 type direction = Up | Down | Left | Right
+type across = Horizontal | Vertical
 
 let alphabet = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h';
                 'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p';
@@ -33,34 +34,29 @@ let snd' (_, a, _) = a
 let thrd' (_, _, a) = a
 let to_str c = String.make 1 c
 
-(* A printing function for the type surroundings [s]. *)
-let print_surr s =
-  let _ =
-    List.map print_string
-      [s.left^"\n"; s.right^"\n"; s.above^"\n"; s.below^"\n"] in ()
+
+let string_of_surr s =
+  let surr =
+    [
+      "\nLEFT: " ^ s.left^"\n";
+      "RIGHT: " ^ s.right^"\n";
+      "ABOVE: " ^ s.above^"\n";
+      "BELOW: " ^ s.below^"\n"
+    ]
+  in
+  String.concat "" surr
 
 
-(* print_pair (r,c) prints the integer pair. *)
-let print_pair (r, c) =
-  print_int r;
-  print_newline ();
-  print_int c;
-  print_newline ()
+let string_of_pair (r, c) =
+  "(" ^ (string_of_int r) ^ ", " ^ (string_of_int c) ^ ")\n"
 
 
-(* Prints a boolean. *)
-let print_bool b =
-  match b with
-  | true -> print_string "True"
-  | false -> print_string "False"
-
-
-let print_dir d =
+let string_of_dir d =
   match d with
-  | Left -> print_string "Left"
-  | Right -> print_string "Right"
-  | Up -> print_string "Up"
-  | Down -> print_string "Down"
+  | Left -> "Left\n"
+  | Right -> "Right\n"
+  | Up -> "Up\n"
+  | Down -> "Down\n"
 
 
 (* [has_neighbors n] returns true if at least one of neighbors [n]s
@@ -132,7 +128,9 @@ let reverse_str s =
 
 
 (* [valid_chars surr tiles] returns the chars from [tiles] that
- * form valid words or *ixes with the surrounding tiles in [surr]. *)
+ * form valid words or *ixes with the surrounding tiles in [surr].
+ * NOTE: Only used for anchor generation, NOT for checking if a particular
+ * tile would make a valid char given the surroundings. *)
 let valid_chars surr tiles =
   let is_ok t =
     let s = to_str t in
@@ -161,9 +159,9 @@ let valid_chars surr tiles =
   List.filter is_ok tiles
 
 
-(* [get_anchors b t s] returns a list of anchors given a list of
+(* [find_anchors b t s] returns a list of anchors given a list of
  * slots [s], a game board [b] and the player's tile list [t]. *)
-let get_anchors board tiles slots =
+let find_anchors board tiles slots =
   let aux acc slot =
     let surr = get_surroundings board slot in
     let chrs = valid_chars surr tiles in
@@ -173,18 +171,23 @@ let get_anchors board tiles slots =
 
 
 (* [makes_move d s c] returns true if the char [c] makes a valid word move
- * in the direction [s] with current surroundings [s]. *)
+ * in the direction [s] with current surroundings [s].
+ * NOTE: makes_move does not concern itself with the surroundings to see
+ * if a move is completely valid. valid_move is the function for that. *)
 let makes_move dir surr ch =
   let s = to_str ch in
-  match dir with
-  | Up -> Dictionary.in_dict (s ^ surr.below)
-  | Down -> Dictionary.in_dict (s ^ surr.above |> reverse_str)
-  | Left -> Dictionary.in_dict (s ^ surr.right)
-  | Right -> Dictionary.in_dict (s ^ surr.left |> reverse_str)
+  let w =
+    match dir with
+    | Up | Down -> (reverse_str surr.above) ^ s ^ (surr.below)
+    | Left | Right -> (reverse_str surr.left) ^ s ^ (surr.right)
+  in
+  Dictionary.in_dict w
 
 
 (* [makes_prefix d s c] returns true if the char [c] makes a valid prefix or
- * suffix in the direction [d] with current surroundings [s]. *)
+ * suffix in the direction [d] with current surroundings [s].
+ * NOTE: just like makes_move, makes_prefix does not check whether char [ch]
+ * forms a valid move with other surroundings. valid_prefix checks for that. *)
 let makes_prefix dir surr ch =
   let s = to_str ch in
   match dir with
@@ -230,6 +233,9 @@ let get_next dir curr =
   | Right -> (r, c + 1)
 
 
+(* [search_next state dir curr] returns either the new position or None
+ * in the given direction [dir] given our current position [curr]
+ * and state [state]. Recursively called. *)
 let rec search_next state dir curr =
   let n = get_next dir curr in
   if out_of_bounds state n then None
@@ -246,52 +252,32 @@ let rec rem li el =
   | h::t -> if h = el then t else h::(rem t el)
 
 
-(* [intersect l1 l2] returns the elements that are common to both of
- * lists l1 AND l2. *)
-let intersect l1 l2 =
-  let it = l1 in
-  let rec aux it acc =
-    match it with
-    | [] -> acc
-    | h::t -> if List.mem h l2 then aux t (h::acc) else aux t acc
-  in
-  aux it []
-
-
 (* [no_dups_append l1 l2] appends all of list [l2] contents to list [l1],
- * and it ensures that there are no duplicates in the result. *)
+ * and it ensures that there are no duplicates from [l2], although not
+ * necessarily in the result itself. *)
 let no_dups_append l1 l2 =
   let rec aux l1 l2 acc =
     match l2 with
     | [] -> acc
-    | h::t -> if List.mem h l1 then aux l1 t acc else aux l1 t (h::acc)
+    | h::t ->
+      if List.mem h l1 || List.mem h t || List.mem h acc
+      then aux l1 t acc
+      else aux l1 t (h::acc)
   in
   aux l1 l2 l1
 
 
-(* [other_dirs_move d s c] returns true if char [c] makes a valid move in all
- * directions given surroundings [s] except for direction [d]. *)
+(* [other_dirs_move d s c] returns true if char [c] makes a valid move, or is
+ * an otherwise acceptable tile placement in all directions given
+ * surroundings [s] except for in direction [d]. *)
 let other_dirs_move dir surr c =
-  let surr_list =
-    [
-    (surr.left, Right);
-    (surr.right, Left);
-    (surr.above, Down);
-    (surr.below, Up)
-    ]
-  in
-  let main =
+  let s = to_str c in
+  let w =
     match dir with
-    | Up -> rem surr_list (surr.below, Up)
-    | Down -> rem surr_list (surr.above, Down)
-    | Left -> rem surr_list (surr.right, Left)
-    | Right -> rem surr_list (surr.left, Right)
+    | Up | Down-> (reverse_str surr.left) ^ s ^ (surr.right)
+    | Left | Right -> (reverse_str surr.above) ^ s ^ (surr.below)
   in
-  let others = List.filter (fun a -> fst a <> "") main
-               |> List.map (fun (s, d) -> makes_move d surr c)
-  in
-  List.fold_left (fun a b -> a && b) true others
-
+  if String.length w = 1 then true else Dictionary.in_dict w
 
 let place_char state (i, j) c = Grid.place state.Game.grid i j c
 
@@ -414,7 +400,7 @@ let best_move state player =
   let anchors =
     if slots = [] && board = Grid.empty then [(center, tiles)]
     else if slots = [] && board <> Grid.empty then raise GameOver
-    else get_anchors board tiles slots
+    else find_anchors board tiles slots
   in
   let build_base = build real_state real_player anchors in
   let gen_moves acc anchor =
@@ -440,3 +426,43 @@ let best_move state player =
       Game.player = player.Game.player_name;
       Game.swap = [];
     }
+
+let string_of_move m =
+  let tp = m.Game.tiles_placed in
+  let strs =
+    List.map
+      (fun ((r, c), ch) -> string_of_pair (r, c) ^ to_str ch)
+      tp
+  in
+  String.concat "\n" strs
+
+
+let rec simulate_game state =
+  try
+    let players = state.Game.players in
+    let final_state =
+      List.fold_left
+      (
+        fun acc player ->
+          let move = best_move acc player in
+          let () = print_string (string_of_move move) in
+          let _ = Game.execute acc move in
+          acc
+      )
+      state players
+    in
+    simulate_game final_state
+  with
+  | GameOver ->
+    print_string "Game has ended." |> print_newline;
+    raise GameOver
+
+let run_games n =
+  let game_state = Game.create_game "Kirk" "Simulation N" in
+  for i = 1 to n do
+    try
+      simulate_game game_state;
+    with
+    | GameOver -> print_string "GAME HAS FINISHED."
+  done;
+  print_string "Finished."
