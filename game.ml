@@ -131,7 +131,7 @@ let take_tiles bag num_to_take =
   in
   Random.self_init ();
   let rec aux tiles b n =
-    if n = 0 then (tiles,b)
+    if n = 0 || List.length b = 0 then (tiles,b)
     else 
       let (t,bag') = take_tile b (Random.int (List.length b)) in 
       aux (t::tiles) bag' (n - 1)
