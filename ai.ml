@@ -174,14 +174,6 @@ let find_anchors board tiles slots =
  * in the direction [s] with current surroundings [s].
  * NOTE: makes_move does not concern itself with the surroundings to see
  * if a move is completely valid. valid_move is the function for that. *)
-(* let makes_move dir surr ch =
-  let s = to_str ch in
-  match dir with
-  | Up -> Dictionary.in_dict (s ^ surr.below)
-  | Down -> Dictionary.in_dict (s ^ surr.above |> reverse_str)
-  | Left -> Dictionary.in_dict (s ^ surr.right)
-  | Right -> Dictionary.in_dict (s ^ surr.left |> reverse_str) *)
-
 let makes_move dir surr ch =
   let s = to_str ch in
   let w =
@@ -280,28 +272,6 @@ let no_dups_append l1 l2 =
  * surroundings [s] except for in direction [d].
  * BUG: What about a nested grid? n _ t? _ = o, but it would be rejected
  * because "ot" isn't a word. *)
-(* let other_dirs_move dir surr c =
-  let surr_list =
-    [
-    (surr.left, Right);
-    (surr.right, Left);
-    (surr.above, Down);
-    (surr.below, Up)
-    ]
-  in
-  let main =
-    match dir with
-    | Up -> rem surr_list (surr.below, Up)
-    | Down -> rem surr_list (surr.above, Down)
-    | Left -> rem surr_list (surr.right, Left)
-    | Right -> rem surr_list (surr.left, Right)
-  in
-  let others = List.filter (fun a -> fst a <> "") main
-               |> List.map (fun (s, d) -> makes_move d surr c)
-  in
-  let almost = List.fold_left (fun a b -> a && b) true others in
-  almost *)
-
 let other_dirs_move dir surr c =
   let s = to_str c in
   let w =
