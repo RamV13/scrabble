@@ -8,6 +8,7 @@ type surroundings = {
 }
 exception GameOver
 type direction = Up | Down | Left | Right
+type across = Horizontal | Vertical
 val alphabet : char list
 val center : int * int
 val fst' : 'a * 'b * 'c -> 'a

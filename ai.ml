@@ -19,6 +19,7 @@ type surroundings = {
 exception GameOver
 
 type direction = Up | Down | Left | Right
+type across = Horizontal | Vertical
 
 let alphabet = ['a'; 'b'; 'c'; 'd'; 'e'; 'f'; 'g'; 'h';
                 'i'; 'j'; 'k'; 'l'; 'm'; 'n'; 'o'; 'p';
@@ -264,6 +265,7 @@ let no_dups_append l1 l2 =
   in
   aux l1 l2 l1
 
+
 (* [other_dirs_move d s c] returns true if char [c] makes a valid move, or is
  * an otherwise acceptable tile placement in all directions given
  * surroundings [s] except for in direction [d].
@@ -288,8 +290,8 @@ let other_dirs_move dir surr c =
   let others = List.filter (fun a -> fst a <> "") main
                |> List.map (fun (s, d) -> makes_move d surr c)
   in
-  List.fold_left (fun a b -> a && b) true others
-
+  let almost = List.fold_left (fun a b -> a && b) true others in
+  almost
 
 let place_char state (i, j) c = Grid.place state.Game.grid i j c
 
