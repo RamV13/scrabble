@@ -131,19 +131,38 @@ let remove_player_tests = [
     ((List.nth (st2.players) removed_turn).score));
 ]
 
+let st5 = init_s ()
+let st6 = init_st ()
+let _ = execute st6 {move with tiles_placed = tp5; player = "alan"}
 let error_tests = [
   "(1) not horiz or vert" >::(fun _ -> assert_raises
     (FailedMove "tiles must be placed horizontally or vertically")
-    (fun () -> execute (init_s ()) {move with tiles_placed = tp1}));
+    (fun () -> execute st5 {move with tiles_placed = tp1}));
   "(2) not on star" >:: (fun _ -> assert_raises
     (FailedMove "first move must have one tile on star")
-    (fun () -> execute (init_s ()) {move with tiles_placed = tp2}));
+    (fun () -> execute st5 {move with tiles_placed = tp2}));
   "(3) gap in tiles" >:: (fun _ -> assert_raises
     (FailedMove "gap in tiles placed")
-    (fun () -> execute (init_s ()) {move with tiles_placed = tp3}));
+    (fun () -> execute st5 {move with tiles_placed = tp3}));
   "(4) not a word" >:: (fun _ -> assert_raises
     (FailedMove "illegimate word(s) formed: abcd")
-    (fun () -> execute (init_s ()) {move with tiles_placed = tp4}));
+    (fun () -> execute st5 {move with tiles_placed = tp4}));
+  "(5) word away from others" >:: (fun _ -> assert_raises
+    (FailedMove "cannot place tiles apart from existing ones")
+    (fun () -> execute st6 {move with tiles_placed = [((0,0),'a');((0,1),'b')];
+    player = "bob"}));
+  "(6) char away from others" >:: (fun _ -> assert_raises
+    (FailedMove "cannot place single tile by itself")
+    (fun () -> execute st6 {move with tiles_placed = [((0,0),'a')];
+    player = "bob"}));
+  "(7) failed swap" >:: (fun _ -> assert_raises
+    (FailedMove "less than 7 tiles remain in the bag")
+    (fun () -> execute {st6 with remaining_tiles = ['A']} {tiles_placed = [];
+      player = "bob"; swap = ['T';'I']}));
+  "(8) not your turn" >:: (fun _ -> assert_raises
+    (FailedMove "it's not your turn")
+    (fun () -> execute st6 {move with tiles_placed = [((0,0),'a')];
+    player = "alan"}));
 ]
 
 let st3 = init_st ()
@@ -163,7 +182,6 @@ let is_over_tests = [
 
 let st4 = {(init_st ()) with players = [init_p1 (); init_p2 (); init_p3 ();
   init_p5 ()]}
-
 let do_stuff () =
   (* diff [d], tiles placed [tp], move turn was [turn], [exp_score] is expected
    * score
