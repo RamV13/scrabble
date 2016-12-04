@@ -425,7 +425,7 @@ let create_diff s tiles_pl cur_p =
     cur_p.tiles <- new_tiles;
     s.turn <- ((s.turn + 1) mod 4);
     s.remaining_tiles <- new_bag;
-    s.score_history <- update_sh s.score_history cur_p.score;
+    s.score_history <- update_sh s.score_history calc_score;
     print_endline ("SCORE HISTORY: (old to new)" ^ (List.fold_left (fun acc x -> acc ^ (string_of_int x) ^ ",") "" s.score_history));
     {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [cur_p]}
     end
