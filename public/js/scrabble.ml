@@ -230,8 +230,9 @@ let game_over () =
   disable_controls ();
   " document.getElementById('board').innerHTML = 
       document.getElementById('board').innerHTML + 
-      '<div id=\"win\" class=\"win\"><span id=\"win-span\" 
-       class=\"win-span\">Game Over<br>Ram Wins!</span></div>';
+      '<div id=\"win\" class=\"win\"><span id=\"win-span\" ' + 
+      'class=\"win-span\">Game Over<br>Ram Wins!</span></div>';
+    document.getElementById('board').offsetHeight; // reflow
     var winningScore = -1;
     var winners = '';
     for (i = 0; i < 4; i++) {

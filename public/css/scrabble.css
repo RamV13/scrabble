@@ -20,7 +20,7 @@ body {
 }
 
 .win {
-    opacity: 1;
+    opacity: 0;
     display: table;
     text-align: center;
     font-size: 4em;
