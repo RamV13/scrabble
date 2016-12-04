@@ -19,6 +19,31 @@ body {
     min-height: 400px;
 }
 
+.win {
+    opacity: 0;
+    display: table;
+    text-align: center;
+    font-size: 4em;
+    color: rgba(255, 255, 255, 0.75);
+    z-index: 10;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.5);
+    -webkit-transition: opacity 1s ease-in-out;
+    transition:         opacity 1s ease-in-out;
+}
+
+.win-span {
+    display: table-cell;
+    vertical-align: middle;
+    line-height: normal; 
+    width: 10000px;
+}
+
 .scrabble-td {
     font-family: "Source Code Pro";
     border: 0.1em solid #FAFAFA;

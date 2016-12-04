@@ -225,6 +225,38 @@ let disable_controls () =
   (get_button_by_id "pass")##disabled <- Js._true;
   (get_button_by_id "replace")##disabled <- Js._true
 
+(* [game_over ()] converts the UI state to the game over state *)
+let game_over () = 
+  disable_controls ();
+  " var winningScore = -1;
+    var winners = '';
+    for (i = 0; i < 4; i++) {
+      var score = parseInt(document.getElementById('score-' + i).innerHTML);
+      if (score == winningScore) {
+        var name = document.getElementById('scorename-' + i).innerHTML;
+        if (winners == '') {
+          winners = name;
+        } else {
+          winners = winners + ' and ' + name;
+        }
+
+      } else if (score > winningScore) {
+        winners = document.getElementById('scorename-' + i).innerHTML;
+        winningScore = score;
+      }
+    }
+    document.getElementById('win').style.opacity = '1';
+    var element = document.getElementById('board');
+    var borderSize = window.getComputedStyle(element).borderWidth;
+    var borderSizeNum = 
+      parseInt(borderSize.substring(0, borderSize.indexOf('px')));
+    var content = document.getElementById('win-span');
+    content.style.height = 
+      element.scrollHeight + 2 * borderSizeNum + 'px';
+    content.innerHTML = 'Game Over<br>' + winners + ' Won!';
+  "
+  |> Js.Unsafe.eval_string
+
 (* [highlight_score_name order] highlights the score name at [order] *)
 let highlight_score_name order = 
   let id = "scorename-" ^ (string_of_int order) in
@@ -514,7 +546,8 @@ let init_state () =
   cur_player := player;
   turn := game_state.turn;
   highlight_score_name game_state.turn;
-  if player.order <> game_state.turn then disable_controls ();
+  if Game.is_over game_state then game_over ()
+  else if player.order <> game_state.turn then disable_controls ();
   reset_player_tiles ()
 
 (* [execute move] performs the HTTP requests for executive a move and effects
@@ -651,6 +684,7 @@ let handle_update json =
           notify "It's your turn!"
         end
     end
+  else if contains json "over" then game_over ()
 
 (* [onload] is the callback for when the window is loaded *)
 let onload _ =

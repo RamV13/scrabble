@@ -100,6 +100,21 @@ let send_diff game_name diff_string =
   in
   try send game_pushers game_name sendable with Not_found -> assert false
 
+(* [send_game_over game_name] sends the game over signal to a game *)
+let send_game_over game_name = 
+  let sendable = 
+    let data = [
+      "data: {";
+      Printf.sprintf "data: \"over\": %s" "true";
+      "data: }"]
+    in
+    let result = 
+      Printf.sprintf "id: %d\r\n%s\r\n\r\n" 0 (String.concat "\r\n" data)
+    in
+    Some result
+  in
+  try send game_pushers game_name sendable with Not_found -> assert false
+
 (* [get_info req] gets the player and game names from the request [req] *)
 let get_info req = 
   let json = Yojson.Basic.from_string req.req_body in
@@ -206,9 +221,19 @@ let loop_ai game =
                   }
               in
               try
-                let diff_string = Game.execute game move |> Game.diff_to_json in
-                send_diff game.name diff_string;
-                run_ai game
+                if Game.is_over game then
+                  begin
+                    send_game_over game.name;
+                    reset_looping ();
+                    Lwt.return ()
+                  end
+                else
+                  begin
+                    Game.execute game move
+                    |> Game.diff_to_json
+                    |> send_diff game.name;
+                    run_ai game
+                  end
               with _ -> 
                 begin
                   print_newline ();

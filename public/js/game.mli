@@ -39,6 +39,9 @@ type diff = {
   players_diff : player list
 }
 
+(* [is_over state] is true if the state is a completed game otherwise false *)
+val is_over : state -> bool
+
 (* [to_json state] is a json representation of [state] as a string *)
 val state_to_json : state -> string
 

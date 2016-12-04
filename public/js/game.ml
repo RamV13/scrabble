@@ -47,6 +47,11 @@ let str_to_c s =
   if String.length s <> 1 then failwith "str_to_char"
   else String.get s 0
 
+let is_over s =
+  let no_tiles = List.filter (fun p -> List.length p.tiles = 0) s.players in
+  (s.remaining_tiles = [] && List.length no_tiles > 0) || 
+  (s.score_history = [0;0;0;0;0;0])
+
 (* ===========================================================================
  * JSON methods below *)
 
