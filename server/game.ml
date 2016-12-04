@@ -170,7 +170,7 @@ let create_game p_n g_n =
     players = List.rev players;
     remaining_tiles = new_bag;
     turn = 0;
-    score_history = [0;0;0;0;0;0]
+    score_history = [-1;-1;-1;-1;-1;-1]
   }
 
 (* [add_player state player_id player_name] adds the player with name
