@@ -7,8 +7,14 @@ top:
 ai:
 	ocamlbuild -use-ocamlfind -pkg yojson,str ai.cmi && ocamlbuild -use-ocamlfind -pkg yojson ai.cmo
 
+game:
+	ocamlbuild -use-ocamlfind -pkg yojson,str game.cmi && ocamlbuild -use-ocamlfind -pkg yojson game.cmo
+
 clean:
 	ocamlbuild -clean
 
-test:
+aitest:
 	ocamlbuild -pkgs oUnit,yojson,str ai_test.byte && ./ai_test.byte
+
+gametest:
+	ocamlbuild -pkgs oUnit,yojson game_test.byte && ./game_test.byte
