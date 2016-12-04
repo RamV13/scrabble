@@ -88,6 +88,18 @@ This API outlines the HTTP interface between the server and clients for the CS 3
                 }
             }
 
+### Leave Game [DELETE]
+
++ Request (application/json)
+
+            {
+                "key": "<API_KEY>",
+                "playerName": "<PLAYER_NAME>",
+                "gameName": "<GAME_NAME>"
+            }
+            
++ Response 200
+
 ## Move [/api/move]
 
 ### Execute Move [POST]
@@ -115,7 +127,7 @@ This API outlines the HTTP interface between the server and clients for the CS 3
                 }
             }
 
-+ Response 200 (application/json)
++ Response 200
 
 ## Messaging [/api/messaging{?gameName,playerName,key}]
 
