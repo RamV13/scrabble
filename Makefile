@@ -12,3 +12,6 @@ $(NAME).byte: $(OBJS)
 clean:
 		rm *.cm*
 		rm *.byte
+
+test:
+	ocamlbuild -pkgs oUnit,yojson game_test.byte && ./game_test.byte
