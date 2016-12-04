@@ -30,7 +30,7 @@ let p3 = {
   tiles = ['e';'h';'v';'w';'j';'n';'?'];
   score = 0;
   order = 2;
-  ai = false
+  ai = true
 }
 
 let p4 = {
@@ -38,7 +38,7 @@ let p4 = {
   tiles = [];
   score = 0;
   order = 3;
-  ai = false
+  ai = true
 }
 
 let grid_w_hello = Grid.place
@@ -69,11 +69,40 @@ let create_game_tests = [
       (create_game "user" "game" |> validate_cg));
 ]
 
+let add_result = add_player st "joe"
+
+let add_player_tests = [
+  "replaced first ai" >:: (fun _ -> assert_equal
+    2
+    add_result);
+  "no longer ai" >:: (fun _ -> assert_equal
+    false
+    ((List.nth (st.players) 2).ai));
+  "same order" >:: (fun _ -> assert_equal
+    p3.order
+    ((List.nth (st.players) 2).order));
+  "same tiles" >:: (fun _ -> assert_equal
+    p3.tiles
+    ((List.nth (st.players) 2).tiles));
+  "same score" >:: (fun _ -> assert_equal
+    p3.score
+    ((List.nth (st.players) 2).score));
+  "add duplicate" >:: (fun _ -> assert_raises
+    PlayerExists
+    (fun () -> add_player st "joe"));
+  "game full" >:: (fun _ -> assert_raises
+    Full
+    (fun () -> add_player {st with players = [p1;p2]} "jake"));
+]
+
+let remove_player_tests = [
+
+]
+
 let error_tests = [
-  "(1) not horiz or vert" >::
-    (fun _ -> assert_raises
-      (FailedMove "tiles must be placed horizontally or vertically")
-      (fun () -> execute s {move with tiles_placed = tp1}));
+  "(1) not horiz or vert" >::(fun _ -> assert_raises
+    (FailedMove "tiles must be placed horizontally or vertically")
+    (fun () -> execute s {move with tiles_placed = tp1}));
   "(2) not on star" >:: (fun _ -> assert_raises
     (FailedMove "first move must have one tile on star")
     (fun () -> execute s {move with tiles_placed = tp2}));
@@ -99,6 +128,7 @@ let is_over_tests = [
 ]
 
 let tests =
-  "test suite for game"  >::: error_tests @ is_over_tests @ create_game_tests
+  "test suite for game"  >::: error_tests @ is_over_tests @ create_game_tests @
+  add_player_tests
 
 let _ = run_test_tt_main tests
