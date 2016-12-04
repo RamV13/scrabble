@@ -630,7 +630,7 @@ let diff_to_json d =
 
 (* [diff] converted from its json representation *)
 let diff_from_json json =
-  let b = member "board_diff" json |> to_list |> json_tp_to_tp in
+  let b = member "board_diff" json |> to_list |> json_tp_to_tp |> List.rev in
   let t = member "new_turn_val" json |> to_int in
   let p = member "players_diff" json |> to_list |> json_players_to_players in
   {board_diff = b; new_turn_val = t; players_diff = p}
