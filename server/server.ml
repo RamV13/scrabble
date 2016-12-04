@@ -184,16 +184,18 @@ let loop_ai game =
   else
     begin
       looping := game.name::!looping;
+      let reset_looping () = 
+        looping := List.filter (fun name -> name <> game.name) !looping
+      in
       let rec run_ai input_game = 
         Lwt_unix.sleep ai_sleep_time >>= fun () ->
           let game = 
-            List.find (fun game -> game.name = input_game.name) !games
+            try List.find (fun game -> game.name = input_game.name) !games
+            with Not_found -> reset_looping (); raise (Failure "")
           in
           let player = 
             List.find (fun player -> player.order = game.turn) game.players
           in
-          print_newline ();
-          print_endline ("AI running on player: " ^ player.player_name);
           if player.ai then 
             begin
               let move = 
@@ -212,17 +214,14 @@ let loop_ai game =
                 run_ai game
               with _ -> 
                 begin
-                  print_endline "Exception: Terminating AI Loop";
-                  looping := List.filter (fun name -> name <> game.name) !looping;
+                  print_newline ();
+                  print_endline "ERROR: EXCEPTION IN AI LOOP";
+                  print_newline ();
+                  reset_looping ();
                   Lwt.return ()
                 end
             end
-          else 
-            begin
-              print_endline "Terminating AI Loop";
-              looping := List.filter (fun name -> name <> game.name) !looping;
-              Lwt.return ()
-            end
+          else (reset_looping (); Lwt.return ())
       in
       run_ai game
     end
