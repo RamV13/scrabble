@@ -58,7 +58,8 @@ let init_st () = {
   name = "game";
   grid = Grid.empty;
   players = [init_p1 ();init_p2 ();init_p3 ();init_p4 ()];
-  remaining_tiles = ['a';'b';'c';'d';'e';'f';'g';'h';'i'];
+  remaining_tiles = ['A';'B';'C';'D';'E';'F';'G';'H';'I';'A';'B';'C';'D';'E';
+    'F';'G';'H';'I';'A';'B';'C';'D';'E';'F';'G';'H';'I';];
   turn = 0;
   score_history = [0;0;0;0;0;0]
 }
@@ -165,9 +166,12 @@ let st4 = {(init_st ()) with players = [init_p1 (); init_p2 (); init_p3 ();
 
 let do_stuff () =
   (* diff [d], tiles placed [tp], move turn was [turn], [exp_score] is expected
-   * score *)
+   * score
+   * Also checks json functions for diffs *)
   let check_move tp turn exp_score player =
     let d = execute st4 {move with tiles_placed = tp; player = player} in
+    let d' = d |> diff_to_json |> Yojson.Basic.from_string |> diff_from_json in
+    assert (d = d');
     let p = List.hd d.players_diff in
     d.board_diff = tp && d.new_turn_val = (turn+1) mod 4 && p.score = exp_score
   in
