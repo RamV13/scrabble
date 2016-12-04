@@ -3,16 +3,20 @@ open Game
 open Grid
 
 let init_s () = create_game "user" "game"
-let move = {tiles_placed = []; player = ""; swap = []}
-let tp1 = [((7,7),'a');((7,8),'b');((8,7),'c')]
-let tp2 = [((6,7),'a');((6,8),'b');((6,9),'c')]
-let tp3 = [((7,7),'a');((7,8),'b');((7,9),'c');((7,11),'d')]
-let tp4 = [((7,7),'a');((7,8),'b');((7,9),'c');((7,10),'d')]
-let tp5 = [((7,7),'r');((7,8),'o');((7,9),'p');((7,10),'e')]
+let move = {tiles_placed = []; player = "user"; swap = []}
+let tp1 = [((7,7),'A');((7,8),'B');((8,7),'C')]
+let tp2 = [((6,7),'A');((6,8),'B');((6,9),'C')]
+let tp3 = [((7,7),'A');((7,8),'B');((7,9),'C');((7,11),'D')]
+let tp4 = [((7,7),'A');((7,8),'B');((7,9),'C');((7,10),'D')]
+let tp5 = [((7,5),'R');((7,6),'O');((7,7),'P');((7,8),'E')]
+let tp6 = [((5,5),'S');((6,5),'T');((8,5),'I');((9,5),'K');((10,5),'E')]
+let tp7 = [((6,8),'W');((8,8),'N')]
+let tp8 =
+  [((7,9),'W');((7,10),'A');((7,11),'L');((7,12),'K');((7,13),'E');((7,14),'R')]
 
 let init_p1 () = {
   player_name = "alan";
-  tiles = ['a';'p';'e';'r';'l';'o';'s'];
+  tiles = ['A';'P';'E';'R';'L';'O';'S'];
   score = 0;
   order = 0;
   ai = false
@@ -20,7 +24,7 @@ let init_p1 () = {
 
 let init_p2 () = {
   player_name = "bob";
-  tiles = ['b';'q';'f';'s';'e';'o';'s'];
+  tiles = ['T';'I';'K';'S';'E';'O';'S'];
   score = 0;
   order = 1;
   ai = false
@@ -28,7 +32,7 @@ let init_p2 () = {
 
 let init_p3 () = {
   player_name = "chris";
-  tiles = ['e';'h';'v';'w';'j';'n';'?'];
+  tiles = ['E';'H';'V';'W';'J';'N';'?'];
   score = 0;
   order = 2;
   ai = true
@@ -37,6 +41,14 @@ let init_p3 () = {
 let init_p4 () = {
   player_name = "don";
   tiles = [];
+  score = 0;
+  order = 3;
+  ai = true
+}
+
+let init_p5 () = {
+  player_name = "don";
+  tiles = ['W';'A';'L';'K';'E';'R';'S'];
   score = 0;
   order = 3;
   ai = true
@@ -53,9 +65,13 @@ let init_st () = {
 
 let validate_cg s =
   let players = s.players in
-  let tiles_full = List.fold_left (fun acc p -> acc && (List.length p.tiles = 7)) true players in
+  let tiles_full = List.fold_left
+    (fun acc p -> acc && (List.length p.tiles = 7))
+    true players
+  in
   let ais = List.fold_left (fun acc p -> acc && p.ai) true (List.tl players) in
-  s.grid = Grid.empty && tiles_full && (not (List.hd players).ai) && ais && s.turn = 0 && s.score_history = [0;0;0;0;0;0]
+  s.grid = Grid.empty && tiles_full && (not (List.hd players).ai) && ais &&
+  s.turn = 0 && s.score_history = [-1;-1;-1;-1;-1;-1]
 
 let create_game_tests = [
   "standard test1" >::
@@ -140,24 +156,35 @@ let is_over_tests = [
     (is_over {st3 with score_history = [1;1;1;1;1;1]}));
   "not over 2" (* everyone still has tiles*) >:: (fun _ -> assert_equal
     false
-    (is_over {st3 with remaining_tiles = []; players = [init_p1 ();init_p2 ();init_p3 ()]; score_history = [1;1;1;1;1;1]}));
+    (is_over {st3 with remaining_tiles = []; players = [init_p1 ();init_p2 ();
+      init_p3 ()]; score_history = [1;1;1;1;1;1]}));
 ]
 
-(*let check_move s tp pl cur_turn =
-  let diff = execute s {move with tiles_placed = tp; player = pl} in
-  let p = init_p1 () in
-  diff.board_diff = tp && new_turn_val = cur_turn + 1
+let st4 = {(init_st ()) with players = [init_p1 (); init_p2 (); init_p3 ();
+  init_p5 ()]}
 
-let st4 = init_st ()
+let do_stuff () =
+  (* diff [d], tiles placed [tp], move turn was [turn], [exp_score] is expected
+   * score *)
+  let check_move tp turn exp_score player =
+    let d = execute st4 {move with tiles_placed = tp; player = player} in
+    let p = List.hd d.players_diff in
+    d.board_diff = tp && d.new_turn_val = (turn+1) mod 4 && p.score = exp_score
+  in
+  let first_move = check_move tp5 st4.turn 12 "alan" in
+  let triple_letter = check_move tp6 st4.turn 22 "bob" in
+  let double_letter = check_move tp7 st4.turn 11 "chris" in
+  let triple_word = check_move tp8 st4.turn 60 "don" in
+  first_move && triple_letter && double_letter && triple_word
+
 let execute_tests = [
-"successful first move" >::(fun _ -> assert_equal
-  true
-  execute s {move with tiles_placed = tp5; player = "alan"});
-]*)
-
+  "sequence of moves" >::(fun _ -> assert_equal
+    true
+    (do_stuff ()));
+]
 
 let tests =
   "test suite for game"  >::: error_tests @ is_over_tests @ create_game_tests @
-  add_player_tests @ remove_player_tests
+  add_player_tests @ remove_player_tests @ execute_tests
 
 let _ = run_test_tt_main tests
