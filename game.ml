@@ -403,7 +403,7 @@ let create_diff s tiles_pl cur_p =
   let words_cap = List.map (fun w -> String.lowercase_ascii w) words in
   print_string "words: ";
   List.iter (fun x -> print_string (x ^ ", ")) words;
-  print_endline "\n";
+  print_endline "";
   let (is_valid,invalid_words) = List.fold_left
     (fun (acc_bool,invalid_w) w ->
       if Dictionary.in_dict w then (acc_bool,invalid_w)
