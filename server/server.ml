@@ -146,8 +146,6 @@ let join_game req =
     let (player_name,game_name) = get_info req in
     try
       let game = List.find (fun game -> game.name = game_name) !games in
-      List.exists (fun player -> player.player_name = player_name) game.players
-      |> fun exists -> if exists then raise Exists;
       let order = Game.add_player game player_name in
       send_new_player game.name player_name order;
       let res_body = Game.state_to_json game in
@@ -163,7 +161,7 @@ let join_game req =
         status=`Bad_request;
         res_body="Game with name '" ^ game_name ^ "' is full"
       }
-    | Exists -> {
+    | PlayerExists -> {
         headers=default_headers;
         status=`Not_acceptable;
         res_body="Player with name '" ^ player_name ^ "' already exists in " ^
