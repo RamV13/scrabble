@@ -228,7 +228,11 @@ let disable_controls () =
 (* [game_over ()] converts the UI state to the game over state *)
 let game_over () = 
   disable_controls ();
-  " var winningScore = -1;
+  " document.getElementById('board').innerHTML = 
+      document.getElementById('board').innerHTML + 
+      '<div id=\"win\" class=\"win\"><span id=\"win-span\" 
+       class=\"win-span\">Game Over<br>Ram Wins!</span></div>';
+    var winningScore = -1;
     var winners = '';
     for (i = 0; i < 4; i++) {
       var score = parseInt(document.getElementById('score-' + i).innerHTML);
