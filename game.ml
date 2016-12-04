@@ -403,7 +403,7 @@ let create_diff s tiles_pl cur_p =
   let words_cap = List.map (fun w -> String.lowercase_ascii w) words in
   print_string "words: ";
   List.iter (fun x -> print_string (x ^ ", ")) words;
-  print_endline "\n";
+  print_endline "";
   let (is_valid,invalid_words) = List.fold_left
     (fun (acc_bool,invalid_w) w ->
       if Dictionary.in_dict w then (acc_bool,invalid_w)
@@ -425,7 +425,7 @@ let create_diff s tiles_pl cur_p =
     cur_p.tiles <- new_tiles;
     s.turn <- ((s.turn + 1) mod 4);
     s.remaining_tiles <- new_bag;
-    s.score_history <- update_sh s.score_history cur_p.score;
+    s.score_history <- update_sh s.score_history calc_score;
     print_endline ("SCORE HISTORY: (old to new)" ^ (List.fold_left (fun acc x -> acc ^ (string_of_int x) ^ ",") "" s.score_history));
     {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [cur_p]}
     end
@@ -630,7 +630,7 @@ let diff_to_json d =
 
 (* [diff] converted from its json representation *)
 let diff_from_json json =
-  let b = member "board_diff" json |> to_list |> json_tp_to_tp in
+  let b = member "board_diff" json |> to_list |> json_tp_to_tp |> List.rev in
   let t = member "new_turn_val" json |> to_int in
   let p = member "players_diff" json |> to_list |> json_players_to_players in
   {board_diff = b; new_turn_val = t; players_diff = p}
