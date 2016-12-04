@@ -207,7 +207,6 @@ let loop_ai game =
               in
               try
                 let diff_string = Game.execute game move |> Game.diff_to_json in
-                print_endline "Executed move";
                 send_diff game.name diff_string;
                 run_ai game
               with _ -> 
