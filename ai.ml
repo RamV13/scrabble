@@ -441,6 +441,7 @@ let string_of_move m =
 let rec simulate_game state =
   try
     let players = state.Game.players in
+    let _ = List.map (fun p -> print_string (p.Game.player_name)) state.Game.players in
     let final_state =
       List.fold_left
       (
@@ -448,6 +449,10 @@ let rec simulate_game state =
           let move = best_move acc player in
           (* let () = print_string (string_of_move move) in *)
           let () = print_string (string_of_pair (player.Game.order, acc.Game.turn)) in
+          let p =
+            List.find (fun p -> player.Game.player_name = p.Game.player_name) acc.Game.players
+          in
+          print_endline ("Player order: " ^ string_of_int p.Game.order);
           let _ = Game.execute acc move in
           acc
       )

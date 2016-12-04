@@ -418,7 +418,6 @@ let create_diff s tiles_pl cur_p =
     let (tiles_taken,new_bag) =
       take_tiles s.remaining_tiles (List.length tiles) in
     let new_tiles = (diff_tile_rack cur_p.tiles tiles) @ tiles_taken in
-    assert (List.length new_tiles = 7);
     cur_p.score <- (cur_p.score + calc_score);
     cur_p.tiles <- new_tiles;
     s.turn <- ((s.turn + 1) mod 4);
@@ -571,7 +570,7 @@ let state_from_json json =
   let n = member "name" json |> to_string in
   let g = member "grid" json |> Grid.from_json in
   let p = member "players" json |> to_list |> json_players_to_players in
-  let r = 
+  let r =
     member "remaining_tiles" json |> to_list
     |> List.map (fun x -> x |> to_string |> str_to_c)
   in
