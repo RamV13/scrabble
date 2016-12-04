@@ -76,6 +76,9 @@ val remove_player : state -> string -> (string * int)
  * raises FailedMove if the move fails *)
 val execute : state -> move -> diff
 
+(* [is_over state] determines if a game given by [state] is over. A game is over
+ * if the remaining bag of tiles is empty and one player no longer has tiles,
+ * or if the past 6 turns have been scoreless. *)
 val is_over : state -> bool
 
 (* [to_json state] is a json representation of [state] as a string *)
