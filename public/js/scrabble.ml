@@ -671,7 +671,8 @@ let handle_update json =
       placed_tiles := [];
       let set_scoreboard order score = 
         let score_id = "score-" ^ (string_of_int order) in
-        (get_element_by_id score_id)##innerHTML <- Js.string (string_of_int score)
+        let score_string = string_of_int score in
+        (get_element_by_id score_id)##innerHTML <- Js.string score_string
       in
       set_scoreboard player.order player.score;
       if (!cur_player).order = player.order then 
