@@ -1,5 +1,6 @@
 
 How to Access (publicly):
+- connect to Cornell's WiFi Network (i.e. eduroam)
 - navigate to the address `http://vellanki-web.coecis.cornell.edu/` in Chrome
 
 How to Run (locally):
