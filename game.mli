@@ -21,7 +21,8 @@ type state = {
   mutable grid: Grid.board;
   players : player list;
   mutable remaining_tiles : char list;
-  mutable turn: int
+  mutable turn: int;
+  mutable score_history : int list
 }
 
 (* [move] is a representation of a game move containing an association list of
@@ -73,6 +74,8 @@ val remove_player : state -> string -> (string * int)
  * updated mutably and the diff between the two states is returned. 
  * raises FailedMove if the move fails *)
 val execute : state -> move -> diff
+
+val is_over : state -> bool
 
 (* [to_json state] is a json representation of [state] as a string *)
 val state_to_json : state -> string
