@@ -223,7 +223,6 @@ let loop_ai game =
       run_ai game
     end
 
-
 (* [leave_game req] removes a player from a game given the request [req] *)
 let leave_game req = 
   try
