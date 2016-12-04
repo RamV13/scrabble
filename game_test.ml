@@ -2,12 +2,13 @@ open OUnit2
 open Game
 open Grid
 
-let s = create_game "user" "game"
-let move = {tiles_placed = []; player = "user"; swap = []}
+let init_s () = create_game "user" "game"
+let move = {tiles_placed = []; player = ""; swap = []}
 let tp1 = [((7,7),'a');((7,8),'b');((8,7),'c')]
 let tp2 = [((6,7),'a');((6,8),'b');((6,9),'c')]
 let tp3 = [((7,7),'a');((7,8),'b');((7,9),'c');((7,11),'d')]
 let tp4 = [((7,7),'a');((7,8),'b');((7,9),'c');((7,10),'d')]
+let tp5 = [((7,7),'r');((7,8),'o');((7,9),'p');((7,10),'e')]
 
 let init_p1 () = {
   player_name = "alan";
@@ -50,7 +51,7 @@ let init_st () = {
   score_history = [0;0;0;0;0;0]
 }
 
-let validate_cg s : bool =
+let validate_cg s =
   let players = s.players in
   let tiles_full = List.fold_left (fun acc p -> acc && (List.length p.tiles = 7)) true players in
   let ais = List.fold_left (fun acc p -> acc && p.ai) true (List.tl players) in
@@ -116,16 +117,16 @@ let remove_player_tests = [
 let error_tests = [
   "(1) not horiz or vert" >::(fun _ -> assert_raises
     (FailedMove "tiles must be placed horizontally or vertically")
-    (fun () -> execute s {move with tiles_placed = tp1}));
+    (fun () -> execute (init_s ()) {move with tiles_placed = tp1}));
   "(2) not on star" >:: (fun _ -> assert_raises
     (FailedMove "first move must have one tile on star")
-    (fun () -> execute s {move with tiles_placed = tp2}));
+    (fun () -> execute (init_s ()) {move with tiles_placed = tp2}));
   "(3) gap in tiles" >:: (fun _ -> assert_raises
     (FailedMove "gap in tiles placed")
-    (fun () -> execute s {move with tiles_placed = tp3}));
+    (fun () -> execute (init_s ()) {move with tiles_placed = tp3}));
   "(4) not a word" >:: (fun _ -> assert_raises
     (FailedMove "illegimate word(s) formed: abcd")
-    (fun () -> execute s {move with tiles_placed = tp4}));
+    (fun () -> execute (init_s ()) {move with tiles_placed = tp4}));
 ]
 
 let st3 = init_st ()
@@ -141,6 +142,19 @@ let is_over_tests = [
     false
     (is_over {st3 with remaining_tiles = []; players = [init_p1 ();init_p2 ();init_p3 ()]; score_history = [1;1;1;1;1;1]}));
 ]
+
+(*let check_move s tp pl cur_turn =
+  let diff = execute s {move with tiles_placed = tp; player = pl} in
+  let p = init_p1 () in
+  diff.board_diff = tp && new_turn_val = cur_turn + 1
+
+let st4 = init_st ()
+let execute_tests = [
+"successful first move" >::(fun _ -> assert_equal
+  true
+  execute s {move with tiles_placed = tp5; player = "alan"});
+]*)
+
 
 let tests =
   "test suite for game"  >::: error_tests @ is_over_tests @ create_game_tests @
