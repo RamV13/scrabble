@@ -376,9 +376,11 @@ let reset_player_tiles () =
       begin
         let tile = get_player_tile col in
         let value = 
-          List.nth (!cur_player).tiles col
-          |> Char.uppercase_ascii
-          |> Char.escaped
+          try
+            List.nth (!cur_player).tiles col
+            |> Char.uppercase_ascii
+            |> Char.escaped
+          with Failure _ -> ""
         in
         tile##innerHTML <- Js.string value;
         tile##setAttribute (Js.string "draggable",Js.string "true");
