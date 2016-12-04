@@ -104,8 +104,8 @@ e.g. HttpServer.add_route (`GET,"/api/") callback
 ```
 
 #### Dictionary
-- used a Map to represent the children of a prefix tree node to increase simplicity and speed of word lookups
-- refs were used while building the dictionary to increase ease of use of the file reading mechanism
+- used a `Map` to represent the children of a prefix tree node to increase simplicity and speed of word lookups
+- `refs` were used while building the dictionary to increase ease of use of the file reading mechanism
 
 **TODO**
 
