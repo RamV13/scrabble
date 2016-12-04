@@ -21,7 +21,7 @@ let to_list = Yojson.Basic.Util.to_list
 let to_int = Yojson.Basic.Util.to_int
 
 (* [ai_sleep_time] is the sleeping time for an AI to perform a move *)
-let ai_sleep_time = 0.
+let ai_sleep_time = 2.75
 
 (* [looping] is the list of game names that are currently running the AI *)
 let looping = ref []
