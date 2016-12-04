@@ -21,7 +21,10 @@ let to_list = Yojson.Basic.Util.to_list
 let to_int = Yojson.Basic.Util.to_int
 
 (* [ai_sleep_time] is the sleeping time for an AI to perform a move *)
-let ai_sleep_time = 3.5
+let ai_sleep_time = 0.
+
+(* [looping] is the list of game names that are currently running the AI *)
+let looping = ref []
 
 (* [keep_alive_time] is the time between keep alive server sent events *)
 let keep_alive_time = 15.
@@ -176,30 +179,54 @@ let join_game req =
     }
 
 (* [loop_ai game] runs the AI moves on a game until a human player is found *)
-let rec loop_ai game = 
-  Lwt_unix.sleep ai_sleep_time >>= fun () ->
-    let running = 
-      List.fold_left (fun acc player -> not player.ai || acc) false game.players
-    in
-    let player = 
-      List.find (fun player -> player.order = game.turn) game.players
-    in
-    if running && player.ai then 
-      begin
-        let move = 
-          try Ai.best_move game player 
-          with 
-          | _ -> {
-              tiles_placed=[];
-              player=player.player_name;
-              swap=[]
-            }
-        in
-        let diff_string = Game.execute game move |> Game.diff_to_json in
-        send_diff game.name diff_string;
-        loop_ai game
-      end
-    else Lwt.return ()
+let loop_ai game = 
+  if List.mem game.name !looping then Lwt.return ()
+  else
+    begin
+      looping := game.name::!looping;
+      let rec run_ai input_game = 
+        Lwt_unix.sleep ai_sleep_time >>= fun () ->
+          let game = 
+            List.find (fun game -> game.name = input_game.name) !games
+          in
+          let player = 
+            List.find (fun player -> player.order = game.turn) game.players
+          in
+          print_newline ();
+          print_endline ("AI running on player: " ^ player.player_name);
+          if player.ai then 
+            begin
+              let move = 
+                try Ai.best_move game player 
+                with 
+                | _ -> {
+                    tiles_placed=[];
+                    player=player.player_name;
+                    swap=[]
+                  }
+              in
+              try
+                let diff_string = Game.execute game move |> Game.diff_to_json in
+                print_endline "Executed move";
+                send_diff game.name diff_string;
+                run_ai game
+              with _ -> 
+                begin
+                  print_endline "Exception: Terminating AI Loop";
+                  looping := List.filter (fun name -> name <> game.name) !looping;
+                  Lwt.return ()
+                end
+            end
+          else 
+            begin
+              print_endline "Terminating AI Loop";
+              looping := List.filter (fun name -> name <> game.name) !looping;
+              Lwt.return ()
+            end
+      in
+      run_ai game
+    end
+
 
 (* [leave_game req] removes a player from a game given the request [req] *)
 let leave_game req = 
