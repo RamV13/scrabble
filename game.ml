@@ -22,7 +22,8 @@ type state = {
   mutable grid: Grid.board;
   players : player list;
   mutable remaining_tiles : char list;
-  mutable turn: int
+  mutable turn: int;
+  mutable score_history : int list
 }
 
 (* [move] is a representation of a game move containing an association list of
@@ -130,7 +131,7 @@ let take_tiles bag num_to_take =
   in
   Random.self_init ();
   let rec aux tiles b n =
-    if n = 0 then (tiles,b)
+    if n = 0 || List.length b = 0 then (tiles,b)
     else
       let (t,bag') = take_tile b (Random.int (List.length b)) in
       aux (t::tiles) bag' (n - 1)
@@ -162,7 +163,14 @@ let create_game p_n g_n =
       [{base_player with player_name = p_n; ai=false; tiles = human_tiles}]
       1 bag'
   in
-  {name=g_n; grid; players=List.rev players; remaining_tiles=new_bag; turn = 0}
+  {
+    name = g_n;
+    grid = grid;
+    players = List.rev players;
+    remaining_tiles = new_bag;
+    turn = 0;
+    score_history = [0;0;0;0;0;0]
+  }
 
 (* [add_player state player_id player_name] adds the player with name
  * [player_name] to the current game [state], and returns the turn order that
@@ -379,6 +387,10 @@ let diff_tile_rack rack played =
   in
   aux rack played
 
+(* update score history. score history is past 6 moves, with oldest at the head*)
+let update_sh old newest =
+  List.tl old @ [newest]
+
 (* return the diff created by placing tiles [tiles_pl] in state [s] by player
  * [cur_p]
  * helper function to [execute] *)
@@ -411,6 +423,8 @@ let create_diff s tiles_pl cur_p =
     cur_p.tiles <- new_tiles;
     s.turn <- ((s.turn + 1) mod 4);
     s.remaining_tiles <- new_bag;
+    s.score_history <- update_sh s.score_history cur_p.score;
+    print_endline ("SCORE HISTORY: (old to new)" ^ (List.fold_left (fun acc x -> acc ^ (string_of_int x) ^ ",") "" s.score_history));
     {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else
@@ -434,7 +448,7 @@ let execute s move =
     try List.find (fun p -> p.player_name = p_n) s.players
     with Not_found -> assert false
   in
-  if not (cur_p.order = s.turn) then raise (FailedMove "it's not your turn") 
+  if not (cur_p.order = s.turn) then raise (FailedMove "it's not your turn")
   else ();
   print_endline ("PLAYER: " ^ p_n);
   if List.length move.swap <> 0  && List.length s.remaining_tiles > 6 then
@@ -447,6 +461,8 @@ let execute s move =
       cur_p.tiles <- new_tiles;
       s.remaining_tiles <- (new_bag @ tiles);
       print_endline "MOVE: swap (successful)";
+      s.score_history <- update_sh s.score_history 0;
+      print_endline ("SCORE HISTORY: (old to new)" ^ (List.fold_left (fun acc x -> acc ^ (string_of_int x) ^ ",") "" s.score_history));
       {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else if List.length move.swap <> 0 && List.length s.remaining_tiles < 7 then
@@ -458,6 +474,8 @@ let execute s move =
     begin
       print_endline "MOVE: pass";
       s.turn <- ((s.turn + 1) mod 4);
+      s.score_history <- update_sh s.score_history 0;
+      print_endline ("SCORE HISTORY: (old to new)" ^ (List.fold_left (fun acc x -> acc ^ (string_of_int x) ^ ",") "" s.score_history));
       {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else
@@ -470,6 +488,10 @@ let execute s move =
         create_diff s tiles_pl cur_p
     end
 
+let is_over s =
+  let no_tiles = List.filter (fun p -> List.length p.tiles = 0) s.players in
+  (s.remaining_tiles = [] && List.length no_tiles > 0) || (s.score_history = [0;0;0;0;0;0])
+
 (* ===========================================================================
  * JSON methods below *)
 
@@ -480,6 +502,15 @@ let char_list_to_json lst =
     match l with
     | h::[] -> acc ^ "\"" ^ (Char.escaped h) ^ "\""
     | h::t -> aux t (acc ^ "\"" ^ (Char.escaped h) ^ "\",")
+    | [] -> acc
+  in
+  "[" ^ aux lst "" ^ "]"
+
+let int_list_to_json lst =
+  let rec aux l acc =
+    match l with
+    | h::[] -> acc ^ (string_of_int h)
+    | h::t -> aux t (acc ^ (string_of_int h) ^ ",")
     | [] -> acc
   in
   "[" ^ aux lst "" ^ "]"
@@ -510,7 +541,8 @@ let state_to_json state =
   "{\"name\": \"" ^ state.name ^ "\",\"grid\":" ^ (Grid.to_json state.grid) ^
   ",\"players\":[" ^ (players_to_json state.players) ^ "],\"remaining_tiles\": "
   ^ (char_list_to_json state.remaining_tiles) ^ ",\"turn\": " ^
-  (string_of_int state.turn) ^ "}"
+  (string_of_int state.turn) ^ ",\"score_history\": " ^
+  (int_list_to_json state.score_history) ^ "}"
 
 (* converts json list [json_l] of players to list of players.
  * helper function for state_from_json and diff_from_json *)
@@ -539,10 +571,13 @@ let state_from_json json =
   let n = member "name" json |> to_string in
   let g = member "grid" json |> Grid.from_json in
   let p = member "players" json |> to_list |> json_players_to_players in
-  let r =
-    member "remaining_tiles" json
-    |> to_list
+  let r = 
+    member "remaining_tiles" json |> to_list
     |> List.map (fun x -> x |> to_string |> str_to_c)
+  in
+  let s =
+    member "score_history" json |> to_list
+    |> List.map (fun x -> x |> to_int)
   in
   let t = member "turn" json |> to_int in
   {
@@ -550,7 +585,8 @@ let state_from_json json =
     grid = g;
     players = p;
     remaining_tiles = r;
-    turn = t
+    turn = t;
+    score_history = s
   }
 
 (* converts a [board_diff] or tiles_placed to json object. It can be used for
