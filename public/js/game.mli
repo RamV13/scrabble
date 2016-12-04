@@ -1,8 +1,3 @@
-open Yojson
-open Grid
-
-exception Full
-exception FailedMove of string
 
 (* [player] contains the player's identification information, tiles, score,
  * order in the game, and a flag indicating whether this player is an AI *)
