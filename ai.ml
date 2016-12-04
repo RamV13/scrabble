@@ -287,13 +287,16 @@ let place_char state (i, j) c = Grid.place state.Game.grid i j c
  * if those ones are not empty. If the surroundings are empty, we shouldn't
  * check makes_move for them. *)
 let valid_move anchors dir surr curr c =
-  if List.mem_assoc curr anchors
-  then
-    let allowed = List.assoc curr anchors in
-    if List.mem c allowed
-    then makes_move dir surr c && other_dirs_move dir surr c
-    else false
-  else makes_move dir surr c && other_dirs_move dir surr c
+  if c = '?'
+  then false
+  else
+    if List.mem_assoc curr anchors
+    then
+      let allowed = List.assoc curr anchors in
+      if List.mem c allowed
+      then makes_move dir surr c && other_dirs_move dir surr c
+      else false
+    else makes_move dir surr c && other_dirs_move dir surr c
 
 
 (* [valid_prefix d s c] returns true if char [c] makes a valid prefix
@@ -316,7 +319,7 @@ let build state player anchors curr dir =
     let surr = get_surroundings state.Game.grid (row, col) in
     let final_tiles = List.filter (valid_move anchors dir surr curr) tiles in
     let moves = List.map
-        (fun t -> (place_char state (row, col) t, ((row, col), t)::path))
+        (fun t -> (((row, col), t)::path))
         final_tiles
     in
     let new_acc = no_dups_append moves acc in
@@ -413,9 +416,7 @@ let best_move state player =
     List.rev_append acc left_moves |> List.rev_append right_moves
     |> List.rev_append up_moves |> List.rev_append down_moves
   in
-  let moves =
-    List.fold_left gen_moves [] anchors |> List.map (fun a -> snd a)
-  in
+  let moves = List.fold_left gen_moves [] anchors in
   let ranked = rank_moves moves in
   let best = pick_best ranked in
   match best with
@@ -440,12 +441,18 @@ let string_of_move m =
 let rec simulate_game state =
   try
     let players = state.Game.players in
+    let _ = List.map (fun p -> print_string (p.Game.player_name)) state.Game.players in
     let final_state =
       List.fold_left
       (
         fun acc player ->
           let move = best_move acc player in
-          let () = print_string (string_of_move move) in
+          (* let () = print_string (string_of_move move) in *)
+          let () = print_string (string_of_pair (player.Game.order, acc.Game.turn)) in
+          let p =
+            List.find (fun p -> player.Game.player_name = p.Game.player_name) acc.Game.players
+          in
+          print_endline ("Player order: " ^ string_of_int p.Game.order);
           let _ = Game.execute acc move in
           acc
       )
@@ -465,4 +472,4 @@ let run_games n =
     with
     | GameOver -> print_string "GAME HAS FINISHED."
   done;
-  print_string "Finished."
+  print_string "Finished simulations."
