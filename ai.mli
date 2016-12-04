@@ -47,7 +47,7 @@ val build :
   Game.state ->
   Game.player ->
   ((int * int) * char list) list ->
-  int * int -> direction -> (Grid.board * ((int * int) * char) list) list
+  int * int -> direction -> ((int * int) * char) list list
 val rank_moves :
   ((int * int) * char) list list -> ((int * int) * char) list list
 val pick_best : 'a list -> 'a option
