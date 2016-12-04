@@ -703,6 +703,7 @@ let onload _ =
   (get_element_by_id "replace")##onclick <- Dom_html.handler handle_replace;
   (get_element_by_id "send")##onclick <- Dom_html.handler handle_send;
   (get_element_by_id "message")##onkeyup <- Dom_html.handler handle_input;
+  ScrabbleClient.init_auth ();
   ScrabbleClient.subscribe_messaging (!player_name) (!game_name) handle_message;
   ScrabbleClient.subscribe_updates (!player_name) (!game_name) handle_update;
   Js._false

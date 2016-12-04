@@ -38,6 +38,17 @@ let game_pushers = ref []
  * clients *)
 let msg_pushers = ref []
 
+(* [api_secret] is the secret string used for API key hashing *)
+let api_secret = "scrabble_key"
+
+(* Map for API keys *)
+module KeyMap = Map.Make(String)
+
+(* [keys] is a mapping from API keys to the corresponding player and game *)
+let keys = ref KeyMap.empty
+
+exception Unauthorized
+
 (* [default_headers] are the set of default headers for plain text responses *)
 let default_headers =
   Header.init_with "content-type" "text/plain"
@@ -122,6 +133,30 @@ let get_info req =
   let game_name = json |> member "gameName" |> to_string in
   (player_name,game_name)
 
+(* [get_key req] gets the API key from the [req] payload *)
+let get_key req = 
+  req.req_body
+  |> Yojson.Basic.from_string
+  |> member "key"
+  |> to_string
+
+(* [gen_api_key (player_name,game_name)] generates an API key for a user by MD5 
+ * hashing the result of player_name + game_name + current time + a secret *)
+let gen_api_key (player_name,game_name) = 
+  let time_string = Unix.time () |> int_of_float |> string_of_int in
+  player_name ^ game_name ^ time_string ^ api_secret
+  |> Digest.string
+  |> Digest.to_hex
+
+(* [authorize_key key (player_name,game_name)] checks the API key against the 
+ * mapping of valid API keys to players and raises Unauthorized if invalid *)
+let authorize_key key (player_name,game_name) = 
+  try 
+    let (player_name',game_name') = KeyMap.find key !keys in
+    if player_name <> player_name' || game_name <> game_name' 
+    then raise Unauthorized
+  with Not_found -> raise Unauthorized
+
 exception Exists
 
 (* [create_game req] creates a game given the request [req] *)
@@ -135,7 +170,12 @@ let create_game req =
       games := new_game::!games;
       msg_pushers := (game_name,ref [])::!msg_pushers;
       game_pushers := (game_name,ref [])::!game_pushers;
-      let res_body = Game.state_to_json new_game in
+      let api_key = gen_api_key (player_name,game_name) in
+      let res_body = 
+        "{\"key\": \"" ^ api_key ^ "\", \"game\": " ^ 
+        Game.state_to_json new_game ^ "}"
+      in
+      keys := KeyMap.add api_key (player_name,game_name) !keys;
       {headers;status=`OK;res_body}
     with
     | Exists -> {
@@ -163,7 +203,11 @@ let join_game req =
       let game = List.find (fun game -> game.name = game_name) !games in
       let order = Game.add_player game player_name in
       send_new_player game.name player_name order;
-      let res_body = Game.state_to_json game in
+      let api_key = gen_api_key (player_name,game_name) in
+      let res_body = 
+        "{\"key\":\"" ^ api_key ^ "\",\"game\":" ^ Game.state_to_json game ^ "}"
+      in
+      keys := KeyMap.add api_key (player_name,game_name) !keys;
       {headers;status=`OK;res_body}
     with
     | Not_found -> {
@@ -252,6 +296,8 @@ let loop_ai game =
 let leave_game req = 
   try
     let (player_name,game_name) = get_info req in
+    let key = get_key req in
+    authorize_key key (player_name,game_name);
     try
       let game = List.find (fun game -> game.name = game_name) !games in
       let (player_name,order) = Game.remove_player game player_name in
@@ -259,6 +305,7 @@ let leave_game req =
       then games := List.filter (fun game -> game.name <> game_name) !games
       else
         begin
+          keys := KeyMap.remove key !keys;
           send_new_player game_name player_name order;
           Lwt.async (fun () -> loop_ai game)
         end;
@@ -271,6 +318,11 @@ let leave_game req =
                  "game with name '" ^ game_name ^ "'"
       }
   with
+  | Unauthorized -> {
+      headers=default_headers;
+      status=`Unauthorized;
+      res_body="Invalid API key"
+    }
   | Yojson.Basic.Util.Type_error _
   | Yojson.Json_error _ -> bad_json_response
   | _ -> {
@@ -286,6 +338,7 @@ let execute_move req =
     let game_name = json |> member "gameName" |> to_string in
     let game = List.find (fun game -> game.name = game_name) !games in
     let move = json |> member "move" |> Game.move_from_json in
+    authorize_key (get_key req) (move.player,game_name);
     let diff_string = Game.execute game move |> Game.diff_to_json in
     send_diff game_name diff_string;
     Lwt.async (fun () -> loop_ai game);
@@ -295,6 +348,11 @@ let execute_move req =
       headers=default_headers;
       status=`Bad_request;
       res_body=msg
+    }
+  | Unauthorized -> {
+      headers=default_headers;
+      status=`Unauthorized;
+      res_body="Invalid API key"
     }
   | Yojson.Basic.Util.Type_error _
   | Yojson.Json_error _ -> bad_json_response
@@ -314,6 +372,7 @@ let subscribe main_pushers req =
     in
     let game_name = List.assoc "gameName" req.params in
     let player_name = List.assoc "playerName" req.params in
+    authorize_key (List.assoc "key" req.params) (player_name,game_name);
     let (st,push_st) = Lwt_stream.create () in
     let body = Cohttp_lwt_body.of_stream st in
     let pushers = List.assoc game_name !main_pushers in
@@ -322,6 +381,9 @@ let subscribe main_pushers req =
   with 
   | Not_found -> Server.respond ~headers:default_headers ~status:`Not_found 
                                 ~body:(Cohttp_lwt_body.of_string "") ()
+  | Unauthorized -> 
+      Server.respond ~headers:default_headers ~status:`Unauthorized
+                     ~body:(Cohttp_lwt_body.of_string "Invalid API key") ()
   | Yojson.Basic.Util.Type_error _
   | Yojson.Json_error _ -> 
       Server.respond ~headers:default_headers ~status:`Bad_request
@@ -355,6 +417,7 @@ let send_message req =
   try
     let json = Yojson.Basic.from_string req.req_body in
     let (player_name,game_name) = get_info req in
+    authorize_key (get_key req) (player_name,game_name);
     let msg = json |> member "msg" |> to_string in
     try
       send msg_pushers game_name (create_msg player_name msg);
@@ -367,6 +430,11 @@ let send_message req =
                  "with name '" ^ player_name ^ "' not found in game"
       }
   with
+  | Unauthorized -> {
+      headers=default_headers;
+      status=`Unauthorized;
+      res_body="Invalid API key"
+    }
   | Yojson.Basic.Util.Type_error _
   | Yojson.Json_error _ -> bad_json_response
   | _ -> {

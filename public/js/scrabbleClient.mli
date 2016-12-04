@@ -10,6 +10,9 @@ type 'a result = Val of 'a
                  | Server_error of string
                  | Success
 
+(* [init_auth ()] initializes the authorization API key from localStorage *)
+val init_auth : unit -> unit
+
 (* [join_game player_name game_name] joins the player with name [player_name] to
  * the game with the name [game_name] and wraps the result in an Lwt thread *)
 val join_game : string -> string -> Game.state result Lwt.t

@@ -22,6 +22,9 @@ let to_int = Yojson.Basic.Util.to_int
 (* [baseURL] is the base URL to request to (currently in relative path mode) *)
 let baseURL = ""
 
+(* [api_key] is the API key for this client to access the server *)
+let api_key = ref ""
+
 (* [event_source_constructor] is a function to construct event sources *)
 let event_source_constructor = Js.Unsafe.global##_EventSource
 
@@ -40,9 +43,25 @@ type 'a result = Val of 'a
                  | Server_error of string
                  | Success
 
+(* [local_storage] is the localStorage javascript object *)
+let local_storage = 
+  match (Js.Optdef.to_option Dom_html.window##localStorage) with
+  | Some value -> value
+  | None -> assert false
+
 (* [server_error_msg] is the message corresponding to server errors *)
 let server_error_msg =
   "Something went wrong. Please ensure that the server is running properly."
+
+(* [fail] is a failure callback *)
+let fail = fun _ -> assert false
+
+let init_auth () = 
+  let key = 
+    Js.Opt.get (local_storage##getItem (Js.string "key")) fail |> Js.to_string
+  in
+  local_storage##removeItem (Js.string "key");
+  api_key := key
 
 let join_game player_name game_name = 
   {
@@ -57,7 +76,13 @@ let join_game player_name game_name =
       begin
         (
         match res.status with
-        | `OK -> Val (state_from_json (Yojson.Basic.from_string res.res_body))
+        | `OK -> 
+            begin
+              let json = Yojson.Basic.from_string res.res_body in
+              let key = json |> member "key" |> to_string in
+              local_storage##setItem (Js.string "key",Js.string key);
+              Val (state_from_json (json |> member "game"))
+            end
         | `Not_found -> Not_found res.res_body
         | `Bad_request -> Full res.res_body
         | `Not_acceptable -> Exists res.res_body
@@ -79,7 +104,13 @@ let create_game player_name game_name =
       begin
         (
         match res.status with
-        | `OK -> Val (state_from_json (Yojson.Basic.from_string res.res_body))
+        | `OK -> 
+            begin
+              let json = Yojson.Basic.from_string res.res_body in
+              let key =  json |> member "key" |> to_string in
+              local_storage##setItem (Js.string "key",Js.string key);
+              Val (state_from_json (json |> member "game"))
+            end
         | `Bad_request -> Exists res.res_body
         | _ -> Server_error server_error_msg
         )
@@ -91,8 +122,8 @@ let leave_game player_name game_name =
     headers;
     meth = `DELETE;
     url = baseURL ^ "/api/game";
-    req_body = "{\"playerName\":\"" ^ player_name ^ "\", \"gameName\":\"" ^ 
-                game_name ^ "\"}"
+    req_body = "{\"key\": \"" ^ !api_key ^ "\", \"playerName\":\"" ^ 
+                player_name ^ "\", \"gameName\":\"" ^ game_name ^ "\"}"
   }
   |> XHRClient.exec_sync
   |> ignore
@@ -102,8 +133,8 @@ let execute_move game_name move =
     headers;
     meth = `POST;
     url = baseURL ^ "/api/move";
-    req_body = "{\"gameName\":\"" ^ game_name ^ "\", \"move\":" ^ 
-                Game.move_to_json move ^ "}"
+    req_body = "{\"key\": \"" ^ !api_key ^ "\",\"gameName\":\"" ^ game_name ^ 
+               "\", \"move\":" ^ Game.move_to_json move ^ "}"
   }
   |> XHRClient.exec
   >>= fun res ->
@@ -124,7 +155,8 @@ let execute_move game_name move =
 let subscribe endpoint player_name game_name callback = 
   let base = Uri.of_string (baseURL ^ "/api/" ^ endpoint) in
   let url = 
-    Uri.with_query base [("gameName",[game_name]); ("playerName",[player_name])]
+    Uri.with_query base 
+    [("gameName",[game_name]); ("playerName",[player_name]); ("key",[!api_key])]
     |> Uri.to_string
   in
   let event_source = jsnew event_source_constructor (Js.string url) in
@@ -147,8 +179,8 @@ let send_message player_name game_name msg =
     headers;
     meth = `POST;
     url = baseURL ^ "/api/messaging";
-    req_body = "{\"playerName\":\"" ^ player_name ^ "\", \"gameName\":\"" ^ 
-                game_name ^ "\", \"msg\":\"" ^ msg ^ "\"}"
+    req_body = "{\"key\":\"" ^ !api_key ^ "\",\"playerName\":\"" ^ player_name ^
+               "\",\"gameName\":\"" ^ game_name ^ "\", \"msg\":\"" ^ msg ^ "\"}"
   }
   |> XHRClient.exec
   |> ignore
