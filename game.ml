@@ -3,6 +3,7 @@ open Grid
 open Dictionary
 
 exception Full
+exception PlayerExists
 exception FailedMove of string
 
 (* [player] contains the player's identification information, tiles, score,
@@ -179,6 +180,8 @@ let create_game p_n g_n =
  * tiles, score, and turn. 
  * raise Full if the game is full of players (non computer) already *)
 let add_player s p_n = 
+  if List.exists (fun x -> x.player_name = p_n) s.players then
+    raise PlayerExists;
   let substituted = 
     try List.find (fun player -> player.ai) s.players
     with Not_found -> raise Full
