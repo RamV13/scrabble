@@ -5,13 +5,14 @@ HOST: http://polls.apiblueprint.org/
 
 This API outlines the HTTP interface between the server and clients for the CS 3110 final project Scrabble.
         
-## Game [/api/game{?gameName,playerName}]
+## Game [/api/game{?gameName,playerName,key}]
 
 ### Subscribe to Game [GET]
 
 + Parameters
     + gameName - name of the game
     + playerName - name of the player
+    + key - the API key
 
 + Response 200 (text/event-stream)
 
@@ -27,25 +28,28 @@ This API outlines the HTTP interface between the server and clients for the CS 3
 + Response 200 (application/json)
 
             {
-                "gameName": "<GAME_NAME>",
-                "grid": [
-                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
-                    [...],
-                    [...],
-                    ...
-                ],
-                "players": [
-                    {
-                        "playerName": "<PLAYER_NAME>",
-                        "tiles": ['a','b','z',...,'t'],
-                        "score": 0,
-                        "order": 1,
-                        "ai": false
-                    },
-                    ...
-                ],
-                "remainingTiles": ['a','w',...,'f'],
-                "turn": 0
+                "key": "<API_KEY>",
+                "game": {
+                    "gameName": "<GAME_NAME>",
+                    "grid": [
+                        [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
+                        [...],
+                        [...],
+                        ...
+                    ],
+                    "players": [
+                        {
+                            "playerName": "<PLAYER_NAME>",
+                            "tiles": ['a','b','z',...,'t'],
+                            "score": 0,
+                            "order": 1,
+                            "ai": false
+                        },
+                        ...
+                    ],
+                    "remainingTiles": ['a','w',...,'f'],
+                    "turn": 0
+                }
             }
             
 ### Create a Game [PUT]
@@ -60,25 +64,28 @@ This API outlines the HTTP interface between the server and clients for the CS 3
 + Response 200 (application/json)
 
             {
-                "gameName": "<GAME_NAME>",
-                "grid": [
-                    [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
-                    [...],
-                    [...],
-                    ...
-                ],
-                "players": [
-                    {
-                        "player_name": "<PLAYER_NAME>",
-                        "tiles": ['a','b','z',...,'t'],
-                        "score": 0,
-                        "order": 1,
-                        "ai": false
-                    },
-                    ...
-                ],
-                "remainingTiles": ['a','w',...,'f'],
-                "turn": 0
+                "key": "<API_KEY>",
+                "game": {
+                    "gameName": "<GAME_NAME>",
+                    "grid": [
+                        [' ', ' ', ' ', ' ', 'a', 't', ..., ' '],
+                        [...],
+                        [...],
+                        ...
+                    ],
+                    "players": [
+                        {
+                            "player_name": "<PLAYER_NAME>",
+                            "tiles": ['a','b','z',...,'t'],
+                            "score": 0,
+                            "order": 1,
+                            "ai": false
+                        },
+                        ...
+                    ],
+                    "remainingTiles": ['a','w',...,'f'],
+                    "turn": 0
+                }
             }
 
 ## Move [/api/move]
@@ -88,6 +95,7 @@ This API outlines the HTTP interface between the server and clients for the CS 3
 + Request (application/json)
 
             {
+                "key": "<API_KEY>",
                 "gameName": "<GAME_NAME>",
                 "move": {
                     "playerName": "<PLAYER_NAME>",
@@ -109,13 +117,14 @@ This API outlines the HTTP interface between the server and clients for the CS 3
 
 + Response 200 (application/json)
 
-## Messaging [/api/messaging{?gameName,playerName}]
+## Messaging [/api/messaging{?gameName,playerName,key}]
 
 ### Subscribe to Messages [GET]
 
 + Parameters
     + gameName - name of the game
     + playerName - name of the player
+    + key - the API key
 
 + Response 200 (text/event-stream)
 
@@ -124,6 +133,7 @@ This API outlines the HTTP interface between the server and clients for the CS 3
 + Request (application/json)
 
             {
+                "key": "<API_KEY>",
                 "playerName": "<PLAYER_NAME>",
                 "gameName": "<GAME_NAME>",
                 "msg": "<MESSAGE>"
