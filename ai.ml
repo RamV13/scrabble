@@ -311,7 +311,9 @@ let unpack_opt o =
   | None -> failwith "Cannot unpack None"
 
 
-(* need to write a really clear spec for this *)
+(* [build s p a c d] returns a list of possible moves for player [p] given
+ * state [s] and anchor list [a], with current location [c] and build
+ * direction [d]. *)
 let build state player anchors curr dir =
   let rec aux state player dir curr acc path =
     let (row, col) = curr in
@@ -352,6 +354,8 @@ let build state player anchors curr dir =
   in
   aux state player dir curr [] []
 
+
+(* Ranks a list of moves in decreasing order. *)
 let rank_moves moves =
   let values = Game.tile_values in
   let rank acc ((r,c), m) =
@@ -372,8 +376,10 @@ let pick_best moves =
   else Some (List.hd moves)
 
 
+(* Converts a list of tiles (chars) to lowercase. *)
 let lowercase_tiles tiles = List.map Char.lowercase_ascii tiles
 
+(* Converts a list of char options to lowercase char options. *)
 let lowercase_list l =
   List.fold_left
     (
@@ -384,6 +390,7 @@ let lowercase_list l =
     )
     [] l |> List.rev
 
+(* Converts a board to all lowercase. *)
 let lowercase_grid grid =
   let acc = ref [] in
   let len = List.length grid - 1 in
@@ -393,7 +400,8 @@ let lowercase_grid grid =
   done;
   List.rev (!acc)
 
-
+(* [best_move s p] returns the best move available to player [p] with the
+ * current state [s]. Raises GameOver exception if no move is possible. *)
 let best_move state player =
   let board = state.Game.grid |> lowercase_grid in
   let tiles = player.Game.tiles |> lowercase_tiles in
@@ -428,6 +436,9 @@ let best_move state player =
       Game.swap = [];
     }
 
+
+(* The below two functions are solely for testing - they are NOT part
+ * of the AI's logic. *)
 let string_of_move m =
   let tp = m.Game.tiles_placed in
   let strs =
@@ -441,16 +452,20 @@ let string_of_move m =
 let rec simulate_game state =
   try
     let players = state.Game.players in
-    let _ = List.map (fun p -> print_string (p.Game.player_name)) state.Game.players in
+    let _ = List.map
+        (fun p -> print_string (p.Game.player_name)) state.Game.players in
     let final_state =
       List.fold_left
       (
         fun acc player ->
           let move = best_move acc player in
           (* let () = print_string (string_of_move move) in *)
-          let () = print_string (string_of_pair (player.Game.order, acc.Game.turn)) in
+          let () =
+            print_string (string_of_pair (player.Game.order, acc.Game.turn)) in
           let p =
-            List.find (fun p -> player.Game.player_name = p.Game.player_name) acc.Game.players
+            List.find
+              (fun p -> player.Game.player_name = p.Game.player_name)
+              acc.Game.players
           in
           print_endline ("Player order: " ^ string_of_int p.Game.order);
           let _ = Game.execute acc move in
