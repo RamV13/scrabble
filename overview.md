@@ -51,6 +51,8 @@ There are two primary components (units of execution) in this system.
 
 ## System Design
 
+Please see the Module Dependency Diagram on the next page.
+
 **Grid** - 2-D representation of board characters (including coordinates of score tiles)  
 **Dictionary** - English dictionary stored in a data structure (implemented as a Trie)  
 **AI** - logic to generate a move based on an input state (uses **Dictionary** to find a valid move)  
