@@ -311,6 +311,7 @@ let a_state =
     players = [];
     remaining_tiles = [];
     turn = 1;
+    score_history = [];
   }
 
 let out_of_bounds_test = [
@@ -550,10 +551,131 @@ let lowercase_tests = [
                                  (lowercase_grid empty_board));
   "Regular grid lowercase" >:: (fun _ -> assert_equal
                                    app_board (lowercase_grid upper_app_board));
+  "Widlcard tiles" >:: (fun _ -> assert_equal ~cmp:cmp_chars
+                           ['a'; 'b'; '?']
+                           (lowercase_tiles (['A'; 'B'; '?'])))
 ]
 
-let build_tests = []
-let best_move_tests = []
+
+let apple_state = {
+  Game.name = "";
+  grid = apple_board;
+  players = [];
+  remaining_tiles = [];
+  turn = 0;
+  score_history = [];
+}
+
+let apple_player1 = {
+  Game.player_name = "a";
+  tiles = ['b'; 'a'; 'c'; 'k'];
+  score = 0;
+  order = 0;
+  ai = true;
+}
+
+let apple_player2 = {apple_player1 with Game.tiles = ['b'; 'a'; 'k'; 'e']}
+let apple_player3 = {apple_player1 with Game.tiles = ['j'; 'a'; 'c'; 'k'; 's']}
+let apple_player4 = {apple_player1 with
+                     Game.tiles = ['j'; 'a'; 'c'; 'k'; 's'; '?'; '?']}
+
+
+let str_of_charlist c =
+  List.fold_left (fun acc b -> (to_str (snd b)) ^ acc) "" c
+
+let str_of_charlist_list cl =
+  List.fold_left (fun acc b -> (str_of_charlist b) ^ "\n" ^ acc) "" cl
+
+let str_of_build l =
+  List.fold_left
+    (fun acc b ->
+       (str_of_charlist b) ^ acc)
+    ""
+    l
+
+let build_tests = [
+  "No moves" >:: (fun _ -> assert_equal ~printer:str_of_build
+                       []
+                       (build apple_state apple_player1
+                            (find_slots
+                               apple_state.Game.grid |>
+                             find_anchors
+                               apple_state.Game.grid
+                               apple_player1.Game.tiles)
+                            (7,5) Left));
+  "No moves" >:: (fun _ -> assert_equal ~printer:str_of_build
+                       [[((7,2), 'b');
+                         ((7,3), 'a');
+                         ((7,4), 'k');
+                         ((7,5), 'e');]]
+                       (build apple_state apple_player2
+                            (find_slots
+                               apple_state.Game.grid |>
+                             find_anchors
+                               apple_state.Game.grid
+                               apple_player2.Game.tiles)
+                            (7,5) Left));
+  "Forward build" >:: (fun _ -> assert_equal ~printer:str_of_charlist_list
+                          [
+                           [
+                             ((7,14), 'k');
+                             ((7,13), 'c');
+                             ((7,12), 'a');
+                             ((7,11), 'j');
+                           ];
+                           [((7,11), 's')];
+                          ]
+                          ((build apple_state apple_player3
+                             (find_slots
+                                apple_state.Game.grid |>
+                              find_anchors
+                                apple_state.Game.grid
+                                apple_player3.Game.tiles)
+                             (7,11) Right)));
+  "Ignore wildcard build" >:: (fun _ -> assert_equal
+                                  ~printer:str_of_charlist_list
+                                  ((build apple_state apple_player4
+                                      (find_slots
+                                         apple_state.Game.grid |>
+                                       find_anchors
+                                         apple_state.Game.grid
+                                         apple_player4.Game.tiles)
+                                      (7,11) Right))
+                                  ((build apple_state apple_player3
+                                      (find_slots
+                                         apple_state.Game.grid |>
+                                       find_anchors
+                                         apple_state.Game.grid
+                                         apple_player3.Game.tiles)
+                                      (7,11) Right))
+                              )
+]
+
+let f_state = {apple_state with Game.grid = full_board}
+let f_player = {apple_player1 with Game.tiles = alphabet}
+let empty_move = {
+  Game.tiles_placed = [];
+  player = f_player.Game.player_name;
+  swap = [];
+}
+
+let single_move = {
+  Game.tiles_placed = (List.rev [((7,2), 'b');
+                       ((7,3), 'a');
+                       ((7,4), 'k');
+                                 ((7,5), 'e');]);
+  player = apple_player2.Game.player_name;
+  swap = [];
+}
+
+let best_move_tests = [
+  "No moves" >:: (fun _ -> assert_raises GameOver
+                     (fun () -> (best_move f_state f_player)));
+  "With wildcard" >:: (fun _ -> assert_equal
+                          (best_move apple_state apple_player3)
+                          (best_move apple_state apple_player4));
+]
+
 
 let suite = "A.I. test suite"
             >:::
