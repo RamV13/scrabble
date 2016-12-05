@@ -71,7 +71,8 @@ NetID's: jwp258, bcs84, kt485, rsv32
 
 ### Code Design
 
-Types are sometimes specified to assist OCaml in overcoming the pitfalls of weak type inference with records or refs and also to improve code clarity in some cases.
+Types are sometimes specified to assist OCaml in overcoming the pitfalls of weak type inference with records or refs and also to improve code clarity in some cases. For loops are also sometimes used
+to more easily iterate over two dimensional lists (the grid).
 
 #### UI
 - used 'id' even for repeated tags because of limitations of `Js_of_ocaml` in searching through an HTML table
@@ -104,6 +105,12 @@ are consistently < 10,000 in length (efficiency traded off in favor of simplicit
 HttpServer.add_route (<HTTP_METHOD>,<ROUTE_ENDPOINT>) <CALLBACK>
 e.g. HttpServer.add_route (`GET,"/api/") callback
 ```
+
+#### AI
+No special data structures created or used, only lists and tuples, but for loops
+were used to process the two dimensional list that is the game board. While this was not
+immutable and very idiomatic, it was far easier than using list folds (tradeoff between
+clarity/simplicity and safety).
 
 #### Dictionary
 - used a `Map` to represent the children of a trie node to increase simplicity and speed of word lookups
