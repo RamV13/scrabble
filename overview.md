@@ -1,4 +1,4 @@
-# Assignment 3: Search
+# MS 2: Scrabble
 
 Authors: Justin Parratt, Brian Shi, Kirk Thaker, Ram Vellanki <br/>
 NetID's: jwp258, bcs84, kt485, rsv32
