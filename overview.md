@@ -139,6 +139,7 @@ e.g. HttpServer.add_route (`GET,"/api/") callback
 #### AI
 - Used for loops to efficiently and simply traverse the board (which is a 2-dimensional list).
 Other than that, nothing special was used (only lists, tuples, and some variant/record data types).
+And for loops were only used occasionally (mostly List.fold_left).
 
 ### Programming
 
