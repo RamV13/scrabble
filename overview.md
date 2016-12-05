@@ -5,7 +5,24 @@ NetID's: jwp258, bcs84, kt485, rsv32
 
 ## System Description
 
-**TODO**
+We developed a multiplayer (distributed) Scrabble game that can be played with either human or computer players complete with the following features.
+
+Key features:
+- AI
+- Web GUI
+- multiplayer (distributed)
+- Chat (Instant Messaging)
+- English (not OCaml) dictionary manipulation using a Trie
+
+We will make a Scrabble game which allows users to play Scrabble, but with added features such as detecting if words are valid or not. We also plan to implement an AI to play words that maximize score according to tile/word bonuses and point values of letters. The AI will also have different levels of difficulty. One way to implement this might be choosing suboptimal words for lower difficulty levels.
+
+These features will be implemented by using a prefix tree because the efficiency of the data structure is especially important for the AI.
+
+For the server-client interface, we will leverage several OCaml packages (listed in the **External Dependencies** section of this document) to persist data across multiple players and multiple instances of games as well as provide an HTTP interface for multiplayer functionality over the internet. Our server will be exposed over a public IP address such that any system on Cornell's network can access and play our game via our web application.
+
+For the user interface, users should be able to view their current available letters as well as the current board and should be able to perform moves. We plan on implementing a text interface to start with, and upgrading it to a graphical interface if time permits.
+
+With regards to the comment on the usefulness of a trie - we felt that a trie was necessary because the AI would be doing lookup of many words when evaluating potential moves. A trie would also allow the AI to quickly determine what words can be made from an existing word on the board by adding some additional tiles to the end of the word. This is elaborated in more detail in the **Data** section of this document.
 
 **Citations**
 - OCaml documentation [http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html](http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html)
@@ -65,6 +82,8 @@ NetID's: jwp258, bcs84, kt485, rsv32
 
 ## Division of Labor
 
+- Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was commiting through the virtual machine)
+
 **TODO**
 
 # TODO SHOULD THE CONTENT BELOW BE INCLUDED
@@ -98,7 +117,7 @@ are consistently < 10,000 in length (efficiency traded off in favor of simplicit
   \* chose not to use WebSockets because of the minimal support for OCaml
 - used `localStorage` to transfer data between the two pages of the web application
 - used 200 HTTP status code for all successful operations for simplicity and ease of development given time constraints (as opposed to employing other more descriptive status code such as 201)
-- `HttpServer` and `HttpClient` modules provide clean interfaces that abstract what would've been duplicated code between HTTP endpoints/requests
+- `HttpServer` and `HttpClient` modules provide clean interfaces that abstract what would've been duplicated code between HTTP endpoints/requests such that a callback function simply needs to accept a request record and produce a response record
 
 `HttpServer` Usage:  
 ```ocaml
