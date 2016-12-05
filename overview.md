@@ -37,13 +37,9 @@ With regards to the comment on the usefulness of a trie - we felt that a trie wa
 
 ## Architecture
 
-![alt text](http://vellanki-web.coecis.cornell.edu/Component%20and%20Connector%20Diagram.jpg "Component and Connector Diagram")
-
 **TODO (pull from MS1)**
 
 ## System Design
-
-![alt text](http://vellanki-web.coecis.cornell.edu/Module%20Dependency%20Diagram.jpg "Module Dependency Diagram")
 
 **TODO (pull from MS1)**
 
@@ -52,8 +48,6 @@ With regards to the comment on the usefulness of a trie - we felt that a trie wa
 **TODO (pull from MS1)**
 
 ## Data
-
-**TODO (pull from MS1)**
 
 ## External Dependencies
 - ounit - for unit testing
@@ -90,7 +84,7 @@ With regards to the comment on the usefulness of a trie - we felt that a trie wa
 
 - Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was commiting through the virtual machine)
 - Brian implemented Game module
-- Ram implemented the Server-Client interface and the web browser GUI
+
 - Kirk implemented the AI (and can also verify that Justin did quite a bit of work, git was just acting weird on Justin's VM).
 
 # TODO SHOULD THE CONTENT BELOW BE INCLUDED
@@ -161,18 +155,20 @@ The key insights to building the scrabble AI were as follows:
 (although having an efficient dictionary helped a ton).
 
 The scrabble AI works as follows:
-
 1. Identifies all "slots" on the board. Slots are simply (row,col) coordinates that are adjacent to an existing word.
-
 2. For each slot, figure out what characters from our tile list simply cannot go there because they form invalid cross words.
-
 3. The generated association list of (row, col) paired with the valid chars that can go there is called an anchor list.
-
 4. For each anchor in our anchor list, the AI
 attempts to build a word in all 4 directions. It uses the anchor list to cut down on permutations early and uses the function Dictionary.has_extension (or Dictionary.has_back_extensions if building backwards) to further cut down on permutations.
-
 5. The final list of possible moves is accumulated and ranked based on tile values and board bonuses found in Game.
-
 6. The best move is selected and returned, or if no move is possible, a GameOver exception is raised.
-
 7. It is worth noting that raising a GameOver exception does not necessarily mean the game is over. It could also be the case that our AI in particular simply has no more moves to make because it has a "bad" tile list. The functions that call Ai.best_move account for this peculiarity.
+
+#### Dictionary
+There are two dictionaries in this project, (the official scrabble dictionary, and a dictionary of all words backwards).
+The trie was implemented as follows:
+-Each node represents a character in a word, a Map of all characters that can come next in a valid word, and a boolean which determines whether or not the current character marks the end of a valid word
+Adding a word to a trie works as follows:
+-In the case that the first character of the word does not exist in the children of the root, the word is recursively 
+-In the case that the first character already exists in children of the root, the rest of the word is added to the children of that node recursively (ie if the trie contints h-e-l-p and h-e-l-l-o is added, the word e-l-l-o will be added to the 'h' node) until there is a difference between the words at which point the new character is added to the map of children nodes (continuing our example the first 'l' in hello now has children 'l' and 'p').
+The boolean in each trie node exists to determine whether the current letter marks the end of a valid word, even if it is not a leaf node (for example in the word "racecar" the 'e' and 'r' characters both mark the end of a valid word)
