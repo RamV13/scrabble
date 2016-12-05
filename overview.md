@@ -37,9 +37,13 @@ With regards to the comment on the usefulness of a trie - we felt that a trie wa
 
 ## Architecture
 
+![alt text](http://vellanki-web.coecis.cornell.edu/Component%20and%20Connector%20Diagram.jpg "Component and Connector Diagram")
+
 **TODO (pull from MS1)**
 
 ## System Design
+
+![alt text](http://vellanki-web.coecis.cornell.edu/Module%20Dependency%20Diagram.jpg "Module Dependency Diagram")
 
 **TODO (pull from MS1)**
 
