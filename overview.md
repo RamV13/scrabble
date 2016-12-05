@@ -144,6 +144,9 @@ Other than that, nothing special was used (only lists, tuples, and some variant/
 
 Each individual module was implemented **bottom-up** while the overall project was implemented **top-down** in order to allow for parallel development of modules while stubbing out dependencies.
 
+#### Game
+Implementing functions like add/remove player and create game were very straightfoward and simple. The execute function was the main challenge. The first step of execute was to take the tiles placed and determine the direction that the tiles were placed on (horizontal or vertical). When a single character is placed, the direction that the user intended to make the new word in needs to be inferred.
+
 #### AI
 Although we used the Scrabble AI paper listed in the citations as inspiration,
 not all of the algorithms described in it were implemented because it was
