@@ -7,13 +7,11 @@ NetID's: jwp258, bcs84, kt485, rsv32
 
 We developed a multiplayer (distributed) Scrabble game that can be played with either human or computer players complete with the following features. \\ \\
 Key features:
-\begin{itemize}
-    \item AI
-    \item Web GUI
-    \item multiplayer (distributed)
-    \item Chat (Instant Messaging)
-    \item English (not OCaml) dictionary manipulation using a Trie
-\end{itemize}
+- AI
+- Web GUI
+- multiplayer (distributed)
+- Chat (Instant Messaging)
+- English (not OCaml) dictionary manipulation using a Trie
 
 We will make a Scrabble game which allows users to play Scrabble, but with added features such as detecting if words are valid or not. We also plan to implement an AI to play words that maximize score according to tile/word bonuses and point values of letters. The AI will also have different levels of difficulty. One way to implement this might be choosing suboptimal words for lower difficulty levels.
 
@@ -23,7 +21,7 @@ For the server-client interface, we will leverage several OCaml packages (listed
 
 For the user interface, users should be able to view their current available letters as well as the current board and should be able to perform moves. We plan on implementing a text interface to start with, and upgrading it to a graphical interface if time permits.
 
-With regards to the comment on the usefulness of a trie - we felt that a trie was necessary because the AI would be doing lookup of many words when evaluating potential moves. A trie would also allow the AI to quickly determine what words can be made from an existing word on the board by adding some additional tiles to the end of the word. This is elaborated in more detail in the \textbf{Data} section of this document.
+With regards to the comment on the usefulness of a trie - we felt that a trie was necessary because the AI would be doing lookup of many words when evaluating potential moves. A trie would also allow the AI to quickly determine what words can be made from an existing word on the board by adding some additional tiles to the end of the word. This is elaborated in more detail in the **Data** section of this document.
 
 **Citations**
 - OCaml documentation [http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html](http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html)
