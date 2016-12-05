@@ -10,7 +10,7 @@ We developed a multiplayer (distributed) Scrabble game that can be played with e
 Key features:
 - AI
 - Web GUI
-- multiplayer (distributed)
+- Multiplayer (distributed)
 - Chat (Instant Messaging)
 - English (not OCaml) dictionary manipulation using a Trie
 
