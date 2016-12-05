@@ -572,7 +572,7 @@ let json_players_to_players json_l =
 let state_from_json json =
   let n = member "name" json |> to_string in
   let g = member "grid" json |> Grid.from_json in
-  let p = member "players" json |> to_list |> json_players_to_players in
+  let p = member "players" json |> to_list |> json_players_to_players |> List.rev in
   let r =
     member "remaining_tiles" json |> to_list
     |> List.map (fun x -> x |> to_string |> str_to_c)
@@ -644,7 +644,7 @@ let move_to_json m =
 (* converts [json] to its move representation *)
 let move_from_json json =
   let p = member "playerName" json |> to_string in
-  let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp in
+  let tp = member "tilesPlaced" json |> to_list |> json_tp_to_tp |> List.rev in
   let st =
     member "swappedTiles" json |> to_list
     |> List.map (fun x -> x |> to_string |> str_to_c)

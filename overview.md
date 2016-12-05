@@ -1,6 +1,6 @@
 # Assignment 3: Search
 
-Authors: Justin Parrat, Brian Shi, Kirk Thaker, Ram Vellanki <br/>
+Authors: Justin Parratt, Brian Shi, Kirk Thaker, Ram Vellanki <br/>
 NetID's: jwp258, bcs84, kt485, rsv32
 
 ## System Description
@@ -102,6 +102,13 @@ are consistently < 10,000 in length (efficiency traded off in favor of simplicit
 HttpServer.add_route (<HTTP_METHOD>,<ROUTE_ENDPOINT>) <CALLBACK>
 e.g. HttpServer.add_route (`GET,"/api/") callback
 ```
+
+#### Dictionary
+- used a `Map` to represent the children of a trie node to increase simplicity and speed of word lookups
+- `refs` were used while building the tries to increase ease of use of the file reading mechanism
+
+#### Grid
+- `lists` were used to represent the grid and bonus tiles for simplicity (list sizes are small so efficiency loss is not drastic)
 
 **TODO**
 
