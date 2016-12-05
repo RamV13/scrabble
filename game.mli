@@ -1,8 +1,14 @@
 open Yojson
 open Grid
 
+(* [Full] is the exception raised when a player tries to join a full game, i.e.
+ * a game with 4 human players *)
 exception Full
+(* [FailedMove] is the exception raised when a move fails for some reason. The
+ * string associated with it is the error message describing why it failed *)
 exception FailedMove of string
+(* [PlayerExists] is the exception raised when a player tries to join a game
+ * with the same name as him *)
 exception PlayerExists
 
 (* [player] contains the player's identification information, tiles, score,
@@ -50,6 +56,9 @@ val tile_values : (char * int) list
 
 (* initialize list of names from names.txt *)
 val init_names : unit -> unit
+
+(* initialize the list of characters in the bag *)
+val create_bag : unit -> char list
 
 (* create new game with 3 AIs and one user given game name and player name.
  * creates ais by getting random names from text file. Tiles are also randomly
