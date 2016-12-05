@@ -6,7 +6,7 @@ How to Access (publicly):
 How to Run (locally):
 
   Install Dependencies:
-    - `opam install ounit yojson cohttp js_of_ocaml lwt`
+    - `opam install ounit yojson cohttp async lwt js_of_ocaml`
     - `brew install node` 
       (dependent 'node_modules' are packaged into the submission for simplicity
        so there is no need for an `npm install` command)
