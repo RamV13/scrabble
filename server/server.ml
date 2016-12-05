@@ -47,6 +47,7 @@ module KeyMap = Map.Make(String)
 (* [keys] is a mapping from API keys to the corresponding player and game *)
 let keys = ref KeyMap.empty
 
+(* [Unauthorized] is the exception raised for unauthorized requests *)
 exception Unauthorized
 
 (* [default_headers] are the set of default headers for plain text responses *)
@@ -157,6 +158,7 @@ let authorize_key key (player_name,game_name) =
     then raise Unauthorized
   with Not_found -> raise Unauthorized
 
+(* [Exists] is the exception raised when a game name already exists *)
 exception Exists
 
 (* [create_game req] creates a game given the request [req] *)
