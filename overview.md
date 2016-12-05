@@ -159,6 +159,7 @@ The key insights to building the scrabble AI were as follows:
 (although having an efficient dictionary helped a ton).
 
 The scrabble AI works as follows:
+
 1. Identifies all "slots" on the board. Slots are simply (row,col) coordinates that are adjacent to an existing word.
 
 2. For each slot, figure out what characters from our tile list simply cannot go there because they form invalid cross words.
