@@ -38,18 +38,14 @@ module CharMap = Map.Make(Char)
   |Empty -> Node ((Some (String.get s 0)), CharMap.add
         (String.get child_string 0) (add_helper child_string Empty) CharMap.empty,false)
 
-  (**)
   let add s n = match n with
   |Node (c,m,word) -> if CharMap.mem (String.get s 0) m then
     let old_node = CharMap.find (String.get s 0) m in
     Node (c, CharMap.add (String.get s 0) (add_helper s old_node) m,word)
   else Node (c, CharMap.add (String.get s 0) (add_helper s Empty) m,word)
-  |Empty -> print_endline "enemy stand";failwith"please add to \"empty\" "
+  |Empty -> failwith"please add to \"empty\" "
 
-  (* //////////////// THIS WHOLE SECTION HAS A TON OF REPEATED CODE
-    ///////////////// I WILL REMEDY THIS SOON*)
-  (*Theres probably a cleaner way to do this but this was the safest
-    way I thought of doing it*)
+
   let rec mem s n = if s = "" then true else match n with
   |Empty -> false
   |Node(c,m,_) -> match c with
@@ -60,10 +56,9 @@ module CharMap = Map.Make(Char)
         (CharMap.find (String.get s 1) m)) with _ -> false)
     |Some _ -> false
 
-  (*If we ever need this I'll implement it*)
+  (*DOES NOTHING*)
   let remove s t = t
 
-  (*Slightly modified version of mem*)
   let rec is_leaf s t = match t with
   |Empty -> false
   |Node(c,m,_) -> match c with
@@ -75,7 +70,6 @@ module CharMap = Map.Make(Char)
         (CharMap.find (String.get s 1) m)) with _ -> false)
     |Some _ -> false
 
-  (*Once again copied code, not sure of better way to do it*)
   let rec is_valid_word s t = match t with
   |Empty -> false
   |Node(c,m,word) -> match c with
@@ -125,7 +119,6 @@ module CharMap = Map.Make(Char)
 
   let dict_from_file f =
   let trees = ref (empty,empty) in
-  let there = ref false in
    let input_channel = open_in f in
    try
       let rec process_line () =
@@ -133,7 +126,6 @@ module CharMap = Map.Make(Char)
         let forward = fst(!trees) in
         let back = snd(!trees) in
         trees:=((add line forward),(add (string_rev line) back));
-        if mem "olleh" (snd(!trees)) then there:=true else if !there = true then (print_endline line; there:=false) else ();
         process_line ()
       in
       ignore (process_line ());
