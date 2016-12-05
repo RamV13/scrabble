@@ -37,20 +37,45 @@ We followed most of the official rules of Scrabble (found on the official websit
 - MDL documentation [https://getmdl.io/components/](https://getmdl.io/components/)
 - JavaScript documentation [https://developer.mozilla.org/en-US/docs/Web/JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 - *The world's fastest scrabble program* [https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf](https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf)
+- API Key Security Guide [http://billpatrianakos.me/blog/2013/09/12/securing-api-keys-in-a-client-side-javascript-app/](http://billpatrianakos.me/blog/2013/09/12/securing-api-keys-in-a-client-side-javascript-app/)
 
 ## Architecture
 
-**TODO (pull from MS1)**
+There are two primary components (units of execution) in this system.
+- Server - provides an interface for accessing/modifying game state over HTTP
+- Client (Browser) - provides an interface for playing a game through a GUI
+
+![alt text](http://vellanki-web.coecis.cornell.edu/Component%20and%20Connector%20Diagram.jpg "Component and Connector Diagram")
 
 ## System Design
 
-**TODO (pull from MS1)**
+**Grid** - 2-D representation of board characters (including coordinates of score tiles)  
+**Dictionary** - English dictionary stored in a data structure (implemented as a Trie)  
+**AI** - logic to generate a move based on an input state (uses **Dictionary** to find a valid move)  
+**Game** - logic to perform actions in a game, such as adding/removing players and performing a move (using **Dictionary** to validate)  
+**GUI** - converts GUI input (from the browser) to moves, uses the Client to process those moves, and reflects changes in the GUI by updating a graphical scrabble board (no .mli file provided because it is the entry point of the application)  
+**HttpServer** - an abstraction of **cohttp** for simpler development of HTTP server APIs  
+**XHRClient** - an abstraction of **cohttp** for simpler development of XML HTTP requests  
+**Server** - accepts moves in the form of HTTP requests then uses Game to produce a new game state, returns the changes, and saves changes to the database, this module issues Server-Side Events to clients as a means of more efficient updates for game state  
+**ScrabbleClient** - communicates with the Server's HTTP API to join games, create games, retrieve the changes in game state etc. (i.e. serves as an abstraction to make the separation between client and server seamless); this module also leverages Server-Side Events for more efficient updates of game state
+
+In order to provide a more comprehensive design of our HTTP API (specifically the **Server** module above), we have developed an outline of our API: [http://docs.scrabble1.apiary.io](http://docs.scrabble1.apiary.io)
+
+![alt text](http://vellanki-web.coecis.cornell.edu/Module%20Dependency%20Diagram.jpg "Component and Connector Diagram")
 
 ## Module Design
 
-**TODO (pull from MS1)**
+The .mli files are provided in the code submission.
+
+Detailed module design descriptions can be found above in the **System Design** section.
 
 ## Data
+
+The system maintains persistent data for game information including its players, remaining tiles, turn counting, and of course the current board state. Here are some of the more intricate details of the data representations and transfer.
+
+- OCaml Memory - information such as game state and players etc. are stored in memory in OCaml List structures (this data representation suffices for our efficiency constraints given that we are unlikely to scale beyond 10,000 simultaneous games)
+- HTTP API - data transferred as JSON
+- Dictionary - a trie contains the dictionary data (the efficiency of this data structure is particularly useful for the AI). Specifically, we insert the English dictionary into two different tries - one where words are in normal order, and one where words are in backwards order (e.g. OCaml would be inserted into the trie as l-m-a-C-O). The forwards-trie is used for word validation as well as for the AI to find words where letters can be added onto the end of an existing word. For example, adding 'd' onto the end of 'dance' yields the new word 'danced'. The backwards-trie would be used for the AI to find words where letters can be added onto the front of an existing word. For example, adding 'un' onto the front of 'balanced' yields the new word 'unbalanced'. This cannot be done with the forwards trie, since it would be very slow to figure out the words that have 'balanced' at the end.
 
 ## External Dependencies
 - ounit - for unit testing
@@ -59,7 +84,7 @@ We followed most of the official rules of Scrabble (found on the official websit
 - yojson - for serializing/deserializing data to and from JSON
 - js_of_ocaml - for developing a browser-compatible GUI
 - str - for easier string processing
-- node - for serving web pages and forwarding requests to the OCaml server
+- NodeJS (not an opam package) - for serving web pages and forwarding requests to the OCaml server
 
 \* use `opam update` and `opam upgrade` to fix unbound value compile errors
 
@@ -67,27 +92,25 @@ We followed most of the official rules of Scrabble (found on the official websit
 
 ### Test Plan
 
-**TODO (pull from MS1)**
+All the non-web modules (e.g. board, dictionary, ai, and game) are tested using black-box and glass-box unit tests. To ensure accountability, the black-box tests for a module were written by someone who did not work on it (i.e. cross-testing). The GUI was be tested by alpha and beta testing including individuals outside of CS 3110. The HttpServer and XHRClient modules and remaining web related modules (e.g. ScrabbleClient, and Server) were tested via integration to the primary system (this was done as opposed to developing mock components to test each individual web component as a result of a lack of time).
 
 ### Test Results
 
-**TODO**
+Running `make test` in the 'server' directory indicates that all of our tests pass which lends a high confidence in the correctness of our software.
 
 ### Known Problems
 
 - only guaranteed to work on Chrome
-- may experience issues with the board view if the screen is too small (simple fix is zooming out on the page)
-- no error handling/fault tolerance for loss of connection (e.g. WiFi dropping out) due to the nature of the `EventSource` API but the server will not crash as a result of any of these issues
-- no real security guarantees (outside of browser CORS security and Cornell's hosting security guarantees) although we do recognize certain vulnerabilities that would be simple to protect against given more time
-  - incorporating a user and game id mechanism and employing hashing and/or authentication to prevent against unwanted requests to modify game state
-  - concealing other player's tiles in server-sent payloads involving game state
-- opening multiple instances of the game on one machine within one browser (i.e. in different tabs) will **NOT** work due to the limitations of 6 `EventSource` instances per browser (may work up to 2-3 tabs at most) and may even break the individual game attempting to be joined but will leave all other games unaffected
+- may experience issues with the view if the screen is too small (simple fix is adjusting the zoom on the page)
+- no error handling/fault tolerance for loss of connection (e.g. WiFi dropping out) due to the nature of the `EventSource` API but the server will not crash as a result of any of these issues (this includes unclean exits from the webpage)
+- some security vulnerabilities (as detailed above)
+- opening multiple instances of the game on one machine within one browser (i.e. in different tabs) will **NOT** work due to the limitations of 6 `EventSource` instances per browser (may work up to 2-3 tabs at most but only guaranteed for 1 tab) and may even break the individual game attempting to be joined but will leave all other games on the server unaffected
 
 ## Division of Labor
 
 - Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was commiting through the virtual machine)
 - Brian implemented Game module
-
+- Ram implemented the Server-Client interface for sending data between different clients over the HTTP interface (including the chat instant messaging system). He also developed the front-end browser GUI to display the data received from the server as well as provide an interface for the end-user to interact with the game and effect changes to the game state. Ram spent approximately **150 hours** on the project.
 - Kirk implemented the AI (and can also verify that Justin did quite a bit of work, git was just acting weird on Justin's VM).
 
 # TODO SHOULD THE CONTENT BELOW BE INCLUDED
@@ -114,6 +137,9 @@ are consistently < 10,000 in length (efficiency traded off in favor of simplicit
 - browser CORS security protects against malicious rewritten JavaScript requests
 - due to Cornell's hosting only opening port 80, all requests to the uri "/api" on port 80 are forwarded to an internal OCaml server running on port 8000
 - prevented DOM manipulation to influence HTTP requests by disabling inspect element functionality
+
+- API keys
+  - concealing other player's tiles in server-sent payloads involving game state
 
 ##### Web
 - used SSE (Server-Sent Events) as opposed to polling techniques (for fast downstream game updates and messages)  
