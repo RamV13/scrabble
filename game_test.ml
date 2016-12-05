@@ -231,9 +231,18 @@ let move_json_tests = [
     (m3 |> move_to_json |> Yojson.Basic.from_string |> move_from_json));
 ]
 
+let miscellaneous_tests = [
+  "bag size" >::(fun _ -> assert_equal
+    100
+    (List.length (create_bag ())));
+  "tile val size" >::(fun _ -> assert_equal
+    27
+    (List.length tile_values));
+]
+
 let tests =
   "test suite for game"  >::: error_tests @ is_over_tests @ create_game_tests @
   add_player_tests @ remove_player_tests @ execute_tests @ state_json_tests @
-  move_json_tests
+  move_json_tests @ miscellaneous_tests
 
 let _ = run_test_tt_main tests
