@@ -343,11 +343,11 @@ let execute_move req =
     authorize_key (get_key req) (move.player,game_name);
     let diff_string = Game.execute game move |> Game.diff_to_json in
     send_diff game_name diff_string;
-    (* if Game.is_over game then *)
-      (* begin *)
+    if Game.is_over game then
+      begin
         Lwt.async(fun () -> Lwt_unix.sleep 2. >>= fun () ->
           send_game_over game_name |> Lwt.return);
-      (* end; *)
+      end;
     Lwt.async (fun () -> loop_ai game);
     {headers;status=`OK;res_body=""}
   with
