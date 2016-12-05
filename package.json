@@ -12,7 +12,7 @@
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "sudo node server.js >> ~/workspace/scrabble/public/server_log.txt 2>&1"
+    "start": "sudo node server.js >> public/server_log.txt 2>&1"
   },
   "repository": {
     "type": "git",
