@@ -65,6 +65,8 @@ NetID's: jwp258, bcs84, kt485, rsv32
 
 ## Division of Labor
 
+- Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was commiting through the virtual machine)
+
 **TODO**
 
 # TODO SHOULD THE CONTENT BELOW BE INCLUDED
