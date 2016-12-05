@@ -17,6 +17,7 @@ NetID's: jwp258, bcs84, kt485, rsv32
 - MDL documentation [https://getmdl.io/components/](https://getmdl.io/components/)
 - JavaScript documentation [https://developer.mozilla.org/en-US/docs/Web/JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 - *The world's fastest scrabble program* [https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf](https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf)
+
 ## Architecture
 
 **TODO (pull from MS1)**
