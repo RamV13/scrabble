@@ -88,7 +88,7 @@ With regards to the comment on the usefulness of a trie - we felt that a trie wa
 
 - Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was commiting through the virtual machine)
 - Brian implemented Game module
-
+- Ram implemented the Server-Client interface and the web browser GUI
 - Kirk implemented the AI (and can also verify that Justin did quite a bit of work, git was just acting weird on Justin's VM).
 
 # TODO SHOULD THE CONTENT BELOW BE INCLUDED
