@@ -427,6 +427,7 @@ let create_diff s tiles_pl cur_p =
     s.turn <- ((s.turn + 1) mod 4);
     s.remaining_tiles <- new_bag;
     s.score_history <- update_sh s.score_history calc_score;
+    print_endline ("SCORE HISTORY: (old to new)" ^ (List.fold_left (fun acc x -> acc ^ (string_of_int x) ^ ",") "" s.score_history));
     {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else
@@ -464,6 +465,7 @@ let execute s move =
       s.remaining_tiles <- (new_bag @ tiles);
       print_endline "MOVE: swap (successful)";
       s.score_history <- update_sh s.score_history 0;
+      print_endline ("SCORE HISTORY: (old to new)" ^ (List.fold_left (fun acc x -> acc ^ (string_of_int x) ^ ",") "" s.score_history));
       {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else if List.length move.swap <> 0 && List.length s.remaining_tiles < 7 then
@@ -476,6 +478,7 @@ let execute s move =
       print_endline "MOVE: pass";
       s.turn <- ((s.turn + 1) mod 4);
       s.score_history <- update_sh s.score_history 0;
+      print_endline ("SCORE HISTORY: (old to new)" ^ (List.fold_left (fun acc x -> acc ^ (string_of_int x) ^ ",") "" s.score_history));
       {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else
