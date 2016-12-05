@@ -24,6 +24,9 @@ For the user interface, users are able to view their current available letters a
 
 With regards to the comment on the usefulness of a trie - we felt that a trie was necessary because the AI would be doing lookup of many words when evaluating potential moves. A trie also allows the AI to quickly determine what words can be made from an existing word on the board by adding some additional tiles to the end of the word. This is elaborated in more detail in the **Data** section of this document.
 
+**Specifications**
+We followed most of the official rules of Scrabble (found on the official website), but made some slight modifications to the ruleset. When ending the game, we enforced that the game could be ended when 6 scoreless turns occur, rather than when "no more moves could be made". We also decided that when choosing a letter for the wildcard, you cannot choose a letter that currently is on your tile rack. For example, if your tile rack is ABCDEF?, and you want to change your ? into a F, you must first place the F on the board before changing the ? to a F. We also allowed blank tiles to be scored by the value of the tile that they transformed to, rather than making it 0.
+
 **Citations**
 - OCaml documentation [http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html](http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html)
 - Js_of_ocaml documentation [https://ocsigen.org/js_of_ocaml/](https://ocsigen.org/js_of_ocaml/)
@@ -139,13 +142,16 @@ e.g. HttpServer.add_route (`GET,"/api/") callback
 #### AI
 - Used for loops to efficiently and simply traverse the board (which is a 2-dimensional list).
 Other than that, nothing special was used (only lists, tuples, and some variant/record data types).
+And for loops were only used occasionally (mostly List.fold_left).
 
 ### Programming
 
 Each individual module was implemented **bottom-up** while the overall project was implemented **top-down** in order to allow for parallel development of modules while stubbing out dependencies.
 
 #### Game
-Implementing functions like add/remove player and create game were very straightfoward and simple. The execute function was the main challenge. The first step of execute was to take the tiles placed and determine the direction that the tiles were placed on (horizontal or vertical). When a single character is placed, the direction that the user intended to make the new word in needs to be inferred.
+Implementing functions like add/remove player and create game were very straightforward and simple. The execute function was the main challenge. The first step of execute was to take the tiles placed and determine the direction that the tiles were placed on (horizontal or vertical). When a single character is placed, the direction that the user intended to make the new word in needs to be inferred.
+Once the direction was inferred, all the words formed by the placement of tiles are collected. First, all the words formed perpendicular to the direction of the main word are collected. For example, if a word is placed horizontally, the vertical words formed by each tile placed are collected. Then the main word along the tiles placed is collected. If when doing this, there is a coordinate with no preexisting tile or tile placed, then the move will fail. The total score is determined in the same way that words are collected.
+A move is interpreted as a pass if the tiles placed is empty, and a swap if the swaps list is nonempty.
 
 #### AI
 Although we used the Scrabble AI paper listed in the citations as inspiration,
