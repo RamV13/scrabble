@@ -5,7 +5,8 @@ NetID's: jwp258, bcs84, kt485, rsv32
 
 ## System Description
 
-We developed a multiplayer (distributed) Scrabble game that can be played with either human or computer players complete with the following features. \\ \\
+We developed a multiplayer (distributed) Scrabble game that can be played with either human or computer players complete with the following features.
+
 Key features:
 - AI
 - Web GUI
