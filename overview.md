@@ -16,7 +16,7 @@ NetID's: jwp258, bcs84, kt485, rsv32
 - Lwt source code and documentation [https://github.com/ocsigen/lwt](https://github.com/ocsigen/lwt)
 - MDL documentation [https://getmdl.io/components/](https://getmdl.io/components/)
 - JavaScript documentation [https://developer.mozilla.org/en-US/docs/Web/JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-
+- *The world's fastest scrabble program* [https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf](https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf)
 ## Architecture
 
 **TODO (pull from MS1)**
@@ -37,6 +37,7 @@ NetID's: jwp258, bcs84, kt485, rsv32
 - cohttp - for the HTTP client and server
 - yojson - for serializing/deserializing data to and from JSON
 - js_of_ocaml - for developing a browser-compatible GUI
+- str - for easier string processing
 - node - for serving web pages and forwarding requests to the OCaml server
 
 \* use `opam update` and `opam upgrade` to fix unbound value compile errors
@@ -56,7 +57,7 @@ NetID's: jwp258, bcs84, kt485, rsv32
 - only guaranteed to work on Chrome
 - may experience issues with the board view if the screen is too small (simple fix is zooming out on the page)
 - no error handling/fault tolerance for loss of connection (e.g. WiFi dropping out) due to the nature of the `EventSource` API but the server will not crash as a result of any of these issues
-- no real security guarantees (outside of browser CORS security and Cornell's hosting security guarantees) although we do recognize certain vulnerabilities that would be simple to protect against given more time 
+- no real security guarantees (outside of browser CORS security and Cornell's hosting security guarantees) although we do recognize certain vulnerabilities that would be simple to protect against given more time
   - incorporating a user and game id mechanism and employing hashing and/or authentication to prevent against unwanted requests to modify game state
   - concealing other player's tiles in server-sent payloads involving game state
 - opening multiple instances of the game on one machine within one browser (i.e. in different tabs) will **NOT** work due to the limitations of 6 `EventSource` instances per browser (may work up to 2-3 tabs at most) and may even break the individual game attempting to be joined but will leave all other games unaffected
