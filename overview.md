@@ -14,15 +14,15 @@ Key features:
 - Chat (Instant Messaging)
 - English (not OCaml) dictionary manipulation using a Trie
 
-We will make a Scrabble game which allows users to play Scrabble, but with added features such as detecting if words are valid or not. We also plan to implement an AI to play words that maximize score according to tile/word bonuses and point values of letters. The AI will also have different levels of difficulty. One way to implement this might be choosing suboptimal words for lower difficulty levels.
+We created a Scrabble game which allows users to play Scrabble, but with added features such as detecting if words are valid or not. We also implemented an AI to play words that maximize score according to tile/word bonuses and point values of letters.
 
-These features will be implemented by using a prefix tree because the efficiency of the data structure is especially important for the AI.
+The scrabble dictionary was implemented by using a prefix tree because the efficiency of the data structure is especially important for the AI.
 
-For the server-client interface, we will leverage several OCaml packages (listed in the **External Dependencies** section of this document) to persist data across multiple players and multiple instances of games as well as provide an HTTP interface for multiplayer functionality over the internet. Our server will be exposed over a public IP address such that any system on Cornell's network can access and play our game via our web application.
+For the server-client interface, we leveraged several OCaml packages (listed in the **External Dependencies** section of this document) to persist data across multiple players and multiple instances of games as well as provide an HTTP interface for multiplayer functionality over the internet. Our server is exposed over a public IP address such that any system on Cornell's network can access and play our game via our web application.
 
-For the user interface, users should be able to view their current available letters as well as the current board and should be able to perform moves. We plan on implementing a text interface to start with, and upgrading it to a graphical interface if time permits.
+For the user interface, users are able to view their current available letters as well as the current board and are able to perform moves.
 
-With regards to the comment on the usefulness of a trie - we felt that a trie was necessary because the AI would be doing lookup of many words when evaluating potential moves. A trie would also allow the AI to quickly determine what words can be made from an existing word on the board by adding some additional tiles to the end of the word. This is elaborated in more detail in the **Data** section of this document.
+With regards to the comment on the usefulness of a trie - we felt that a trie was necessary because the AI would be doing lookup of many words when evaluating potential moves. A trie also allows the AI to quickly determine what words can be made from an existing word on the board by adding some additional tiles to the end of the word. This is elaborated in more detail in the **Data** section of this document.
 
 **Citations**
 - OCaml documentation [http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html](http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html)
@@ -82,7 +82,8 @@ With regards to the comment on the usefulness of a trie - we felt that a trie wa
 
 ## Division of Labor
 
-- Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was committing through the virtual machine)
+- Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was commiting through the virtual machine)
+- Brian implemented Game module
 
 - Kirk implemented the AI (and can also verify that Justin did quite a bit of work, git was just acting weird on Justin's VM).
 
@@ -90,8 +91,7 @@ With regards to the comment on the usefulness of a trie - we felt that a trie wa
 
 ### Code Design
 
-Types are sometimes specified to assist OCaml in overcoming the pitfalls of weak type inference with records or refs and also to improve code clarity in some cases. For loops are also sometimes used
-to more easily iterate over two dimensional lists (the grid).
+Types are sometimes specified to assist OCaml in overcoming the pitfalls of weak type inference with records or refs and also to improve code clarity in some cases.
 
 #### UI
 - used 'id' even for repeated tags because of limitations of `Js_of_ocaml` in searching through an HTML table
@@ -125,18 +125,16 @@ HttpServer.add_route (<HTTP_METHOD>,<ROUTE_ENDPOINT>) <CALLBACK>
 e.g. HttpServer.add_route (`GET,"/api/") callback
 ```
 
-#### AI
-No special data structures created or used, only lists and tuples, but for loops
-were used to process the two dimensional list that is the game board. While this was not
-immutable and very idiomatic, it was far easier than using list folds (tradeoff between
-clarity/simplicity and safety).
-
 #### Dictionary
 - used a `Map` to represent the children of a trie node to increase simplicity and speed of word lookups
 - `refs` were used while building the tries to increase ease of use of the file reading mechanism
 
 #### Grid
 - `lists` were used to represent the grid and bonus tiles for simplicity (list sizes are small so efficiency loss is not drastic)
+
+#### Game
+- used records to represent a player, game diff, move, and game state.
+- state and player are mutable records because the game information is not stored in a database (e.g. SQL) but rather in memory. We would have preferred to do this immutably, but the difficulty in using SQL with OCaml made us decide to just have the game information stored in memory and use mutable records.
 
 **TODO**
 
@@ -164,4 +162,4 @@ The scrabble AI works as follows:
 attempts to build a word in all 4 directions. It uses the anchor list to cut down on permutations early and uses the function Dictionary.has_extension (or Dictionary.has_back_extensions if building backwards) to further cut down on permutations.
 5. The final list of possible moves is accumulated and ranked based on tile values and board bonuses found in Game.
 6. The best move is selected and returned, or if no move is possible, a GameOver exception is raised.
-7. It is worth noting that raising a GameOver exception does not necessarily mean the game is over. It could also be the case that our AI in particular simply has no more moves to make because it has a "bad" tile list. The functions that call Ai.best_move account for this peculiarity. 
+7. It is worth noting that raising a GameOver exception does not necessarily mean the game is over. It could also be the case that our AI in particular simply has no more moves to make because it has a "bad" tile list. The functions that call Ai.best_move account for this peculiarity.
