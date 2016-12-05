@@ -11,21 +11,23 @@ Key features:
 - AI
 - Web GUI
 - multiplayer (distributed)
+- security with generated API keys (detailed in the **Additional Information** section)
 - Chat (Instant Messaging)
+- Keep-Alive mechanism for Server Sent Events (detailed in the **Additional Information** section)
+- Logging mechanism for viewing server data (formatted as a quasi-HAR file and detailed in the **Additional Information** section)
 - English (not OCaml) dictionary manipulation using a Trie
 
-We created a Scrabble game which allows users to play Scrabble, but with added features such as detecting if words are valid or not. We also implemented an AI to play words that maximize score according to tile/word bonuses and point values of letters.
+We created a Scrabble game which allows users to play Scrabble, but with added features such as detecting if words are valid or not. We also implemented an AI to play words that maximize score according to tile/word bonuses and point values of letters. Please note that the AI is intentionally delayed so as to allow human users to view the AI moves sequentially.
 
 The scrabble dictionary was implemented by using a prefix tree because the efficiency of the data structure is especially important for the AI.
 
-For the server-client interface, we leveraged several OCaml packages (listed in the **External Dependencies** section of this document) to persist data across multiple players and multiple instances of games as well as provide an HTTP interface for multiplayer functionality over the internet. Our server is exposed over a public IP address such that any system on Cornell's network can access and play our game via our web application.
+For the server-client interface, we leveraged several OCaml packages (listed in the **External Dependencies** section of this document) to persist data across multiple players and multiple instances of games as well as provide an HTTP interface for multiplayer functionality over the internet. Our server is exposed over a public IP address such that any system on Cornell's network can access and play our game via our web application. The API for this server is documented on [http://docs.scrabble1.apiary.io](http://docs.scrabble1.apiary.io).
 
 For the user interface, users are able to view their current available letters as well as the current board and are able to perform moves.
 
 With regards to the comment on the usefulness of a trie - we felt that a trie was necessary because the AI would be doing lookup of many words when evaluating potential moves. A trie also allows the AI to quickly determine what words can be made from an existing word on the board by adding some additional tiles to the end of the word. This is elaborated in more detail in the **Data** section of this document.
 
-**Specifications**
-We followed most of the official rules of Scrabble (found on the official website), but made some slight modifications to the ruleset. When ending the game, we enforced that the game could be ended when 6 scoreless turns occur, rather than when "no more moves could be made". We also decided that when choosing a letter for the wildcard, you cannot choose a letter that currently is on your tile rack. For example, if your tile rack is ABCDEF?, and you want to change your ? into a F, you must first place the F on the board before changing the ? to a F. We also allowed blank tiles to be scored by the value of the tile that they transformed to, rather than making it 0.
+**Please note that we provided extensive detailed design information in additional sections at the bottom of this document (this organizational suggestion of adding additional sections was given to us by Professor Clarkson via Piazza)**
 
 **Citations**
 - OCaml documentation [http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html](http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html)
@@ -77,6 +79,8 @@ The system maintains persistent data for game information including its players,
 - HTTP API - data transferred as JSON
 - Dictionary - a trie contains the dictionary data (the efficiency of this data structure is particularly useful for the AI). Specifically, we insert the English dictionary into two different tries - one where words are in normal order, and one where words are in backwards order (e.g. OCaml would be inserted into the trie as l-m-a-C-O). The forwards-trie is used for word validation as well as for the AI to find words where letters can be added onto the end of an existing word. For example, adding 'd' onto the end of 'dance' yields the new word 'danced'. The backwards-trie would be used for the AI to find words where letters can be added onto the front of an existing word. For example, adding 'un' onto the front of 'balanced' yields the new word 'unbalanced'. This cannot be done with the forwards trie, since it would be very slow to figure out the words that have 'balanced' at the end.
 
+\* Note that we chose to use OCaml memory over persistent data storage mechanism such as databases with a query language such as SQL due to the ease of development, efficiency, and the stronger security guarantees due to avoiding issues such as SQL injection. The tradeoff of this approach involved a heavy use of mutable features to maintain the state on the server.
+
 ## External Dependencies
 - ounit - for unit testing
 - lwt (**2.6.0**) - for concurrent programming
@@ -102,9 +106,10 @@ Running `make test` in the 'server' directory indicates that all of our tests pa
 
 - only guaranteed to work on Chrome
 - may experience issues with the view if the screen is too small (simple fix is adjusting the zoom on the page)
-- no error handling/fault tolerance for loss of connection (e.g. WiFi dropping out) due to the nature of the `EventSource` API but the server will not crash as a result of any of these issues (this includes unclean exits from the webpage)
+- no error handling/fault tolerance for loss of connection (e.g. WiFi dropping out) due to the nature of the `EventSource` API but the server will not crash as a result of any of these issues (this includes unclean exits from the webpage including sleeping a computer)
 - some security vulnerabilities (as detailed above)
-- opening multiple instances of the game on one machine within one browser (i.e. in different tabs) will **NOT** work due to the limitations of 6 `EventSource` instances per browser (may work up to 2-3 tabs at most but only guaranteed for 1 tab) and may even break the individual game attempting to be joined but will leave all other games on the server unaffected
+- opening multiple instances of the game on one machine within one browser (i.e. in different tabs) will **NOT** work due to the limitations of 6 `EventSource` instances per browser (may work up to 2-3 tabs at most but only guaranteed for 1 tab) and may even break the individual game attempting to be joined but will leave all other games on the server unaffected (i.e. can still create a fresh completely functional game)
+- there do exist some thread safety issues in that multiple people joining a single game too quickly can lead to slight UI inconsistencies but this could easily be solved with more time by implementing a locking mechanism such that these types of requests are processed sequentially
 
 ## Division of Labor
 
@@ -113,13 +118,33 @@ Running `make test` in the 'server' directory indicates that all of our tests pa
 - Ram implemented the Server-Client interface for sending data between different clients over the HTTP interface (including the chat instant messaging system). He also developed the front-end browser GUI to display the data received from the server as well as provide an interface for the end-user to interact with the game and effect changes to the game state. Ram spent approximately **150 hours** on the project.
 - Kirk implemented the AI (and can also verify that Justin did quite a bit of work, git was just acting weird on Justin's VM).
 
-# TODO SHOULD THE CONTENT BELOW BE INCLUDED
+## Additional Information
 
-### Code Design
+### Usage Details
+
+General
+- drag tiles from the player tiles onto the board to lay out your move
+- select individual player tiles (highlighted white) in order to replace those tiles
+
+Visual Updates
+- the highlighted player in the score table is the player who's turn it is
+- snackbar notifications at the bottom of the screen display relevant game information such as joining and leaving players
+
+Buttons
+- Place - place the tiles you have dragged on
+- Reset - reset all placed tiles from the board back to the player tiles
+- Pass - pass your turn
+- Replace - replace the selected player tiles (highlighted white)
+
+### Scrabble Rules
+We followed most of the official rules of Scrabble (found on the official website), but made some slight modifications to the ruleset. When ending the game, we enforced that the game could be ended when 6 scoreless turns occur, rather than when "no more moves could be made". We also decided that when choosing a letter for the wildcard, you cannot choose a letter that currently is on your tile rack. For example, if your tile rack is ABCDEF?, and you want to change your ? into a F, you must first place the F on the board before changing the ? to a F. We also allowed blank tiles to be scored by the value of the tile that they transformed to, rather than making it 0.
+
+### Code Design/Programming
 
 Types are sometimes specified to assist OCaml in overcoming the pitfalls of weak type inference with records or refs and also to improve code clarity in some cases.
 
 #### UI
+- the AI is intentionally delayed so as to allow human users to view the AI moves sequentially
 - used 'id' even for repeated tags because of limitations of `Js_of_ocaml` in searching through an HTML table
 - used viewport pixels to scale well with multiple screen sizes
 - newly joined users may not view older chats only newly received chats (design decision of messaging system)
@@ -133,17 +158,27 @@ are consistently < 10,000 in length (efficiency traded off in favor of simplicit
 - `refs` were employed extensively in order to save state on the server side because immutable abstractions are impossible when each individual endpoint callback is process independently in its own scope and own thread (alternative would be to use a database such as `sqlite3` for persistent storage but again efficiency was traded off in favor of simplicity)
 
 ##### Web Security
+- API keys - upon joining/creating a game an API key is generated by hashing the result of `player name + game name + current system time + secret string on the server` (all subsequent requests to modify or act as that player in that game must include this API key or else the server responds with a 401 status code indicating an unauthorized request); this approach was inspired by [http://billpatrianakos.me/blog/2013/09/12/securing-api-keys-in-a-client-side-javascript-app/](http://billpatrianakos.me/blog/2013/09/12/securing-api-keys-in-a-client-side-javascript-app/)
 - web application is only accessible on Cornell's network for security reasons
 - browser CORS security protects against malicious rewritten JavaScript requests
-- due to Cornell's hosting only opening port 80, all requests to the uri "/api" on port 80 are forwarded to an internal OCaml server running on port 8000
-- prevented DOM manipulation to influence HTTP requests by disabling inspect element functionality
+- prevented DOM manipulation to influence HTTP requests by deterring inspect element functionality via disabling right-click and certain shortcut key strokes
+- concealing other player's tiles in server-sent payloads involving game state
 
-- API keys
-  - concealing other player's tiles in server-sent payloads involving game state
+Security Summary:
+- Parameter Attacks - **protected**: these types of attacks are infeasible (no additional query language such as SQL is used so no vulnerability such as SQL injection is present)
+- Identity Attacks - **protected**: because API key is generated on creating/joining by hashing a combination of information such as the user-agent, the current time, and a secret key (also obfuscated! because of the nature of js_of_ocaml first compiling to bytecode then transpiling to JS)
+- Man in the Middle - **vulnerable**: because the domain is net secured by SSL (simple improvement would be to dish out cash for this)
+- DoS - **vulnerable**: no human authentication for creating new games (simply fix by integrating reCAPTCHA)
+- DOM - **semi-protected**: inspect element deterrent with right click and keyboard shortcut disable
 
 ##### Web
-- used SSE (Server-Sent Events) as opposed to polling techniques (for fast downstream game updates and messages)  
-  \* chose not to use WebSockets because of the minimal support for OCaml
+- requests to the server are logged at `<URL>/server_log.txt` in a format similar to a HAR (HTTP Archive) file and game logging is saved to `<URL>/game_log.txt` (an additional improvement would be to secure these two files behind a password protected authentication system)
+- there is slight duplication of files between the 'public/js' and 'server' directories due to modules that the client employs to organize information more cleanly such as using the **Grid** module to obtain the bonus tiles of the board and using the **Game** JSON serialization functions to more easily interpret game information sent from the server and send game information to the server
+- certain pieces in the 'scrabble.ml' OCaml file are written with pure JavaScript bindings due to the limitations of js_of_ocaml (e.g. displaying the dialog for selecting wildcard tile values)
+- due to Cornell's hosting only opening port 80, all requests to the uri "/api" on port 80 are forwarded to an internal OCaml server running on port 8000
+- used SSE (Server-Sent Events) as opposed to polling techniques (for fast downstream game updates and messages) and implemented a keep alive mechanism that pings clients every ~ 15s to maintain wakefulness of client EventSources that wait to read data from these Server-Sent Events  
+  \* chose not to use WebSockets because of the minimal support for OCaml  
+  \* still lacks EventSource reconnection (mentioned in the known problems)  
 - used `localStorage` to transfer data between the two pages of the web application
 - used 200 HTTP status code for all successful operations for simplicity and ease of development given time constraints (as opposed to employing other more descriptive status code such as 201)
 - `HttpServer` and `HttpClient` modules provide clean interfaces that abstract what would've been duplicated code between HTTP endpoints/requests such that a callback function simply needs to accept a request record and produce a response record
@@ -169,8 +204,6 @@ e.g. HttpServer.add_route (`GET,"/api/") callback
 - Used for loops to efficiently and simply traverse the board (which is a 2-dimensional list).
 Other than that, nothing special was used (only lists, tuples, and some variant/record data types).
 And for loops were only used occasionally (mostly List.fold_left).
-
-### Programming
 
 Each individual module was implemented **bottom-up** while the overall project was implemented **top-down** in order to allow for parallel development of modules while stubbing out dependencies.
 
