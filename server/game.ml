@@ -91,7 +91,7 @@ let create_bag () =
     'H';'H';
     'I';'I';'I';'I';'I';'I';'I';'I';'I';
     'J';
-    'K';'K';
+    'K';
     'L';'L';'L';'L';
     'M';'M';
     'N';'N';'N';'N';'N';'N';
@@ -390,7 +390,8 @@ let diff_tile_rack rack played =
   in
   aux rack played
 
-(* update score history. score history is past 6 moves, with oldest at the head*)
+(* update score history. score history is the past 6 moves, with oldest at the
+ * head*)
 let update_sh old newest =
   List.tl old @ [newest]
 
@@ -426,7 +427,6 @@ let create_diff s tiles_pl cur_p =
     s.turn <- ((s.turn + 1) mod 4);
     s.remaining_tiles <- new_bag;
     s.score_history <- update_sh s.score_history calc_score;
-    print_endline ("SCORE HISTORY: (old to new)" ^ (List.fold_left (fun acc x -> acc ^ (string_of_int x) ^ ",") "" s.score_history));
     {board_diff = tiles_pl; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else
@@ -464,7 +464,6 @@ let execute s move =
       s.remaining_tiles <- (new_bag @ tiles);
       print_endline "MOVE: swap (successful)";
       s.score_history <- update_sh s.score_history 0;
-      print_endline ("SCORE HISTORY: (old to new)" ^ (List.fold_left (fun acc x -> acc ^ (string_of_int x) ^ ",") "" s.score_history));
       {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else if List.length move.swap <> 0 && List.length s.remaining_tiles < 7 then
@@ -477,7 +476,6 @@ let execute s move =
       print_endline "MOVE: pass";
       s.turn <- ((s.turn + 1) mod 4);
       s.score_history <- update_sh s.score_history 0;
-      print_endline ("SCORE HISTORY: (old to new)" ^ (List.fold_left (fun acc x -> acc ^ (string_of_int x) ^ ",") "" s.score_history));
       {board_diff = []; new_turn_val = s.turn; players_diff = [cur_p]}
     end
   else
@@ -492,7 +490,8 @@ let execute s move =
 
 let is_over s =
   let no_tiles = List.filter (fun p -> List.length p.tiles = 0) s.players in
-  (s.remaining_tiles = [] && List.length no_tiles > 0) || (s.score_history = [0;0;0;0;0;0])
+  (s.remaining_tiles = [] && List.length no_tiles > 0) ||
+  (s.score_history = [0;0;0;0;0;0])
 
 (* ===========================================================================
  * JSON methods below *)
@@ -572,7 +571,10 @@ let json_players_to_players json_l =
 let state_from_json json =
   let n = member "name" json |> to_string in
   let g = member "grid" json |> Grid.from_json in
-  let p = member "players" json |> to_list |> json_players_to_players |> List.rev in
+  let p =
+    member "players" json |> to_list
+    |> json_players_to_players |> List.rev
+  in
   let r =
     member "remaining_tiles" json |> to_list
     |> List.map (fun x -> x |> to_string |> str_to_c)
