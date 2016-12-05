@@ -172,6 +172,6 @@ The trie was implemented as follows:
 Adding a word to a trie works as follows:
 
 - In the case that the first character of the word does not exist in the children of the root, the word is recursively added letter by letter to the trie
-- In the case that the first character already exists in children of the root, the rest of the word is added to the children of that node recursively (ie if the trie contints h-e-l-p and h-e-l-l-o is added, the word e-l-l-o will be added to the 'h' node) until there is a difference between the words at which point the new character is added to the map of children nodes (continuing our example the first 'l' in hello now has children 'l' and 'p').
+- In the case that the first character already exists in children of the root, the rest of the word is added to the children of that node recursively (for example if the trie contains h-e-l-p and h-e-l-l-o is added, the word e-l-l-o will be added to the 'h' node) until there is a difference between the words at which point the new character is added to the map of children nodes (continuing our example the first 'l' in hello now has children 'l' and 'p').
 
 The boolean in each trie node exists to determine whether the current letter marks the end of a valid word, even if it is not a leaf node (for example in the word "racecar" the 'e' and 'r' characters both mark the end of a valid word)
