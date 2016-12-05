@@ -138,6 +138,10 @@ clarity/simplicity and safety).
 #### Grid
 - `lists` were used to represent the grid and bonus tiles for simplicity (list sizes are small so efficiency loss is not drastic)
 
+### Game
+- used records to represent a player, game diff, move, and game state. 
+- state and player are mutable records because the game information is not stored in a database (e.g. SQL) but rather in memory. We would have preferred to do this immutably, but the difficulty in using SQL with OCaml made us decide to just have the game information stored in memory and use mutable records.
+
 **TODO**
 
 ### Programming
