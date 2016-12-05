@@ -56,10 +56,9 @@ module CharMap = Map.Make(Char)
         (CharMap.find (String.get s 1) m)) with _ -> false)
     |Some _ -> false
 
-  (*If we ever need this I'll implement it*)
+  (*DOES NOTHING*)
   let remove s t = t
 
-  (*Slightly modified version of mem*)
   let rec is_leaf s t = match t with
   |Empty -> false
   |Node(c,m,_) -> match c with
@@ -71,7 +70,6 @@ module CharMap = Map.Make(Char)
         (CharMap.find (String.get s 1) m)) with _ -> false)
     |Some _ -> false
 
-  (*Once again copied code, not sure of better way to do it*)
   let rec is_valid_word s t = match t with
   |Empty -> false
   |Node(c,m,word) -> match c with
