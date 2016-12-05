@@ -10,7 +10,7 @@ val is_empty : t -> bool
 (*[add] adds a string to an existing trie*)
 val add : string -> t -> t
 
-(*[remove] removes a string from an existing trie*)
+(*[remove] is unimplemented and returns the same trie*)
 val remove: string -> t -> t
 
 (*[mem] returns whether or not a word exists in a trie*)

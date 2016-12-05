@@ -27,6 +27,12 @@ ai:
 game:
 	ocamlbuild -use-ocamlfind -pkg yojson,str game.cmi && ocamlbuild -use-ocamlfind -pkg yojson game.cmo
 
+test:
+	ocamlbuild -pkgs oUnit,yojson dict_test.byte && ./dict_test.byte
+	ocamlbuild -pkgs oUnit,yojson grid_test.byte && ./grid_test.byte
+	ocamlbuild -pkgs oUnit,yojson game_test.byte && ./game_test.byte
+	ocamlbuild -pkgs oUnit,yojson,str ai_test.byte && ./ai_test.byte
+
 aitest:
 	ocamlbuild -pkgs oUnit,yojson,str ai_test.byte && ./ai_test.byte
 
