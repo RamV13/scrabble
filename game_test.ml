@@ -205,8 +205,35 @@ let execute_tests = [
     (do_stuff ()));
 ]
 
+let s1 = init_s ()
+let s2 = init_st ()
+let state_json_tests = [
+  "json for state s1" >::(fun _ -> assert_equal
+    s1
+    (s1 |> state_to_json |> Yojson.Basic.from_string |> state_from_json));
+  "json for state s2" >::(fun _ -> assert_equal
+    s2
+    (s2 |> state_to_json |> Yojson.Basic.from_string |> state_from_json));
+]
+
+let m1 = {move with tiles_placed = tp5}
+let m2 = {move with swap = ['A';'B';'C']}
+let m3 = {move with player = "brian"}
+let move_json_tests = [
+  "json for move m1" >::(fun _ -> assert_equal
+    m1
+    (m1 |> move_to_json |> Yojson.Basic.from_string |> move_from_json));
+  "json for move m2" >::(fun _ -> assert_equal
+    m2
+    (m2 |> move_to_json |> Yojson.Basic.from_string |> move_from_json));
+  "json for move m3" >::(fun _ -> assert_equal
+    m3
+    (m3 |> move_to_json |> Yojson.Basic.from_string |> move_from_json));
+]
+
 let tests =
   "test suite for game"  >::: error_tests @ is_over_tests @ create_game_tests @
-  add_player_tests @ remove_player_tests @ execute_tests
+  add_player_tests @ remove_player_tests @ execute_tests @ state_json_tests @
+  move_json_tests
 
 let _ = run_test_tt_main tests
