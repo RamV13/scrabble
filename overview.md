@@ -113,10 +113,10 @@ Running `make test` in the 'server' directory indicates that all of our tests pa
 
 ## Division of Labor
 
-- Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was commiting through the virtual machine)
-- Brian implemented Game module
+- Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was commiting through the virtual machine). Justin spent approximately **30 hours** on the project.
+- Brian implemented Game module. Brian spent approximately **30 hours** on the project.
 - Ram implemented the Server-Client interface for sending data between different clients over the HTTP interface (including the chat instant messaging system). He also developed the front-end browser GUI to display the data received from the server as well as provide an interface for the end-user to interact with the game and effect changes to the game state. Ram spent approximately **150 hours** on the project.
-- Kirk implemented the AI (and can also verify that Justin did quite a bit of work, git was just acting weird on Justin's VM).
+- Kirk implemented the AI (and can also verify that Justin did quite a bit of work, git was just acting weird on Justin's VM). Kirk spent approximately **30 hours** on the project.
 
 ## Additional Information
 
