@@ -23,6 +23,8 @@ module CharMap = Map.Make(Char)
   |Node (c,m,_) -> CharMap.iter print_ugly_helper m
   |_ -> ()
 
+  (*The reason the on (old_node) field is passed is to keep track of
+    previously added words with the same prefix, as not to overwrite them*)
   let rec add_helper s on =  if (String.length s) < 2 then (match on with
   |Node (_,m,_) -> Node (Some (String.get s 0),m,true)
   |Empty -> Node (Some (String.get s 0),CharMap.empty,true)) else
@@ -38,13 +40,13 @@ module CharMap = Map.Make(Char)
   |Empty -> Node ((Some (String.get s 0)), CharMap.add
         (String.get child_string 0) (add_helper child_string Empty) CharMap.empty,false)
 
+
   let add s n = match n with
   |Node (c,m,word) -> if CharMap.mem (String.get s 0) m then
     let old_node = CharMap.find (String.get s 0) m in
     Node (c, CharMap.add (String.get s 0) (add_helper s old_node) m,word)
   else Node (c, CharMap.add (String.get s 0) (add_helper s Empty) m,word)
   |Empty -> failwith"please add to \"empty\" "
-
 
   let rec mem s n = if s = "" then true else match n with
   |Empty -> false
@@ -70,6 +72,8 @@ module CharMap = Map.Make(Char)
         (CharMap.find (String.get s 1) m)) with _ -> false)
     |Some _ -> false
 
+  (*The key difference between this function and mem is that this function
+    also checks for the [word] boolean field*)
   let rec is_valid_word s t = match t with
   |Empty -> false
   |Node(c,m,word) -> match c with
@@ -81,7 +85,8 @@ module CharMap = Map.Make(Char)
         (CharMap.find (String.get s 1) m)) with _ -> false)
     |_ -> false
 
-
+  (*Due to the nature of List.flatten duplicates will occur in the list
+    this could be avoided if a set was returned instead*)
   let rec add_words t accum str = match t with
   |Empty -> []
   |Node(_,m,_) -> if CharMap.is_empty m then accum else List.flatten (List.map
@@ -92,7 +97,8 @@ module CharMap = Map.Make(Char)
       else add_words new_node accum new_str)
       |Empty ->[])) (List.map (fun (a,b) -> a) (CharMap.bindings m)))
 
-
+  (*First find the end of the word, then recurse through the different possible
+    paths and add every valid word found along the way*)
   let rec extend s t words str = match t with
   |Empty -> []
   |Node(c,m,word) -> match c with
@@ -104,10 +110,13 @@ module CharMap = Map.Make(Char)
         (CharMap.find (String.get s 1) m) words str) with _ -> words)
     |Some _ -> words
 
+
   let rec extensions s t = extend s t [] s
 
   let make s = add s empty;;
 
+  (*Helper function used to create the back dict, modifies a word in
+    place using Bytes.set for maximum speed*)
   let string_rev s = let new_str = (String.make (String.length s) 'a') in
     let rec rev_word str counter = (match counter with
     |0 -> new_str
@@ -116,7 +125,8 @@ module CharMap = Map.Make(Char)
       rev_word str (counter - 1)) in
     rev_word s (String.length s)
 
-
+  (*Imperitively updates the pair of trees and returns the dereferenced pair
+    File reading code reused from game.ml*)
   let dict_from_file f =
   let trees = ref (empty,empty) in
    let input_channel = open_in f in
