@@ -37,7 +37,7 @@ let tests = "test suite" >::: [
       (Some 'b')
       (get_tile (place (place empty 1 2 'b') 0 1 'a') 1 2));
 
-
+(*get diff testing*)
 
 "get_diff" >::
     (fun _ -> assert_equal
@@ -59,6 +59,8 @@ let tests = "test suite" >::: [
       (['b'])
       (get_diff (place empty 0 1 'a') (place (place empty 0 1 'a') 1 1 'b')));
 
+
+    (*get neighbors testing*)
 
   "get_neighbors" >::
     (fun _ -> assert_equal
@@ -89,6 +91,36 @@ let tests = "test suite" >::: [
     (fun _ -> assert_equal
       ({top=None;left=None;right=None;bottom=Some 'a'})
       (get_neighbors (place empty 8 7 'a') 7 7));
+
+    (*bonus word and letter testing*)
+
+    "get_bonus1" >::
+    (fun _ -> assert_equal
+      (2)
+      (bonus_word_at (7,7)));
+
+    "get_bonus2" >::
+    (fun _ -> assert_equal
+      (1)
+      (bonus_word_at (7,6)));
+
+    "get_bonus3" >::
+    (fun _ -> assert_equal
+      (3)
+      (bonus_word_at (14,14)));
+
+    "get_bonus4" >::
+    (fun _ -> assert_equal
+      (2)
+      (bonus_letter_at (2,8)));
+
+    "get_bonus5" >::
+    (fun _ -> assert_equal
+      (1)
+      (bonus_letter_at (0,0)));
+
+
+
 
     ]
 
