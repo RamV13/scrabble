@@ -5,7 +5,24 @@ NetID's: jwp258, bcs84, kt485, rsv32
 
 ## System Description
 
-**TODO**
+We developed a multiplayer (distributed) Scrabble game that can be played with either human or computer players complete with the following features.
+
+Key features:
+- AI
+- Web GUI
+- multiplayer (distributed)
+- Chat (Instant Messaging)
+- English (not OCaml) dictionary manipulation using a Trie
+
+We created a Scrabble game which allows users to play Scrabble, but with added features such as detecting if words are valid or not. We also implemented an AI to play words that maximize score according to tile/word bonuses and point values of letters.
+
+The scrabble dictionary was implemented by using a prefix tree because the efficiency of the data structure is especially important for the AI.
+
+For the server-client interface, we leveraged several OCaml packages (listed in the **External Dependencies** section of this document) to persist data across multiple players and multiple instances of games as well as provide an HTTP interface for multiplayer functionality over the internet. Our server is exposed over a public IP address such that any system on Cornell's network can access and play our game via our web application.
+
+For the user interface, users are able to view their current available letters as well as the current board and are able to perform moves.
+
+With regards to the comment on the usefulness of a trie - we felt that a trie was necessary because the AI would be doing lookup of many words when evaluating potential moves. A trie also allows the AI to quickly determine what words can be made from an existing word on the board by adding some additional tiles to the end of the word. This is elaborated in more detail in the **Data** section of this document.
 
 **Citations**
 - OCaml documentation [http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html](http://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html)
@@ -17,11 +34,16 @@ NetID's: jwp258, bcs84, kt485, rsv32
 - MDL documentation [https://getmdl.io/components/](https://getmdl.io/components/)
 - JavaScript documentation [https://developer.mozilla.org/en-US/docs/Web/JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 - *The world's fastest scrabble program* [https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf](https://www.cs.cmu.edu/afs/cs/academic/class/15451-s06/www/lectures/scrabble.pdf)
+
 ## Architecture
+
+![alt text](http://vellanki-web.coecis.cornell.edu/Component%20and%20Connector%20Diagram.jpg "Component and Connector Diagram")
 
 **TODO (pull from MS1)**
 
 ## System Design
+
+![alt text](http://vellanki-web.coecis.cornell.edu/Module%20Dependency%20Diagram.jpg "Module Dependency Diagram")
 
 **TODO (pull from MS1)**
 
@@ -64,7 +86,10 @@ NetID's: jwp258, bcs84, kt485, rsv32
 
 ## Division of Labor
 
-**TODO**
+- Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was commiting through the virtual machine)
+- Brian implemented Game module
+- Ram implemented the Server-Client interface and the web browser GUI
+- Kirk implemented the AI (and can also verify that Justin did quite a bit of work, git was just acting weird on Justin's VM).
 
 # TODO SHOULD THE CONTENT BELOW BE INCLUDED
 
@@ -96,7 +121,7 @@ are consistently < 10,000 in length (efficiency traded off in favor of simplicit
   \* chose not to use WebSockets because of the minimal support for OCaml
 - used `localStorage` to transfer data between the two pages of the web application
 - used 200 HTTP status code for all successful operations for simplicity and ease of development given time constraints (as opposed to employing other more descriptive status code such as 201)
-- `HttpServer` and `HttpClient` modules provide clean interfaces that abstract what would've been duplicated code between HTTP endpoints/requests
+- `HttpServer` and `HttpClient` modules provide clean interfaces that abstract what would've been duplicated code between HTTP endpoints/requests such that a callback function simply needs to accept a request record and produce a response record
 
 `HttpServer` Usage:  
 ```ocaml
@@ -111,6 +136,10 @@ e.g. HttpServer.add_route (`GET,"/api/") callback
 #### Grid
 - `lists` were used to represent the grid and bonus tiles for simplicity (list sizes are small so efficiency loss is not drastic)
 
+#### Game
+- used records to represent a player, game diff, move, and game state.
+- state and player are mutable records because the game information is not stored in a database (e.g. SQL) but rather in memory. We would have preferred to do this immutably, but the difficulty in using SQL with OCaml made us decide to just have the game information stored in memory and use mutable records.
+
 **TODO**
 
 ### Programming
@@ -118,3 +147,30 @@ e.g. HttpServer.add_route (`GET,"/api/") callback
 Each individual module was implemented **bottom-up** while the overall project was implemented **top-down** in order to allow for parallel development of modules while stubbing out dependencies.
 
 **TODO**
+
+#### AI
+Although we used the Scrabble AI paper listed in the citations as inspiration,
+not all of the algorithms described in it were implemented because it was
+simpler and far more clear to do otherwise.
+
+The key insights to building the scrabble AI were as follows:
+- Scrabble moves have to be adjacent to an existing word (except if it's the first move)
+- The limiting factor in generating move permutations is our tile set and not the dictionary
+(although having an efficient dictionary helped a ton).
+
+The scrabble AI works as follows:
+
+1. Identifies all "slots" on the board. Slots are simply (row,col) coordinates that are adjacent to an existing word.
+
+2. For each slot, figure out what characters from our tile list simply cannot go there because they form invalid cross words.
+
+3. The generated association list of (row, col) paired with the valid chars that can go there is called an anchor list.
+
+4. For each anchor in our anchor list, the AI
+attempts to build a word in all 4 directions. It uses the anchor list to cut down on permutations early and uses the function Dictionary.has_extension (or Dictionary.has_back_extensions if building backwards) to further cut down on permutations.
+
+5. The final list of possible moves is accumulated and ranked based on tile values and board bonuses found in Game.
+
+6. The best move is selected and returned, or if no move is possible, a GameOver exception is raised.
+
+7. It is worth noting that raising a GameOver exception does not necessarily mean the game is over. It could also be the case that our AI in particular simply has no more moves to make because it has a "bad" tile list. The functions that call Ai.best_move account for this peculiarity.
