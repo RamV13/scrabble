@@ -82,9 +82,9 @@ With regards to the comment on the usefulness of a trie - we felt that a trie wa
 
 ## Division of Labor
 
-- Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was commiting through the virtual machine)
+- Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was committing through the virtual machine)
 
-**TODO**
+- Kirk implemented the AI (and can also verify that Justin did quite a bit of work, git was just acting weird on Justin's VM).
 
 # TODO SHOULD THE CONTENT BELOW BE INCLUDED
 
@@ -145,3 +145,23 @@ clarity/simplicity and safety).
 Each individual module was implemented **bottom-up** while the overall project was implemented **top-down** in order to allow for parallel development of modules while stubbing out dependencies.
 
 **TODO**
+
+#### AI
+Although we used the Scrabble AI paper listed in the citations as inspiration,
+not all of the algorithms described in it were implemented because it was
+simpler and far more clear to do otherwise.
+
+The key insights to building the scrabble AI were as follows:
+- Scrabble moves have to be adjacent to an existing word (except if it's the first move)
+- The limiting factor in generating move permutations is our tile set and not the dictionary
+(although having an efficient dictionary helped a ton).
+
+The scrabble AI works as follows:
+1. Identifies all "slots" on the board. Slots are simply (row,col) coordinates that are adjacent to an existing word.
+2. For each slot, figure out what characters from our tile list simply cannot go there because they form invalid cross words.
+3. The generated association list of (row, col) paired with the valid chars that can go there is called an anchor list.
+4. For each anchor in our anchor list, the AI
+attempts to build a word in all 4 directions. It uses the anchor list to cut down on permutations early and uses the function Dictionary.has_extension (or Dictionary.has_back_extensions if building backwards) to further cut down on permutations.
+5. The final list of possible moves is accumulated and ranked based on tile values and board bonuses found in Game.
+6. The best move is selected and returned, or if no move is possible, a GameOver exception is raised.
+7. It is worth noting that raising a GameOver exception does not necessarily mean the game is over. It could also be the case that our AI in particular simply has no more moves to make because it has a "bad" tile list. The functions that call Ai.best_move account for this peculiarity. 
