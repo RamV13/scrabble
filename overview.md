@@ -83,6 +83,7 @@ With regards to the comment on the usefulness of a trie - we felt that a trie wa
 ## Division of Labor
 
 - Justin implemented the Grid and Dictionary modules (commits aren't logged correctly because he was commiting through the virtual machine)
+- Brian implemented Game module
 
 **TODO**
 
@@ -130,6 +131,10 @@ e.g. HttpServer.add_route (`GET,"/api/") callback
 
 #### Grid
 - `lists` were used to represent the grid and bonus tiles for simplicity (list sizes are small so efficiency loss is not drastic)
+
+#### Game
+- used records to represent a player, game diff, move, and game state. 
+- state and player are mutable records because the game information is not stored in a database (e.g. SQL) but rather in memory. We would have preferred to do this immutably, but the difficulty in using SQL with OCaml made us decide to just have the game information stored in memory and use mutable records.
 
 **TODO**
 
