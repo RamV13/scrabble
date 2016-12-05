@@ -97,7 +97,7 @@ are consistently < 10,000 in length (efficiency traded off in favor of simplicit
   \* chose not to use WebSockets because of the minimal support for OCaml
 - used `localStorage` to transfer data between the two pages of the web application
 - used 200 HTTP status code for all successful operations for simplicity and ease of development given time constraints (as opposed to employing other more descriptive status code such as 201)
-- `HttpServer` and `HttpClient` modules provide clean interfaces that abstract what would've been duplicated code between HTTP endpoints/requests
+- `HttpServer` and `HttpClient` modules provide clean interfaces that abstract what would've been duplicated code between HTTP endpoints/requests such that a callback function simply needs to accept a request record and produce a response record
 
 `HttpServer` Usage:  
 ```ocaml
