@@ -3,6 +3,10 @@
 Authors: Justin Parratt, Brian Shi, Kirk Thaker, Ram Vellanki <br/>
 NetID's: jwp258, bcs84, kt485, rsv32
 
+## How to Run
+
+See [README.txt](./README.txt)
+
 ## System Description
 
 We developed a multiplayer (distributed) Scrabble game that can be played with either human or computer players complete with the following features.
